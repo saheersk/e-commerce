@@ -16,10 +16,12 @@ def product_all(request):
 def product_details(request, slug):
     product = get_object_or_404(Product, slug=slug)
     product_images = ProductImage.objects.filter(product=product)
+    related_products = Product.objects.filter(category=product.category).exclude(pk=product.pk)[:4]
 
     context = {
         'title': f'Male Fashion | {product.title}',
-        'products': product,
+        'product': product,
         'product_images': product_images,
+        'related_products': related_products
     }
     return render(request, 'product/shop-details.html', context)

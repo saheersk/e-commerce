@@ -1,0 +1,128 @@
+{% load static %}
+<div class="app-menu">
+    <!-- Sidebar -->
+
+    <div class="navbar-vertical navbar nav-dashboard">
+        <div class="h-100" data-simplebar>
+            <!-- Brand logo -->
+            <a class="navbar-brand" href="index.html">
+                <img src="{% static 'admin/images/brand/logo/logo-2.svg' %}" alt="dash ui - bootstrap 5 admin dashboard template" />
+            </a>
+            <!-- Navbar nav -->
+            <ul class="navbar-nav flex-column" id="sideNavbar">
+                <li class="nav-item">
+                    <a href="{% url 'customadmin:admin_panel' %}" class="nav-link has-arrow">
+                        <i data-feather="home" class="nav-icon me-2 icon-xxs" ></i> 
+                        Home 
+                    </a>
+                </li>
+                <!-- Nav item -->
+                <li class="nav-item">
+                    <div class="navbar-heading">
+                          User 
+                    </div>
+                </li>
+                <!-- Nav item -->
+                <li class="nav-item">
+                    <a class="nav-link has-arrow" href="{% url 'customadmin:admin_user' %}">
+                     Users
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <div class="navbar-heading">Shop</div>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link has-arrow" href="{% url 'customadmin:admin_category' %}">
+                       Categories 
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link has-arrow" href="pages/chat-app.html">
+                        Products
+                    </a>
+                </li>
+
+                <li class="nav-item">
+                    <div class="navbar-heading">web</div>
+                </li>
+                <!-- Nav item -->
+                <li class="nav-item">
+                    <a class="nav-link has-arrow" href="pages/chat-app.html">
+                        Banners
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link has-arrow" href="pages/chat-app.html">
+                        Contacts
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link has-arrow" href="pages/chat-app.html">
+                        Fashion trends
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link has-arrow" href="pages/chat-app.html">
+                        Newsletter
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link has-arrow" href="pages/chat-app.html">
+                        Showcases
+                    </a>
+                </li>
+
+                <!-- Nav item -->
+                {% comment %} <li class="nav-item">
+                    <a
+                        class="nav-link has-arrow collapsed"
+                        href="#!"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#navecommerce"
+                        aria-expanded="false"
+                        aria-controls="navecommerce"
+                    >
+                        <i data-feather="shopping-cart" class="nav-icon me-2 icon-xxs"> </i> Ecommerce
+                    </a>
+
+                    <div id="navecommerce" class="collapse" data-bs-parent="#sideNavbar">
+                        <ul class="nav flex-column">
+                            <li class="nav-item">
+                                <a class="nav-link has-arrow" href="pages/ecommerce-products.html"> Products </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link has-arrow" href="pages/ecommerce-products-details.html">
+                                    Product Detail
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link has-arrow" href="pages/ecommerce-product-edit.html"> Add Product </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link has-arrow" href="pages/ecommerce-order-list.html"> Orders </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link has-arrow" href="pages/ecommerce-order-detail.html">
+                                    Orders Detail
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link has-arrow" href="pages/ecommerce-cart.html"> Shopping cart </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link has-arrow" href="pages/ecommerce-checkout.html"> Checkout </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link has-arrow" href="pages/ecommerce-customer.html"> Customer </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link has-arrow" href="pages/ecommerce-seller.html"> Seller </a>
+                            </li>
+                        </ul>
+                    </div>
+                </li> {% endcomment %}
+
+        </div>
+    </div>
+</div>

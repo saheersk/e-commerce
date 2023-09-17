@@ -1,0 +1,26 @@
+.input-container .input-form {
+    display: flex;
+}
+.input-container .input-form label {
+    margin-bottom: 15px;
+}
+.input-container .input-form input[type="text"]{
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #ccc;
+}
+.input-container .input-form input[type="email"]{
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #ccc;
+}
+.input-container .input-form input[type="password"]{
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #ccc;
+}
+.input-container .input-form input[type="tel"]{
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #ccc;
+}

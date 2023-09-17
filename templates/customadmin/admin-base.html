@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+    {% load static %}
+    <!-- Mirrored from dashui.codescandy.com/dashuipro/index.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 11 Sep 2023 11:46:26 GMT -->
+    <head>
+        <!-- Required meta tags -->
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <meta name="author" content="Codescandy" />
+
+        <!-- Google tag (gtag.js) -->
+        <script async src="https://www.googletagmanager.com/gtag/js?id=G-M8S4MT3EYG"></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag() {
+                dataLayer.push(arguments);
+            }
+            gtag("js", new Date());
+
+            gtag("config", "G-M8S4MT3EYG");
+        </script>
+
+        <!-- Favicon icon-->
+        <link rel="shortcut icon" type="image/x-icon" href="{% static 'admin/images/favicon/favicon.ico' %}" />
+
+        <!-- Libs CSS -->
+        <link href="{% static 'admin/libs/bootstrap-icons/font/bootstrap-icons.css' %}" rel="stylesheet" />
+        <link href="{% static 'admin/libs/%40mdi/font/css/materialdesignicons.min.css' %}" rel="stylesheet" />
+        <link href="{% static 'admin/libs/simplebar/dist/simplebar.min.css' %}" rel="stylesheet" />
+
+        <!-- Theme CSS -->
+        <link rel="stylesheet" href="{% static 'admin/css/theme.min.css' %}" />
+        <link rel="stylesheet" href="{% static 'admin/css/style.css' %}" />
+        <link href="{% static 'admin/libs/datatables.net-bs5/css/dataTables.bootstrap5.min.css' %}" rel="stylesheet" />
+        <title>{{title}}</title>
+    </head>
+
+    <body>
+        {% block content %}{% endblock %}
+        <!-- Scripts -->
+
+        <!-- dropzone -->
+        <script src="{% static 'admin/libs/dropzone/dist/min/dropzone.min.js' %}"></script>
+        <!-- flatpickr -->
+        <script src="{% static 'admin/libs/flatpickr/dist/flatpickr.min.js' %}"></script>
+
+        <!-- quill js -->
+        <script src="{% static 'admin/libs/quill/dist/quill.min.js' %}"></script>
+        <script src="{% static 'admin/libs/%40yaireo/tagify/dist/tagify.min.js' %}"></script>
+
+        <!-- Libs JS -->
+        <script src="{% static 'admin/libs/jquery/dist/jquery.min.js' %}"></script>
+        <script src="{% static 'admin/libs/bootstrap/dist/js/bootstrap.bundle.min.js' %}"></script>
+        <script src="{% static 'admin/libs/feather-icons/dist/feather.min.js' %}"></script>
+        <script src="{% static 'admin/libs/simplebar/dist/simplebar.min.js' %}"></script>
+
+        <!-- Theme JS -->
+        <script src="{% static 'admin/js/theme.min.js' %}"></script>
+        <script src="{% static 'admin/libs/apexcharts/dist/apexcharts.min.js' %}"></script>
+        <script src="{% static 'admin/js/vendors/chart.js' %}"></script>
+        <!-- popper js -->
+        <script src="{% static 'admin/libs/%40popperjs/core/dist/umd/popper.min.js' %}"></script>
+        <!-- tippy js -->
+        <script src="{% static 'admin/libs/tippy.js' %}/dist/tippy-bundle.umd.min.js' %}"></script>
+        <script src="{% static 'admin/js/vendors/tooltip.js' %}"></script>
+        <script src="{% static 'admin/libs/datatables/media/js/jquery.dataTables.min.js' %}"></script>
+        <script src="{% static 'admin/libs/datatables.net-bs5/js/dataTables.bootstrap5.min.js' %}"></script>
+        <script src="{% static 'admin/libs/datatables.net-responsive/js/dataTables.responsive.min.js' %}"></script>
+        <script src="{% static 'admin/js/vendors/datatable.js' %}"></script>
+    </body>
+
+    <!-- Mirrored from dashui.codescandy.com/dashuipro/index.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 11 Sep 2023 11:48:27 GMT -->
+</html>

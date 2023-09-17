@@ -1,12 +1,12 @@
+import os
 import uuid 
 
 from django.db import models
 from django.utils.text import slugify
+from django.core.files.uploadedfile import SimpleUploadedFile
 
-# from imagekit.models import ProcessedImageField
-# from imagekit.processors import ResizeToFill
-from resizeimage import resizeimage
 from PIL import Image
+from io import BytesIO
 
 from user.models import CustomUser
 
@@ -54,19 +54,33 @@ class Product(models.Model):
             img = Image.open(img_file)
             img = img.resize((262, 260), Image.Resampling.LANCZOS)
             img.save(self.featured_image.path, img.format)
-    
+
 
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='product_image')
     image = models.ImageField(upload_to='Product/images')
+    thumbnail = models.ImageField(upload_to='Product/thumbnails', blank=True, null=True)
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
 
-        with open(self.image.path, 'rb') as img_file:
-            img = Image.open(img_file)
-            img = img.resize((300, 533), Image.Resampling.LANCZOS)
-            img.save(self.image.path, img.format)
+        if not self.thumbnail:  # Check if thumbnail field is empty
+            with open(self.image.path, 'rb') as img_file:
+                img = Image.open(img_file)
+                img = img.resize((300, 533), Image.LANCZOS)
+
+                # Create a thumbnail and save it to the thumbnail field
+                thumbnail_img = img.copy()
+                thumbnail_img.thumbnail((100, 120), Image.LANCZOS)
+
+                # Save both the thumbnail and the original image with the same filename
+                thumb_filename = os.path.basename(self.image.path)
+                thumb_io = BytesIO()
+                thumbnail_img.save(thumb_io, format='JPEG', quality=90)
+                thumb_file = SimpleUploadedFile(thumb_filename, thumb_io.getvalue(), content_type='image/jpeg')
+                self.thumbnail.save(thumb_filename, thumb_file, save=False)
+                self.image.save(thumb_filename, thumb_file, save=False)
+
 
 
 class Cart(models.Model):
