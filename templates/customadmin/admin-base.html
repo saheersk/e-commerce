@@ -10,6 +10,7 @@
 
         <!-- Google tag (gtag.js) -->
         <script async src="https://www.googletagmanager.com/gtag/js?id=G-M8S4MT3EYG"></script>
+        <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
             window.dataLayer = window.dataLayer || [];
             function gtag() {
@@ -21,7 +22,7 @@
         </script>
 
         <!-- Favicon icon-->
-        <link rel="shortcut icon" type="image/x-icon" href="{% static 'admin/images/favicon/favicon.ico' %}" />
+        <link rel="shortcut icon" type="image/x-icon" href="{% static 'img/logo.png' %}" />
 
         <!-- Libs CSS -->
         <link href="{% static 'admin/libs/bootstrap-icons/font/bootstrap-icons.css' %}" rel="stylesheet" />
@@ -63,10 +64,11 @@
         <!-- tippy js -->
         <script src="{% static 'admin/libs/tippy.js' %}/dist/tippy-bundle.umd.min.js' %}"></script>
         <script src="{% static 'admin/js/vendors/tooltip.js' %}"></script>
-        <script src="{% static 'admin/libs/datatables/media/js/jquery.dataTables.min.js' %}"></script>
+        {% comment %} <script src="{% static 'admin/libs/datatables/media/js/jquery.dataTables.min.js' %}"></script> {% endcomment %}
         <script src="{% static 'admin/libs/datatables.net-bs5/js/dataTables.bootstrap5.min.js' %}"></script>
         <script src="{% static 'admin/libs/datatables.net-responsive/js/dataTables.responsive.min.js' %}"></script>
         <script src="{% static 'admin/js/vendors/datatable.js' %}"></script>
+        <script src="{% static 'admin/js/script.js' %}"></script>
     </body>
 
     <!-- Mirrored from dashui.codescandy.com/dashuipro/index.html by HTTrack Website Copier/3.x [XR&CO'2014], Mon, 11 Sep 2023 11:48:27 GMT -->

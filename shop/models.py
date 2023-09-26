@@ -13,7 +13,9 @@ from user.models import CustomUser
 
 class Category(models.Model):
     name = models.CharField(max_length=100)
+    is_blocked = models.BooleanField(default=False)
     created_date = models.DateTimeField(auto_now_add=True)
+    is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name
@@ -26,7 +28,7 @@ class Product(models.Model):
     title = models.CharField(max_length=150)
     featured_image = models.ImageField(upload_to='Product/featured-images')
     description = models.TextField()
-    price = models.CharField(max_length=50)
+    price = models.PositiveIntegerField()
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     short_description = models.CharField(max_length=200)
     stock_unit = models.IntegerField()
@@ -34,6 +36,7 @@ class Product(models.Model):
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)
     slug = models.SlugField(unique=True, blank=True)
+    is_deleted = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['-created_date']    
@@ -58,36 +61,37 @@ class Product(models.Model):
 
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='product_image')
-    image = models.ImageField(upload_to='Product/images')
+    image = models.ImageField(upload_to='Product/images', blank=True, null=True)
     thumbnail = models.ImageField(upload_to='Product/thumbnails', blank=True, null=True)
+    is_show = models.BooleanField(default=True)
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
 
-        if not self.thumbnail:  # Check if thumbnail field is empty
-            with open(self.image.path, 'rb') as img_file:
-                img = Image.open(img_file)
-                img = img.resize((300, 533), Image.LANCZOS)
+        if not self.thumbnail:
+            if self.image:  
+                with open(self.image.path, 'rb') as img_file:
+                    img = Image.open(img_file)
+                    img = img.resize((300, 533), Image.LANCZOS)
 
-                # Create a thumbnail and save it to the thumbnail field
-                thumbnail_img = img.copy()
-                thumbnail_img.thumbnail((100, 120), Image.LANCZOS)
+                    thumbnail_img = img.copy()
+                    thumbnail_img.thumbnail((100, 120), Image.LANCZOS)
 
-                # Save both the thumbnail and the original image with the same filename
-                thumb_filename = os.path.basename(self.image.path)
-                thumb_io = BytesIO()
-                thumbnail_img.save(thumb_io, format='JPEG', quality=90)
-                thumb_file = SimpleUploadedFile(thumb_filename, thumb_io.getvalue(), content_type='image/jpeg')
-                self.thumbnail.save(thumb_filename, thumb_file, save=False)
-                self.image.save(thumb_filename, thumb_file, save=False)
-
+                    thumb_filename = os.path.basename(self.image.path)
+                    thumb_io = BytesIO()
+                    thumbnail_img.save(thumb_io, format='JPEG', quality=90)
+                    thumb_file = SimpleUploadedFile(thumb_filename, thumb_io.getvalue(), content_type='image/jpeg')
+                    self.thumbnail.save(thumb_filename, thumb_file, save=False)
+                    self.image.save(thumb_filename, thumb_file, save=False)
 
 
 class Cart(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     user =  models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    qty = models.IntegerField()
+    qty = models.PositiveIntegerField(default=1)
+    total_price_of_product = models.PositiveIntegerField()
     added_date = models.DateTimeField(auto_now_add=True)
+    is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
         return self.product.title
@@ -97,6 +101,7 @@ class Wishlist(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     user =  models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     added_date = models.DateTimeField(auto_now_add=True)
+    is_deleted = models.BooleanField(default=False)
 
     def __str__(self):
         return self.product.title

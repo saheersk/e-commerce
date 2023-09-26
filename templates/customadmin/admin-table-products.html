@@ -1,0 +1,113 @@
+{% extends "customadmin/admin-base.html" %} {% block content %} {% load static %}
+<!-- Wrapper -->
+<main id="main-wrapper" class="main-wrapper">
+    {% include 'customadmin/includes/admin-header.html' %} {% include 'customadmin/includes/sidebar.html' %}
+    <div id="app-content">
+        <!-- Container fluid -->
+        <div class="app-content-area">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-lg-12 col-md-12 col-12">
+                        <!-- Page header -->
+                        <div class="mb-5">
+                            <h3 class="mb-0">Products</h3>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <!-- row -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header d-md-flex border-bottom-0">
+                                    <div class="flex-grow-1">
+                                        <a href="{% url 'customadmin:admin_product_add' %}" class="btn btn-primary"
+                                            >+ Add</a
+                                        >
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive table-card">
+                                        <table
+                                            id="example"
+                                            class="table text-nowrap table-centered mt-0"
+                                            style="width: 100%"
+                                        >
+                                            <thead class="table-light">
+                                                <tr>
+                                                    {% for name in heading %}
+                                                    <th>{{name}}</th>
+                                                    {% endfor %}
+                                                    <th>Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for product in products %}
+                                                <tr>
+                                                    <td>{{product.title}}</td>
+                                                    <td>{{product.category}}</td>
+                                                    <td>{{product.stock_unit}}</td>
+                                                    {% if product.is_show %}
+                                                    <td>
+                                                        <span class="badge badge-success-soft">Active</span>
+                                                    </td>
+                                                    {% else %}
+                                                    <td>
+                                                        <span class="badge badge-danger-soft">Deactive</span>
+                                                    </td>
+                                                    {% endif %}
+                                                    <td>
+                                                        <a
+                                                            href="{% url 'customadmin:admin_product_edit' product.id %}"
+                                                            class="btn btn-ghost btn-icon btn-sm rounded-circle texttooltip"
+                                                            data-template="editOne"
+                                                        >
+                                                            <i data-feather="edit" class="icon-xs"></i>
+                                                            <div id="editOne" class="d-none">
+                                                                <span>Edit</span>
+                                                            </div>
+                                                        </a>
+                                                        {% if product.is_show %}
+                                                        <a
+                                                            href="{% url 'customadmin:admin_product_delete' product.id %}"
+                                                            class=" btn btn-ghost btn-icon btn-sm rounded-circle texttooltip danger action-button reload"
+                                                            data-text="Are you sure want to soft delete this Product.You can't undo this action."
+                                                            data-title="Confirm Delete!"
+                                                            title="Delete!"
+                                                        >
+                                                            <i data-feather="trash-2" class="icon-xs"></i>
+                                                            <div id="trashOne" class="d-none">
+                                                                <span>Delete</span>
+                                                            </div>
+                                                        </a>
+                                                        {% else %}
+                                                        <a
+                                                            href="{% url 'customadmin:admin_product_delete' product.id %}"
+                                                            class=" btn btn-ghost btn-icon btn-sm rounded-circle texttooltip danger action-button reload"
+                                                            data-text="Are you sure want to Revert to show."
+                                                            data-title="Confirm Revert"
+                                                            title="Delete!"
+                                                        >
+                                                            <i data-feather="rotate-cw" class="icon-xs"></i>
+                                                            <div id="trashOne" class="d-none">
+                                                                <span>Delete</span>
+                                                            </div>
+                                                        </a>
+                                                        {% endif %}
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+{% endblock %}

@@ -21,7 +21,19 @@
                             <div class="card">
                                 <div class="card-header d-md-flex border-bottom-0">
                                     <div class="flex-grow-1">
-                                        <a href="{% url 'customadmin:admin_category_add' %}" class="btn btn-primary">+ Add</a>
+                                        <a href="{% url 'customadmin:admin_category_add' %}" class="btn btn-primary"
+                                            >+ Add</a
+                                        >
+                                    </div>
+                                    <div class="search-bar">
+                                        <form>
+                                            <input
+                                                type="text"
+                                                name="search"
+                                                class="form-control"
+                                                placeholder="Search..."
+                                            />
+                                        </form>
                                     </div>
                                 </div>
                                 <div class="card-body">
@@ -43,6 +55,15 @@
                                                 {% for category in categories %}
                                                 <tr>
                                                     <td>{{category.name}}</td>
+                                                    {% if category.is_blocked %}
+                                                    <td>
+                                                        <span class="badge badge-danger-soft">Deactive</span>
+                                                    </td>
+                                                    {% else %}
+                                                    <td>
+                                                        <span class="badge badge-success-soft">Active</span>
+                                                    </td>
+                                                    {% endif %}
                                                     <td>
                                                         <a
                                                             href="{% url 'customadmin:admin_category_edit' user.id %}"
@@ -51,13 +72,15 @@
                                                         >
                                                             <i data-feather="edit" class="icon-xs"></i>
                                                             <div id="editOne" class="d-none">
-                                                                    <span>Edit</span>
+                                                                <span>Edit</span>
                                                             </div>
                                                         </a>
                                                         <a
-                                                            href="#!"
-                                                            class="btn btn-ghost btn-icon btn-sm rounded-circle texttooltip"
-                                                            data-template="trashOne"
+                                                            href="{% url 'customadmin:admin_category_delete' category.id %}"
+                                                            class=" btn btn-ghost btn-icon btn-sm rounded-circle texttooltip danger action-button reload"
+                                                            data-text="Are you sure want to remove this category. You can't undo this action."
+                                                            data-title="Confirm Delete!"
+                                                            title="Delete!"
                                                         >
                                                             <i data-feather="trash-2" class="icon-xs"></i>
                                                             <div id="trashOne" class="d-none">
@@ -80,4 +103,4 @@
     </div>
 </main>
 
-{% endblock %} 
+{% endblock %}

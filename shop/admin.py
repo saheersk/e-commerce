@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from shop.models import Category, ProductImage, Product
+from shop.models import Category, ProductImage, Product, Cart
 
 
 class ProductImageAdmin(admin.TabularInline):
@@ -20,3 +20,10 @@ class ProductAdmin(admin.ModelAdmin):
     inlines = [ProductImageAdmin]
 
 admin.site.register(Product, ProductAdmin)
+
+
+class CartAdmin(admin.ModelAdmin):
+    list_display = ['id', 'user', 'product', 'qty']
+
+admin.site.register(Cart, CartAdmin)
+

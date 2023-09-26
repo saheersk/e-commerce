@@ -1,8 +1,12 @@
 .input-container .input-form {
     display: flex;
 }
-.input-container .input-form label {
+.input-container .input-form span {
     margin-bottom: 15px;
+    display: block;
+}
+.input-container .input-form label {
+    margin-bottom: 5px;
 }
 .input-container .input-form input[type="text"]{
     width: 100%;
@@ -24,3 +28,31 @@
     padding: 5px;
     border: 1px solid #ccc;
 }
+.input-container .input-form input[type="file"]{
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #ccc;
+    margin-bottom: 24px;
+}
+.input-container .input-form input[type="number"]{
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #ccc;
+}
+.input-container .input-form textarea{
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #ccc;
+}
+/* .input-container .input-form input[type="checkbox"]{
+    display: inline-block;
+    width: 10%;
+    padding: 5px;
+    border: 1px solid #ccc;
+} */
+/* .input-container .input-form a {
+    display: block;
+}
+.input-container .input-form button {
+    margin-top: 20px;
+} */

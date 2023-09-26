@@ -57,8 +57,8 @@
             <!--Navbar nav -->
             <ul class="navbar-nav navbar-right-wrap ms-lg-auto d-flex nav-top-wrap align-items-center ms-4 ms-lg-0">
                 {% if request.user.is_authenticated and request.user.is_superuser %}
-                <li class="mr-2">{{username}}</li>
-                <li class="ml-2" ><a class="ml-2" href="#"> Logout </a></li>
+                <li style="margin-right: 5px;" >{{username}}</li>
+                <li ><a class="ml-2" href="{% url 'customadmin:admin_logout' %}"> Logout </a></li>
                 {% else %}
                 <li>Login</li>
                 {% endif %}

@@ -937,7 +937,7 @@ ol {
 
 .product__item {
 	overflow: hidden;
-	height: 265px;
+	/* height: 265px; */
 	margin-bottom: 40px;
 }
 
@@ -980,8 +980,8 @@ ol {
 	align-items: center;
 }
 .product__item__pic .product-img {
-	height: 180px;
-	width: 182px;
+	/* height: 180px; */
+	width: 200px;
 }
 .product__item__pic .product-img img {
 	display: block;
@@ -2347,6 +2347,10 @@ ol {
 	margin-right: 30px;
 }
 
+.shopping__cart__table table tbody tr td.product__cart__item .product__cart__item__pic img {
+	height: 100px;
+}
+
 .shopping__cart__table table tbody tr td.product__cart__item .product__cart__item__text {
 	overflow: hidden;
 	padding-top: 21px;
@@ -2370,8 +2374,20 @@ ol {
 
 .shopping__cart__table table tbody tr td.quantity__item .quantity .pro-qty-2 {
 	width: 80px;
+	display: flex;
 }
 
+.shopping__cart__table table tbody tr td.quantity__item .quantity .pro-qty-2 .right-arrow {
+	rotate: 180deg;
+	display: inline-block;
+	width: 24px;
+	height: 24px;
+}
+.shopping__cart__table table tbody tr td.quantity__item .quantity .pro-qty-2 .left-arrow {
+	display: inline-block;
+	width: 24px;
+	height: 24px;
+}
 .shopping__cart__table table tbody tr td.quantity__item .quantity .pro-qty-2 input {
 	width: 50px;
 	border: none;
@@ -3372,7 +3388,79 @@ ol {
 	padding: 14px 35px;
 }
 
+
+div.pagination {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 2px solid #f5f5f5;
+    padding-top: 20px;
+}
+div.pagination a.prev {
+    display: flex;
+    align-items: center;
+    font-size: 18px;
+    color: #5e5e5e;
+    font-weight: 700;
+}
+div.pagination a.prev span, div.pagination .disabled.prev span {
+    transform: rotate(90deg);
+    margin-right: 10px;
+    width: 15px;
+}
+div.pagination a.next, div.pagination .disabled {
+    display: flex;
+    align-items: center;
+    font-size: 18px;
+    font-weight: 700;
+    color: #5e5e5e;
+}
+div.pagination a.next span, div.pagination .disabled.next span {
+    transform: rotate(-90deg);
+    margin-left: 10px;
+    width: 15px;
+}
+div.pagination .disabled {
+    color: #ccc;
+    cursor: not-allowed;
+}
+div.pagination div.pages {
+    display: flex;
+    align-items: center;
+}
+div.pagination div.pages span.active {
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    width:30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #5aab7b;
+    border-radius: 4px;
+    margin-right: 10px;
+}
+div.pagination div.pages a {
+    color: #5e5e5e;
+    font-size: 18px;
+    font-weight: 700;
+    width:30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+
+}
+div.pagination div.pages a:hover {
+    background: #c9eee4;
+}
+
+
 /*--------------------------------- Responsive Media Quaries -----------------------------*/
+
 
 @media only screen and (min-width: 1200px) {
 	.container {

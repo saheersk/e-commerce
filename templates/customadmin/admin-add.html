@@ -34,3 +34,45 @@
     </div>
 </main>
 {% endblock %}
+{% comment %} 
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="button" id="add-image-input">Add Image</button>
+    <input type="submit" value="Upload">
+</form>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const addImageInputButton = document.getElementById("add-image-input");
+    const form = document.querySelector("form");
+
+    addImageInputButton.addEventListener("click", function() {
+        const newInput = document.createElement("input");
+        newInput.type = "file";
+        newInput.name = "images";
+        newInput.accept = "image/*";
+        newInput.multiple = true;
+
+        form.insertBefore(newInput, addImageInputButton);
+    });
+});
+</script> {% endcomment %}
+{% comment %} 
+from django.shortcuts import render
+from .forms import ImageUploadForm
+
+def upload_images(request):
+    if request.method == 'POST':
+        form = ImageUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            # Handle the uploaded images here
+            images = request.FILES.getlist('images')
+            for image in images:
+                # Process each image as needed (e.g., save it to the database or file system)
+                pass
+            return render(request, 'success.html')
+    else:
+        form = ImageUploadForm()
+
+    return render(request, 'upload.html', {'form': form}) {% endcomment %}

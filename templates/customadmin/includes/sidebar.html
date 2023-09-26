@@ -6,7 +6,7 @@
         <div class="h-100" data-simplebar>
             <!-- Brand logo -->
             <a class="navbar-brand" href="index.html">
-                <img src="{% static 'admin/images/brand/logo/logo-2.svg' %}" alt="dash ui - bootstrap 5 admin dashboard template" />
+                <img src="{% static 'img/logo.png' %}" style='width:150px' alt="dash ui - bootstrap 5 admin dashboard template" />
             </a>
             <!-- Navbar nav -->
             <ul class="navbar-nav flex-column" id="sideNavbar">
@@ -38,7 +38,7 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link has-arrow" href="pages/chat-app.html">
+                    <a class="nav-link has-arrow" href="{% url 'customadmin:admin_product'  %}">
                         Products
                     </a>
                 </li>

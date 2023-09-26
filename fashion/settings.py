@@ -10,7 +10,7 @@ SECRET_KEY = 'django-insecure-%vy8$8d6$jah0=bk63#fvyr#@)did)1m*ilrwv+6sj-hr=k@kf
 
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1']
 
 
 INSTALLED_APPS = [
@@ -52,6 +52,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'fashion.context_processors.username',
+                'shop.context_processors.cart_count',
             ],
         },
     },
@@ -109,3 +111,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 AUTH_USER_MODEL = 'user.CustomUser'
+
+EMAIL_BACKEND = 'sendgrid_backend.SendgridBackend'
+SENDGRID_API_KEY = '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'
+
+
+

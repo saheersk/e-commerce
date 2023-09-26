@@ -18,10 +18,17 @@ urlpatterns = [
     path('user/users/add/', views.admin_user_add, name='admin_user_add'),
     path('user/users/edit/<int:pk>/', views.admin_user_edit, name='admin_user_edit'),
     path('user/users/delete/<int:pk>/', views.admin_user_delete, name='admin_user_delete'),
+    path('user/users/block/<int:pk>/', views.admin_user_block, name='admin_user_block'),
 
     #Admin Category
     path('category/categories/', views.admin_category, name='admin_category'),
     path('category/categories/add/', views.admin_category_add, name='admin_category_add'),
     path('category/categories/edit/<int:pk>/', views.admin_category_edit, name='admin_category_edit'),
     path('category/categories/delete/<int:pk>/', views.admin_category_delete, name='admin_category_delete'),
+
+    #Admin Product
+    path('product/products/', views.admin_product, name='admin_product'),
+    path('product/products/add/', views.admin_product_add, name='admin_product_add'),
+    path('product/products/edit/<int:pk>/', views.admin_product_edit, name='admin_product_edit'),
+    path('product/products/delete/<int:pk>/', views.admin_product_delete, name='admin_product_delete'),
 ]

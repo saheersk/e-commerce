@@ -1,0 +1,64 @@
+{% load static %}
+{% load paginator_tags %}
+{{instances.has_other_pages}}
+{% if instances.has_other_pages %}
+          <div class="pagination">
+            {% if instances.has_previous %}
+            {% change_params instances.previous_page_number as prev_url %}
+            <a href="{{prev_url}}" class="prev">
+              <span class="arrow">
+                <img
+                  src="{% static './img/icon/arrow.svg' %}"
+                  alt="Arrow"
+                />
+              </span>
+              Previous
+            </a>
+            {% else %}
+            <div class="prev disabled">
+              <span class="arrow">
+                <img
+                  src="{% static './img/icon/arrow.svg' %}"
+                  alt="Arrow"
+                />
+              </span>
+              Previous
+            </div>
+            {% endif %}
+            <div class="pages">
+                {% get_elided_page_range instances.paginator instances.number as page_range %}
+              {% for i in page_range %} 
+                {% if instances.number == i %}
+                    <span class="active">{{i}}</span>
+                {% else %}
+                    {% change_params i as current_url %}
+                    <a href="{{current_url}}">{{i}} </a>
+                {% endif %} 
+              {% endfor %}
+            </div>
+            {% if instances.has_next %}
+            {% change_params instances.next_page_number as next_url %}
+            <a href="{{next_url}}" class="next">
+              Next
+              <span class="arrow">
+                <img
+                  src="{% static './img/icon/arrow.svg' %}"
+                  alt="Arrow"
+                />
+              </span>
+            </a>
+            {% else %}
+            <div class="next disabled">
+              Next
+              <span class="arrow">
+                <img
+                  src="{% static './img/icon/arrow.svg' %}"
+                  alt="Arrow"
+                />
+              </span>
+            </div>
+            {% endif %}
+          </div>
+          {% else %}
+          <h2>Hello</h2>
+          {% endif %}

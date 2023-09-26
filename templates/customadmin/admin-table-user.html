@@ -20,8 +20,22 @@
                         <div class="col-12">
                             <div class="card">
                                 <div class="card-header d-md-flex border-bottom-0">
+                                    {% comment %}
                                     <div class="flex-grow-1">
-                                        <a href="{% url 'customadmin:admin_user_add' %}" class="btn btn-primary">+ Add</a>
+                                        <a href="{% url 'customadmin:admin_user_add' %}" class="btn btn-primary"
+                                            >+ Add</a
+                                        >
+                                    </div>
+                                    {% endcomment %}
+                                    <div class="search-bar">
+                                        <form>
+                                            <input
+                                                type="text"
+                                                name="search"
+                                                class="form-control"
+                                                placeholder="Search..."
+                                            />
+                                        </form>
                                     </div>
                                 </div>
                                 <div class="card-body">
@@ -54,8 +68,58 @@
                                                     <td>
                                                         <span class="badge badge-danger-soft">Deactive</span>
                                                     </td>
+                                                    {% endif %} {% if user.is_blocked %}
+                                                    <td>
+                                                        <span class="badge badge-danger-soft">Deactive</span>
+                                                    </td>
+                                                    {% else %}
+                                                    <td>
+                                                        <span class="badge badge-success-soft">Active</span>
+                                                    </td>
                                                     {% endif %}
                                                     <td>
+                                                        {% comment %} <form action="" method="post">
+                                                            {% csrf_token %}
+                                                        <button type="submit" 
+                                                            class="btn btn-ghost btn-icon btn-sm rounded-circle texttooltip"
+                                                            data-template="editOne"
+                                                        >
+                                                            <i class="mdi mdi-block-helper icon-xs"></i>
+                                                            <div id="editOne" class="d-none">
+                                                                <span>Block</span>
+                                                            </div>
+                                                        </button>
+                                                    </form> {% endcomment %}
+                                                    {% if not user.is_blocked %}
+                                                        <a
+                                                            href="{% url 'customadmin:admin_user_block' user.id %}"
+                                                            class=" btn btn-ghost btn-icon btn-sm rounded-circle texttooltip danger action-button reload"
+                                                            data-text="Are you sure want to Block this User."
+                                                            data-title="Confirm Block User"
+                                                            title="Delete!"
+                                                        >
+                                                        <i class="mdi mdi-block-helper icon-xs"></i>
+                                                            <div id="editOne" class="d-none">
+                                                                <span>Block</span>
+                                                            </div>
+                                                    
+                                                    </a>
+                                                    {% else %}
+                                                    <a
+                                                            href="{% url 'customadmin:admin_user_block' user.id %}"
+                                                            class=" btn btn-ghost btn-icon btn-sm rounded-circle texttooltip danger action-button reload"
+                                                            data-text="Are you sure want to Unblock this User."
+                                                            data-title="Confirm Unblock User"
+                                                            title="Delete!"
+                                                        >
+                                                        <i class="mdi mdi-block-helper icon-xs"></i>
+                                                            <div id="editOne" class="d-none">
+                                                                <span>Block</span>
+                                                            </div>
+                                                    
+                                                    </a>
+                                                    {% endif %} 
+                                                        {% comment %}
                                                         <a
                                                             href="{% url 'customadmin:admin_user_edit' user.id %}"
                                                             class="btn btn-ghost btn-icon btn-sm rounded-circle texttooltip"
@@ -63,11 +127,12 @@
                                                         >
                                                             <i data-feather="edit" class="icon-xs"></i>
                                                             <div id="editOne" class="d-none">
-                                                                    <span>Edit</span>
+                                                                <span>Edit</span>
                                                             </div>
                                                         </a>
+                                                        {% endcomment %} {% comment %}
                                                         <a
-                                                            href="#!"
+                                                            href="{% url 'customadmin:admin_user_delete' user.id %}"
                                                             class="btn btn-ghost btn-icon btn-sm rounded-circle texttooltip"
                                                             data-template="trashOne"
                                                         >
@@ -76,6 +141,7 @@
                                                                 <span>Delete</span>
                                                             </div>
                                                         </a>
+                                                        {% endcomment %}
                                                     </td>
                                                 </tr>
                                                 {% endfor %}
@@ -92,4 +158,4 @@
     </div>
 </main>
 
-{% endblock %} 
+{% endblock %}

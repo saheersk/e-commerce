@@ -5,7 +5,7 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-        <title>Sign Up Form by Colorlib</title>
+        <title>Male Fashion | Signup</title>
 
         <!-- Font Icon -->
         <link rel="stylesheet" href="{% static 'fonts/material-icon/css/material-design-iconic-font.min.css' %}" />
@@ -41,7 +41,7 @@
                                 />
                             </div>
                             <div class="form-group">
-                                <input type="email" class="form-input" name="email" id="email" placeholder="Email" />
+                                <input type="text" class="form-input" name="email" placeholder="Email"/>
                             </div>
                             <div class="form-group">
                                 <input
@@ -54,43 +54,34 @@
                             </div>
                             <div class="form-group">
                                 <input
-                                    type="text"
+                                    type="password"
                                     class="form-input"
                                     name="password"
                                     id="password"
                                     placeholder="Password"
                                 />
-                                <span toggle="#password" class="zmdi zmdi-eye field-icon toggle-password"></span>
+                                <span toggle="#password" class="zmdi zmdi-eye-off field-icon toggle-password"></span>
                             </div>
                             <div class="form-group">
                                 <input
                                     type="password"
                                     class="form-input"
                                     name="confirm_password"
-                                    id="re_password"
+                                    id="password"
                                     placeholder="Confirm your password"
                                 />
+                                <span toggle="#password" class="zmdi zmdi-eye-off field-icon toggle-password"></span>
                             </div>
-                            {% comment %}
-                            <div class="form-group">
-                                <input type="checkbox" name="agree-term" id="agree-term" class="agree-term" />
-                                <label for="agree-term" class="label-agree-term"
-                                    ><span><span></span></span>I agree all statements in
-                                    <a href="#" class="term-service">Terms of service</a></label
-                                >
-                            </div>
-                            {% endcomment %} 
                             {% if error %}
-                        <p class="error-message">{{message}}</p>
-                        {% endif %} 
-                            {% if form.errors %}
+                            <p class="error-message">{{message}}</p>
+                            {% endif %} {% if form.errors %}
                             <div class="alert alert-danger">
                                 <ul>
-                                  {% for field in form %} {% for error in field.errors %}
+                                    {% for field in form %} {% for error in field.errors %}
                                     <li>{{ error }}</li>
                                     {% endfor %} {% for err in field.non_field_errors %}
                                     <li>{{ err }}</li>
-                                    {% endfor %} {% endfor %} 
+                                    {% endfor %} {% endfor %}
                                 </ul>
                             </div>
                             {% endif %}
@@ -99,7 +90,8 @@
                             </div>
                         </form>
                         <p class="loginhere">
-                            Have already an account ? <a href="#" class="loginhere-link">Login here</a>
+                            Have already an account ?
+                            <a href="{% url 'user:login' %}" class="loginhere-link">Login here</a>
                         </p>
                     </div>
                 </div>
@@ -108,7 +100,9 @@
 
         <!-- JS -->
         <script src="{% static 'vendor/jquery/jquery.min.js' %}"></script>
+
         <script src="{% static 'js/signup-main.js' %}"></script>
+
     </body>
     <!-- This templates was made by Colorlib (https://colorlib.com) -->
 </html>

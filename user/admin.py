@@ -14,6 +14,7 @@ class CustomUserAdmin(UserAdmin):
                 'fields': (
                     'phone_number',
                     'profile_picture', 
+                    'is_blocked'
                 ),
             }
         ),

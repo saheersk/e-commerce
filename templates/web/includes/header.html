@@ -19,9 +19,9 @@
         </div>
     </div>
     <div class="offcanvas__nav__option">
-        <a href="#" class="search-switch"><img src="{% static 'img/icon/search.png' %}" alt="" /></a>
+        {% comment %} <a href="#" class="search-switch"><img src="{% static 'img/icon/search.png' %}" alt="" /></a> {% endcomment %}
         <a href="#"><img src="{% static 'img/icon/heart.png' %}" alt="" /></a>
-        <a href="#"><img src="{% static 'img/icon/cart.png' %}" alt="" /> <span>0</span></a>
+        <a href="#"><img src="{% static 'img/icon/cart.png' %}" alt="" /> <span class="cart-count">{{cart_count}}</span></a>
         {% comment %} <div class="price">$0.00</div> {% endcomment %}
     </div>
     <div id="mobile-menu-wrap"></div>
@@ -62,32 +62,40 @@
         <div class="row">
             <div class="col-lg-3 col-md-3">
                 <div class="header__logo">
-                    <a href="./index.html"><img src="{% static 'img/logo.png' %}" alt="" /></a>
+                    <a href="{% url 'web:index' %}"><img src="{% static 'img/logo.png' %}" alt="" /></a>
                 </div>
             </div>
             <div class="col-lg-6 col-md-6">
                 <nav class="header__menu mobile-menu">
                     <ul>
-                        <li class="active"><a href="./index.html">Home</a></li>
-                        <li><a href="./shop.html">Shop</a></li>
-                        <li>
+                        <li {% if active_menu_item == 'home' %}class="active"{% endif %}>
+                            <a href="{% url 'web:index' %}">Home</a>
+                        </li>
+                        <li {% if active_menu_item == 'shop' %}class="active"{% endif %}>
+                            <a href="{% url 'shop:product_all' %}">Shop</a>
+                        </li>
+                        <li {% if active_menu_item == 'pages' %}class="active"{% endif %}>
                             <a href="#">Pages</a>
                             <ul class="dropdown">
-                                <li><a href="./about.html">About Us</a></li>
-                                <li><a href="./shop-details.html">Shop Details</a></li>
-                                <li><a href="./shopping-cart.html">Shopping Cart</a></li>
-                                <li><a href="./checkout.html">Check Out</a></li>
+                                <li>
+                                    <a href="{% url 'web:about' %}">About Us</a>
+                                </li>
+                                <li><a href="{% url 'shop:product_cart' %}">Shopping Cart</a></li>
+                                <li><a href="#">My Order</a></li>
+                                <li><a href="#">Check Out</a></li>
                             </ul>
                         </li>
-                        <li><a href="./contact.html">Contacts</a></li>
+                        <li {% if active_menu_item == 'contact' %}class="active"{% endif %}>
+                            <a href="{% url 'web:contact' %}">Contacts</a>
+                        </li>
                     </ul>
                 </nav>
             </div>
             <div class="col-lg-3 col-md-3">
                 <div class="header__nav__option">
-                    <a href="#" class="search-switch"><img src="{% static 'img/icon/search.png' %}" alt="" /></a>
-                    <a href="#"><img src="{% static 'img/icon/heart.png' %}" alt="" /></a>
-                    <a href="#"><img src="{% static 'img/icon/cart.png' %}" alt="" /> <span>0</span></a>
+                    {% comment %} <a href="#" class="search-switch"><img src="{% static 'img/icon/search.png' %}" alt="" /></a> {% endcomment %}
+                    <a href="{% url 'shop:product_wishlist' %}"><img src="{% static 'img/icon/heart.png' %}" alt="" /></a>
+                    <a href="{% url 'shop:product_cart' %}"><img src="{% static 'img/icon/cart.png' %}" alt="" /> <span class="cart-count">{{cart_count}}</span></a>
                     {% comment %}
                     <div class="price">$0.00</div>
                     {% endcomment %}

@@ -24,6 +24,7 @@ class CustomUser(AbstractUser, PermissionsMixin):
     profile_picture = models.FileField(upload_to="user/profile/", null=True, blank=True)
     phone_number = PhoneNumberField(unique=True)
     email = models.EmailField(unique=True)
+    is_blocked = models.BooleanField(default=False)
 
     objects = CustomUserManager()
 

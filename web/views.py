@@ -3,8 +3,9 @@ import json
 from django.shortcuts import render
 from django.http import HttpResponse
 
-from web.models import Banner, Showcase, FashionTrends, Contact
+from web.models import Banner, Showcase, FashionTrends
 from web.forms import ContactForm
+from shop.models import Product, Cart
 from user.functions import generate_form_error
 
 
@@ -12,20 +13,27 @@ def index(request):
     banner = Banner.objects.filter(is_featured=True)
     showcase = Showcase.objects.filter(is_featured=True)[:3]
     trends = FashionTrends.objects.filter(is_featured=True)[:3]
+    products = Product.objects.all()[:8]
+
+    request.session['cart_count'] = Cart.objects.filter(user=request.user, is_deleted=False).count() if request.user.is_authenticated else 0
 
     context = {
         "title": "Male Fashion | Home",
-        "username": request.user.username if request.user.is_authenticated else None,
         "banner": banner,
         "showcase": showcase, 
         "showcase_class": ['', 'banner__item--middle', 'banner__item--last'],
-        "trends": trends
+        "trends": trends,
+        "products": products, 
+        'active_menu_item': "home"
     }
     return render(request, 'web/index.html', context)
 
 
 def about(request):
-    context = {}
+    context = {
+        "title": "Male Fashion | About",
+        'active_menu_item': "pages"
+    }
     return render(request, 'web/about.html', context)
 
 
@@ -57,5 +65,6 @@ def contact(request):
     else:
         context = {
             "title": "Male Fashion | Contact",
+            'active_menu_item': "contact"
         }
         return render(request, 'web/contact.html', context)
