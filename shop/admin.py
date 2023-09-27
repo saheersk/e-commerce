@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from shop.models import Category, ProductImage, Product, Cart
+from shop.models import Category, ProductImage, Product, Cart, Coupon
 
 
 class ProductImageAdmin(admin.TabularInline):
@@ -27,3 +27,8 @@ class CartAdmin(admin.ModelAdmin):
 
 admin.site.register(Cart, CartAdmin)
 
+
+class CouponAdmin(admin.ModelAdmin):
+    list_display = ['id', 'code', 'discount_type', 'amount_or_percent']
+
+admin.site.register(Coupon, CouponAdmin)

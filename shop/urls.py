@@ -20,4 +20,11 @@ urlpatterns = [
     path('user/cart/add/<int:pk>/', views.product_cart_add, name='product_cart_add'),
     path('user/cart/remove/<int:pk>/', views.product_cart_remove, name='product_cart_remove'),
     path('product/quantity/<int:pk>/', views.update_product_quantity, name='update_product_quantity'),
+
+    #Checkout
+    path('user/checkout/', views.product_checkout, name='product_checkout'),
+
+    #discount
+    path('user/discount/', views.product_discount, name='product_discount'),
+
 ]

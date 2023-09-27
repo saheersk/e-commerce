@@ -1,12 +1,15 @@
 import json 
+from decimal import Decimal
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
 from django.db.models import Sum, Q
 from django.db.models import Sum, F, ExpressionWrapper, DecimalField
+from django.utils import timezone
 
-from shop.models import Product, ProductImage, Category, Wishlist, Cart
+from shop.models import Product, ProductImage, Category, Wishlist, Cart, Coupon
+from user.models import Address
 from main.functions import paginate_instances
 
 
@@ -204,6 +207,8 @@ def update_product_quantity(request, pk):
     elif action == 'decrement':
         if product.qty > 1:
             product.qty -= 1
+    
+    product.total_price_of_product = product.product.price * product.qty
 
     product.save()
 
@@ -251,3 +256,93 @@ def product_cart_remove(request, pk):
 
     return HttpResponse(json.dumps(response_data), content_type="application/json")
 
+
+#checkout
+@login_required(login_url="user/login/")
+def product_checkout(request):
+    user_addresses = Address.objects.filter(user=request.user, is_default=False)
+    user_default_address = Address.objects.get(user=request.user, is_default=True)
+
+    current_datetime = timezone.now()
+
+    valid_coupons = Coupon.objects.filter(active=True, valid_to__gte=current_datetime)
+    products = Cart.objects.filter(user=request.user, is_deleted=False)
+
+    total_amount = products.aggregate(
+        total_amount=Sum(
+            ExpressionWrapper(
+                F('product__price') * F('qty'),
+                output_field=DecimalField()
+            )
+        )
+    )['total_amount'] or 0
+
+    print(total_amount, 'amount')
+
+    discount_amount = 0
+    for item in products:
+        print(item.total_price_of_product)
+        discount_amount += item.total_price_of_product
+
+    discount = False
+    if discount_amount != total_amount:
+        discount = True
+
+    print(discount, discount_amount, total_amount, 'amount')
+
+    context = {
+        "title" : "Male Fashion | Product Checkout",
+        "user_addresses": user_addresses,
+        "user_default_address": user_default_address,
+        "products": products,
+        "coupons": valid_coupons,
+        "total_amount": total_amount,
+        "discount_amount": discount_amount,
+        "discount" : discount
+    }
+    return render(request, 'product/checkout.html', context)
+
+
+def product_discount(request):
+    if request.method == 'POST':
+        code = request.POST['coupon']
+
+        coupon = get_object_or_404(Coupon, code=code)
+        products = Cart.objects.filter(user=request.user, is_deleted=False)
+
+        current_datetime = timezone.now()
+
+        if current_datetime <= coupon.valid_to:
+            total_amount = 0
+            if coupon.discount_type == 'amount':
+                for item in products:
+                    item.total_price_of_product = item.total_price_of_product - (coupon.amount_or_percent/2)
+                    total_amount += item.total_price_of_product
+                    item.save()
+            else:
+                for item in products:
+                    item.total_price_of_product = item.total_price_of_product - (item.total_price_of_product * (coupon.amount_or_percent/2) / 100)
+                    total_amount += item.total_price_of_product
+                    item.save()
+        else:
+            response_data = {
+                "title" : "Sorry",
+                "text" : "This Coupon is not available",
+                "status" : "Error",
+            }
+
+            return HttpResponse(json.dumps(response_data), content_type="application/json")
+
+        
+        print(total_amount, 'amount')
+        response_data = {
+                "title" : "Discount applied",
+                "text" : "Your discount will applied now.",
+                "status" : "success",
+                "total_amount" : float(total_amount)
+            }
+
+        return HttpResponse(json.dumps(response_data), content_type="application/json")
+    else:
+        pass
+    

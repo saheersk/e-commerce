@@ -199,6 +199,23 @@ $(document).on("click", ".action-button", function (e) {
 });
 
 $(document).ready(function () {
+
+    //copy coupon
+    $(".copy-coupon").click(function () {
+        var buttonElement = $(this);
+        var couponId = buttonElement.attr("data-coupon");
+    
+        try {
+            navigator.clipboard.writeText(couponId).then(function () {
+                buttonElement.text("Copied!");
+            }).catch(function (err) {
+                console.error("Unable to copy: ", err);
+            });
+        } catch (err) {
+            console.error("Unable to copy: ", err);
+        }
+    });
+
     // Function to get the CSRF token from the page's cookies
     function getCSRFToken() {
         var csrfToken = null;
@@ -213,6 +230,43 @@ $(document).ready(function () {
         return csrfToken;
     }
 
+    $(document).on("submit", "form.ajax-discount", function (e) {
+        console.log('discount');
+        var csrfToken = getCSRFToken(); // Get the CSRF token
+        if (!csrfToken) {
+            console.error("CSRF token not found.");
+            return;
+        }
+
+        e.preventDefault();
+
+        var coupon = $("input[name='coupon']").val();
+    
+        $.ajax({
+            url: '/shop/user/discount/',
+            type: 'POST',
+            data: {
+                coupon: coupon,
+                csrfmiddlewaretoken: csrfToken, // Include CSRF token here
+            },
+            dataType: "json",
+            success: function (data) {
+                Swal.fire({
+                    icon: data.status,
+                    title: data.title,
+                    text: data.message,
+                });
+                var totalLiElement = document.querySelector(".checkout__total__all li:last-child");
+                totalLiElement.innerHTML = "Discounted Total Price <span>₹" + data.total_amount + "</span>";
+            },
+            error: function (err) {
+                console.log("error", err);
+            },
+
+    
+        })
+    
+    });
     // Attach click event handlers to the increment and decrement buttons
     $(".increment-quantity").click(function () {
         var productId = $(this).data("product-id");
@@ -459,7 +513,7 @@ $(document).ready(function () {
                     cartCounts.forEach(function (cartCount) {
                         cartCount.textContent = data.cart_count;
                     });
-                    
+
                     const Toast = Swal.mixin({
                         toast: true,
                         position: "top-end",

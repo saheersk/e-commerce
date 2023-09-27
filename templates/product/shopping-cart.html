@@ -111,7 +111,7 @@
                         <li>Subtotal <span id="sub_total_price">₹{{total_amount}}</span></li>
                         <li>Total <span id="total_price">₹{{total_amount}}</span></li>
                     </ul>
-                    <a href="#" class="primary-btn">Proceed to checkout</a>
+                    <a href="{% url 'shop:product_checkout' %}" class="primary-btn">Proceed to checkout</a>
                 </div>
             </div>
         </div>

@@ -1,9 +1,11 @@
 import os
 import uuid 
+import random
 
 from django.db import models
 from django.utils.text import slugify
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.utils import timezone
 
 from PIL import Image
 from io import BytesIO
@@ -107,19 +109,30 @@ class Wishlist(models.Model):
         return self.product.title
     
 
-# class Order(models.Model):
-#     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-#     user =  models.ForeignKey(User, on_delete=models.CASCADE)
-#     qty = models.IntegerField()
-#     added_date = models.DateTimeField(auto_now_add=True)
+class Coupon(models.Model):
+    DISCOUNT_TYPE_CHOICES = [
+        ('amount', 'Amount'),
+        ('percent', 'Percent'),
+    ]
 
+    code = models.CharField(max_length=50, unique=True)
+    description = models.CharField(max_length=50)
+    discount_type = models.CharField(max_length=100, choices=DISCOUNT_TYPE_CHOICES)
+    amount_or_percent = models.DecimalField(max_digits=5, decimal_places=2)
+    valid_from = models.DateTimeField()
+    valid_to = models.DateTimeField()
+    active = models.BooleanField(default=True)
 
-# class ProductImage(models.Model):
-#     image = models.ImageField(upload_to='product_images/')
-    # thumbnail = ImageSpecField(source='image',
-    #                             processors=[ResizeToFill(100, 100)],
-    #                             format='JPEG',
-    #                             options={'quality': 90})
+    def __str__(self):
+        return self.code
+    
+    def save(self, *args, **kwargs):
+        unique_number = random.randint(1000, 9999)
+        self.code = self.code + str(unique_number)
+        super(Coupon, self).save(*args, **kwargs)
 
+    def is_valid(self):
+        now = timezone.now()
+        return self.valid_from <= now <= self.valid_to and self.active
 
 

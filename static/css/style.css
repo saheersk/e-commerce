@@ -104,8 +104,13 @@ ul,
 ol {
 	padding: 0;
 	margin: 0;
+	list-style: none;
 }
-
+select {
+    -webkit-appearance: none; /* Remove arrow icon in Chrome and Safari */
+    -moz-appearance: none; /* Remove arrow icon in Firefox */
+    appearance: none;
+}
 /*---------------------
   Helper CSS
 -----------------------*/
@@ -2686,7 +2691,7 @@ ol {
 
 .checkout__order p {
 	color: #444444;
-	font-size: 16px;
+	font-size: 13px;
 	line-height: 28px;
 }
 
