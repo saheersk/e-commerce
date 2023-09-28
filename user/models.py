@@ -3,6 +3,9 @@ import random
 from django.utils import timezone
 from django.db import models
 from django.contrib.auth.models import AbstractUser, PermissionsMixin, BaseUserManager
+from django.core.files.storage import default_storage
+
+from PIL import Image
 
 from phonenumber_field.modelfields import PhoneNumberField
 
@@ -52,7 +55,7 @@ class Coupon(models.Model):
     
 
 class CustomUser(AbstractUser, PermissionsMixin):
-    profile_picture = models.FileField(upload_to="user/profile/", null=True, blank=True)
+    profile_picture = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
     phone_number = PhoneNumberField(unique=True)
     email = models.EmailField(unique=True)
     is_blocked = models.BooleanField(default=False)
@@ -64,6 +67,18 @@ class CustomUser(AbstractUser, PermissionsMixin):
 
     def __str__(self):
         return self.email
+    
+    def save(self, *args, **kwargs):
+        if self.profile_picture and hasattr(self.profile_picture, 'path'):
+            try:
+                with default_storage.open(self.profile_picture.path, 'rb') as img_file:
+                    img = Image.open(img_file)
+                    img = img.resize((150, 150), Image.LANCZOS)
+                    img.save(self.profile_picture.path, img.format)
+            except FileNotFoundError:
+                pass
+
+        super().save(*args, **kwargs)
     
 
 class CouponUsage(models.Model):

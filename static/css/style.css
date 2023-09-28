@@ -3463,6 +3463,59 @@ div.pagination div.pages a:hover {
     background: #c9eee4;
 }
 
+.input-container .input-form {
+    display: flex;
+	flex-wrap: wrap;
+	width: 50%;
+}
+.input-container .input-form p {
+	width: 100%;
+	margin-right: 14px;
+}
+.input-container .input-form span {
+    margin-bottom: 15px;
+    display: block;
+}
+.input-container .input-form label {
+    margin-bottom: 5px;
+}
+.input-container .input-form input[type="text"]{
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #ccc;
+}
+.input-container .input-form input[type="email"]{
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #ccc;
+}
+.input-container .input-form input[type="password"]{
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #ccc;
+}
+.input-container .input-form input[type="tel"]{
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #ccc;
+}
+.input-container .input-form input[type="file"]{
+    width: 100%;
+    padding: 2px;
+    border: 1px solid #ccc;
+    /* margin-bottom: 24px; */
+}
+.input-container .input-form input[type="number"]{
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #ccc;
+}
+.input-container .input-form textarea{
+    width: 100%;
+    padding: 5px;
+    border: 1px solid #ccc;
+}
+
 
 /*--------------------------------- Responsive Media Quaries -----------------------------*/
 

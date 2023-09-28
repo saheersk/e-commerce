@@ -90,7 +90,6 @@ class Cart(models.Model):
     user =  models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     qty = models.PositiveIntegerField(default=1)
     total_price_of_product = models.PositiveIntegerField()
-    # coupon = models.ManyToManyField(Coupon)
     added_date = models.DateTimeField(auto_now_add=True)
     is_deleted = models.BooleanField(default=False)
 

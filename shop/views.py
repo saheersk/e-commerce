@@ -8,7 +8,7 @@ from django.db.models import Sum, F, ExpressionWrapper, DecimalField
 from django.utils import timezone
 
 from shop.models import Product, ProductImage, Category, Wishlist, Cart, OrderStatus, Order, Payment, PaymentMethod
-from user.models import Address, Coupon, CustomUser
+from user.models import Address, Coupon, CustomUser, CouponUsage
 from main.functions import paginate_instances
 
 
@@ -305,44 +305,73 @@ def product_checkout(request):
 
 def product_discount(request):
     if request.method == 'POST':
-        code = request.POST['coupon']
+        code = request.POST.get('coupon')
 
+        # Check if the coupon exists or return an error
         coupon = get_object_or_404(Coupon, code=code)
-        user = CustomUser.objects.get(user=request.user)
-        products = Cart.objects.filter(user=request.user, is_deleted=False)
+        
+        user = request.user
+        products = Cart.objects.filter(user=user, is_deleted=False)
 
-        current_datetime = timezone.now()
-        if True:
-            if True:
-                    pass
-            else:
-                    response_data = {
-                        "title" : "Coupon not available",
-                        "status" : "Error",
-                    }
+        # Calculate the total amount of the cart
+        total_amount = sum(item.product.price * item.qty for item in products)
 
-                    return HttpResponse(json.dumps(response_data), content_type="application/json")
-        else:
+        # Check if the coupon has already been used by the user
+        if CouponUsage.objects.filter(user=user).exists():
             response_data = {
-                    "error" : True,
-                    "title" : "Already used One coupon",
-                    "status" : "warning",
-                }
-
+                "error": True,
+                "title": "Already used one coupon",
+                "status": "warning",
+            }
             return HttpResponse(json.dumps(response_data), content_type="application/json")
 
-        
-        print(total_amount, 'amount')
-        response_data = {
-                "Error" : False,
-                "title" : "Discount applied",
-                "status" : "success",
-                "total_amount" : float(total_amount)
+        current_datetime = timezone.now()
+
+        # Check if the coupon is valid
+        if current_datetime > coupon.valid_to:
+            response_data = {
+                "title": "Coupon not available",
+                "status": "error",
             }
+            return HttpResponse(json.dumps(response_data), content_type="application/json")
+
+        # Check if the cart meets the minimum purchase amount requirement
+        if total_amount <= coupon.min_purchase_amount:
+            response_data = {
+                "title": f"Minimum amount for this coupon is {coupon.min_purchase_amount}",
+                "status": "error",
+            }
+            return HttpResponse(json.dumps(response_data), content_type="application/json")
+
+        # Apply the discount based on the coupon type
+        discount_amount = 0
+        if coupon.discount_type == 'amount':
+            discount = coupon.amount_or_percent / 2
+            for item in products:
+                item.total_price_of_product -= discount
+                discount_amount += item.total_price_of_product 
+                item.save()
+        else:
+            for item in products:
+                item.total_price_of_product = item.total_price_of_product - (item.total_price_of_product * (coupon.amount_or_percent / 200))
+                discount_amount += item.total_price_of_product 
+                item.save()
+
+        # Create a coupon usage record for the user
+        CouponUsage.objects.create(user=user, coupon=coupon)
+
+        response_data = {
+            "error": False,
+            "title": "Discount applied",
+            "status": "success",
+            "total_amount": float(discount_amount),
+        }
 
         return HttpResponse(json.dumps(response_data), content_type="application/json")
     else:
+        # Handle other HTTP methods or return an appropriate response
         pass
+
 
 
 def product_order(request):
