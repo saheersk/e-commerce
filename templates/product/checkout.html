@@ -27,40 +27,39 @@
                     <div class="checkout__order mb-4">
                         <div class="checkout__input">
                             <label for="address">Default Address:</label>
-                                <ul class="list-group">
-                                    <li class="list-group-item">
-                                        {{ user_default_address.first_name }} {{ user_default_address.last_name }}<br />
-                                        {{ user_default_address.address_line1 }}<br />
-                                        {{ user_default_address.city }}, {{ user_default_address.country }}<br />
-                                        <span class="text-muted">Phone: {{ user_default_address.phone_number }}</span>
-                                    </li>
-                                </ul>
+                            <ul class="list-group">
+                                <li class="list-group-item">
+                                    {{ user_default_address.first_name }} {{ user_default_address.last_name }}<br />
+                                    {{ user_default_address.address_line1 }}<br />
+                                    {{ user_default_address.city }}, {{ user_default_address.country }}<br />
+                                    <span class="text-muted">Phone: {{ user_default_address.phone_number }}</span>
+                                </li>
+                            </ul>
                             <div>
-                            <label for="address" class="mt-3">Select an Address:</label>
-                            <p class="text-danger">
-                                *Select Your Address From Below for your Product.
-                            </p>
+                                <label for="address" class="mt-3">Select an Address:</label>
+                                <p class="text-danger">*Select Your Address From Below for your Product.</p>
                             </div>
                             <select class="custom-select w-100" id="address" name="address">
                                 <option
                                     value="{{ user_default_address.id }}"
                                     {% if user_default_address.is_preselected %}selected{% endif %}
                                 >
-                                    {{ user_default_address.first_name }} {{ user_default_address.last_name }} - {{user_default_address.address_line1 }}, 
-                                    {{ user_default_address.city }}, {{ user_default_address.country }}
+                                    {{ user_default_address.first_name }} {{ user_default_address.last_name }} -
+                                    {{user_default_address.address_line1 }}, {{ user_default_address.city }}, 
+                                    {{ user_default_address.country }}
                                 </option>
                                 {% for user_address in user_addresses %}
                                 <option
                                     value="{{ user_address.id }}"
                                     {% if user_address.is_preselected %}selected{% endif %}
                                 >
-                                    {{ user_address.first_name }} {{ user_address.last_name }} - {{user_address.address_line1 }}, 
-                                    {{ user_address.city }}, {{ user_address.country }}
+                                    {{ user_address.first_name }} {{ user_address.last_name }} -
+                                    {{user_address.address_line1 }}, {{ user_address.city }}, {{ user_address.country }}
                                 </option>
                                 {% endfor %}
                             </select>
                         </div>
-                        <a href="#" class="site-btn text-center mt-3">Add New Address</a>
+                        <button id="new-address" class="site-btn text-center mt-3">Add New Address</button>
                     </div>
                     <div class="col-lg-12 checkout__order">
                         <div class="cart__discount col-lg-8">
@@ -79,16 +78,20 @@
                                         <div class="card-body">
                                             <h5 class="card-title">Coupon Code: {{coupon.code}}</h5>
                                             <p class="card-text">{{coupon.description}}</p>
-                                            <button id="coupon-{{coupon.id}}" class="btn btn-primary copy-coupon" data-coupon="{{coupon.code}}">Copy</button>
+                                            <button
+                                                id="coupon-{{coupon.id}}"
+                                                class="btn btn-primary copy-coupon"
+                                                data-coupon="{{coupon.code}}"
+                                            >
+                                                Copy
+                                            </button>
                                         </div>
                                     </div>
                                 </li>
                                 {% endfor %}
                             </ul>
                         </div>
-                        
                     </div>
-                    
                 </div>
 
                 <div class="col-lg-4 col-md-6">
@@ -97,41 +100,50 @@
                         <div class="checkout__order__products">Product <span>Total</span></div>
                         <ul class="checkout__total__products">
                             {% for product in products %}
-                            <li>{{ product.qty }} X {{ product.product.title }} <span>₹{{ product.total_price_of_product }}</span></li>
+                            <li>
+                                {{ product.qty }} X {{ product.product.title }}
+                                <span>₹{{ product.total_price_of_product }}</span>
+                            </li>
                             {% endfor %}
                         </ul>
                         <ul class="checkout__total__all">
                             <li>Subtotal <span>₹{{total_amount}}</span></li>
                             <li></li>
                             {% if discount %}
-                                <li>Discounted Price <span >₹{{discount_amount}}</span></li>
+                            <li>Discounted Price <span>₹{{discount_amount}}</span></li>
                             {% elif discount_amount != total_amount %}
-                                <li>Total <span >₹{{discount_amount}}</span></li>
+                            <li>Total <span>₹{{discount_amount}}</span></li>
                             {% else %}
-                                <li>Total <span >₹{{total_amount}}</span></li>
+                            <li>Total <span>₹{{total_amount}}</span></li>
                             {% endif %}
                         </ul>
-
-                            <div class="checkout__input__checkbox">
+                        <form method="post" action="" class="ajax-order">
+                            <div class="checkout__input__radio">
                                 <label for="cash-on-delivery">
+                                    <input type="radio" id="cash-on-delivery" value="cash" name="payment-method" />
                                     Cash on Delivery
-                                    <input type="checkbox" id="cash-on-delivery" />
                                     <span class="checkmark"></span>
                                 </label>
                             </div>
-                            <div class="checkout__input__checkbox">
-                                <label for="paypal">
-                                    Paypal
-                                    <input type="checkbox" id="paypal" />
+                            <div class="checkout__input__radio">
+                                <label for="wallet">
+                                    <input type="radio" id="wallet" value="wallet" name="payment-method" />
+                                    Wallet
                                     <span class="checkmark"></span>
                                 </label>
                             </div>
-                        <button type="submit" class="site-btn">PLACE ORDER</button>
+                            <div class="checkout__input__radio">
+                                <label for="digital">
+                                    <input type="radio" id="digital" value="digital" name="payment-method" />
+                                    Digital
+                                    <span class="checkmark"></span>
+                                </label>
+                            </div>
+                            <button type="submit" class="site-btn">PLACE ORDER</button>
+                        </form>
                     </div>
                 </div>
             </div>
-
-           
         </div>
     </div>
 </section>

@@ -6,9 +6,12 @@ app_name = "user"
 
 
 urlpatterns = [
+    #authentication
     path('login/', views.login, name='login'),
     path('signup/', views.signup, name='signup'),
     path('logout/', views.logout, name='logout'),
+
+    #otp
     path('otp-sent/', views.otp_sent, name='otp_sent'),
     path('otp-resend/', views.otp_resend, name='otp_resend'),
     path('otp-verify/', views.otp_verify, name='otp_verify'),

@@ -1,5 +1,4 @@
 import json 
-from decimal import Decimal
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
@@ -8,8 +7,8 @@ from django.db.models import Sum, Q
 from django.db.models import Sum, F, ExpressionWrapper, DecimalField
 from django.utils import timezone
 
-from shop.models import Product, ProductImage, Category, Wishlist, Cart, Coupon
-from user.models import Address
+from shop.models import Product, ProductImage, Category, Wishlist, Cart, OrderStatus, Order, Payment, PaymentMethod
+from user.models import Address, Coupon, CustomUser
 from main.functions import paginate_instances
 
 
@@ -153,6 +152,7 @@ def product_cart_add(request, pk):
         instance = Cart.objects.get(product=product)
         instance.is_deleted = False
         instance.qty = 1
+        instance.total_price_of_product =  instance.product.price * instance.qty
         instance.save()
     else:
         Cart.objects.create(
@@ -308,36 +308,34 @@ def product_discount(request):
         code = request.POST['coupon']
 
         coupon = get_object_or_404(Coupon, code=code)
+        user = CustomUser.objects.get(user=request.user)
         products = Cart.objects.filter(user=request.user, is_deleted=False)
 
         current_datetime = timezone.now()
-
-        if current_datetime <= coupon.valid_to:
-            total_amount = 0
-            if coupon.discount_type == 'amount':
-                for item in products:
-                    item.total_price_of_product = item.total_price_of_product - (coupon.amount_or_percent/2)
-                    total_amount += item.total_price_of_product
-                    item.save()
+        if True:
+            if True:
+                    pass
             else:
-                for item in products:
-                    item.total_price_of_product = item.total_price_of_product - (item.total_price_of_product * (coupon.amount_or_percent/2) / 100)
-                    total_amount += item.total_price_of_product
-                    item.save()
+                    response_data = {
+                        "title" : "Coupon not available",
+                        "status" : "Error",
+                    }
+
+                    return HttpResponse(json.dumps(response_data), content_type="application/json")
         else:
             response_data = {
-                "title" : "Sorry",
-                "text" : "This Coupon is not available",
-                "status" : "Error",
-            }
+                    "error" : True,
+                    "title" : "Already used One coupon",
+                    "status" : "warning",
+                }
 
             return HttpResponse(json.dumps(response_data), content_type="application/json")
 
         
         print(total_amount, 'amount')
         response_data = {
+                "Error" : False,
                 "title" : "Discount applied",
-                "text" : "Your discount will applied now.",
                 "status" : "success",
                 "total_amount" : float(total_amount)
             }
@@ -345,4 +343,60 @@ def product_discount(request):
         return HttpResponse(json.dumps(response_data), content_type="application/json")
     else:
         pass
+
+
+def product_order(request):
+    if request.method == 'POST':
+        user = request.user
+        payment_method = request.POST.get('payment_method')
+        address = request.POST.get('address')
+
+        products = Cart.objects.filter(user=user, is_deleted=False)
+        shipping_address = Address.objects.get(user=user, id=address)
+        order_status = OrderStatus.objects.get(status="Pending")
+        payment_type = PaymentMethod.objects.get(payment_type="COD")
+
+
+        if payment_method == "cash":
+            total_amount = 0
+            for item in products:
+                order = Order.objects.create(
+                            product=item.product,
+                            user=user,
+                            shipping_address=shipping_address,
+                            order_status=order_status,
+                            product_qty=item.qty,
+                            product_price_per_unit=item.product.price,
+                        )
+                item.product.stock_unit -= item.qty
+                total_amount += item.total_price_of_product
+
+            Payment.objects.create(
+                    order=order,
+                    user=user,
+                    payment_method=payment_type,
+                    transaction_id="COD",
+                    purchased_price=total_amount
+                )
+            
+            for item in products:
+                item.is_deleted = True
+                item.qty = 1
+                item.total_price_of_product = item.product.price * item.qty
+                item.save()
+            
+            response_data = {
+                    "title" : "Order Purchased",
+                    "message" : "Your Product will be deliver shortly",
+                    "status" : "success",
+                }
+
+            return HttpResponse(json.dumps(response_data), content_type="application/json")
+            
+        else:
+            pass
+    else:
+        pass
+
+
     

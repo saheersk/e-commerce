@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from user.models import CustomUser, Address
+from user.models import CustomUser, Address, Coupon, CouponUsage
 
 class CustomUserAdmin(UserAdmin):
     list_display = ('id', 'first_name', 'last_name', 'email', 'phone_number')
@@ -34,4 +34,17 @@ class AddressAdmin(admin.ModelAdmin):
     list_display = ['first_name', 'last_name', 'pin_code']
 
 admin.site.register(Address, AddressAdmin)
+
+
+class CouponAdmin(admin.ModelAdmin):
+    list_display = ['id', 'code', 'discount_type', 'amount_or_percent']
+
+admin.site.register(Coupon, CouponAdmin)
+
+
+class CouponUsageAdmin(admin.ModelAdmin):
+    list_display = ['id', 'user', 'coupon']
+
+admin.site.register(CouponUsage, CouponUsageAdmin)
+
 

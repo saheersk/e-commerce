@@ -1,16 +1,14 @@
 import os
 import uuid 
-import random
 
 from django.db import models
 from django.utils.text import slugify
 from django.core.files.uploadedfile import SimpleUploadedFile
-from django.utils import timezone
 
 from PIL import Image
 from io import BytesIO
 
-from user.models import CustomUser
+from user.models import CustomUser, Address, Coupon
 
 
 class Category(models.Model):
@@ -92,6 +90,7 @@ class Cart(models.Model):
     user =  models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     qty = models.PositiveIntegerField(default=1)
     total_price_of_product = models.PositiveIntegerField()
+    # coupon = models.ManyToManyField(Coupon)
     added_date = models.DateTimeField(auto_now_add=True)
     is_deleted = models.BooleanField(default=False)
 
@@ -109,30 +108,44 @@ class Wishlist(models.Model):
         return self.product.title
     
 
-class Coupon(models.Model):
-    DISCOUNT_TYPE_CHOICES = [
-        ('amount', 'Amount'),
-        ('percent', 'Percent'),
-    ]
+class OrderStatus(models.Model):
+    status = models.CharField(max_length=150)
 
-    code = models.CharField(max_length=50, unique=True)
-    description = models.CharField(max_length=50)
-    discount_type = models.CharField(max_length=100, choices=DISCOUNT_TYPE_CHOICES)
-    amount_or_percent = models.DecimalField(max_digits=5, decimal_places=2)
-    valid_from = models.DateTimeField()
-    valid_to = models.DateTimeField()
-    active = models.BooleanField(default=True)
+    class Meta:
+        verbose_name_plural = 'Order Status'
 
     def __str__(self):
-        return self.code
+        return self.status
     
-    def save(self, *args, **kwargs):
-        unique_number = random.randint(1000, 9999)
-        self.code = self.code + str(unique_number)
-        super(Coupon, self).save(*args, **kwargs)
 
-    def is_valid(self):
-        now = timezone.now()
-        return self.valid_from <= now <= self.valid_to and self.active
+class Order(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    user =  models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    order_status = models.ForeignKey(OrderStatus, on_delete=models.CASCADE)
+    shipping_address = models.ForeignKey(Address, on_delete=models.CASCADE)
+    product_qty = models.PositiveBigIntegerField()
+    product_price_per_unit = models.PositiveBigIntegerField()
+    coupon = models.ForeignKey(Coupon, on_delete=models.SET_NULL, null=True, blank=True)
+    purchased_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.user.first_name
+    
+
+class PaymentMethod(models.Model):
+    payment_type = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.payment_type
 
 
+class Payment(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    user =  models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    payment_method = models.ForeignKey(PaymentMethod, on_delete=models.CASCADE)
+    transaction_id = models.CharField(max_length=150)
+    purchased_price = models.PositiveBigIntegerField()
+    payment_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.user.first_name

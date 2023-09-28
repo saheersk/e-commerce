@@ -1,13 +1,16 @@
+import json
 import pyotp
 from datetime import datetime
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
 
-from user.models import CustomUser
-from user.forms import CustomUserForm
-from user.functions import generate_form_error
+from user.models import CustomUser, Address
+from user.forms import CustomUserForm, AddressForm
+from main.functions import generate_form_error
 from user.utils import send_otp
 
 
@@ -172,3 +175,42 @@ def otp_verify(request, *args, **kwargs):
 def logout(request):
     auth_logout(request)
     return redirect("web:index")
+
+
+@login_required(login_url="user/login/")
+def user_address(request):
+    if request.method == "POST":
+        form = AddressForm(request.POST)
+
+        if form.is_valid():
+            instance = form.save(commit=False)
+
+            default = request.POST.get('is_default')
+            if default == 'on':
+                address = Address.objects.get(user=request.use, is_default=True)
+                address.is_default = False
+                address.save()
+                instance.is_default = True
+
+            instance.user = request.user
+            instance.save()
+
+            return redirect('shop:product_checkout')
+        else:
+            error_message = generate_form_error(form)
+            context = {
+                "error" : True,
+                "title" : "Male Fashion | Address",
+                "message" : str(error_message),
+                }
+            return render(request, 'user/address-input.html', context)
+    else:
+        form = AddressForm()
+        context = {
+            "error" : False,
+            "title" : "Male Fashion | Address",
+            "form" : form,
+        }
+
+        return render(request, 'user/address-input.html', context)
+

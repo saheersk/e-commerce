@@ -199,6 +199,10 @@ $(document).on("click", ".action-button", function (e) {
 });
 
 $(document).ready(function () {
+    //Address path
+    $("#new-address").click(function () {
+        window.location.href = "/user/address/?next=" + window.location.pathname
+    })
 
     //copy coupon
     $(".copy-coupon").click(function () {
@@ -240,7 +244,8 @@ $(document).ready(function () {
 
         e.preventDefault();
 
-        var coupon = $("input[name='coupon']").val();
+        var couponInput = $("input[name='coupon']");
+        var coupon = couponInput.val();
     
         $.ajax({
             url: '/shop/user/discount/',
@@ -251,13 +256,27 @@ $(document).ready(function () {
             },
             dataType: "json",
             success: function (data) {
-                Swal.fire({
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: "top-end",
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
+                    didOpen: (toast) => {
+                        toast.addEventListener("mouseenter", Swal.stopTimer);
+                        toast.addEventListener("mouseleave", Swal.resumeTimer);
+                    },
+                });
+
+                Toast.fire({
                     icon: data.status,
                     title: data.title,
-                    text: data.message,
                 });
-                var totalLiElement = document.querySelector(".checkout__total__all li:last-child");
-                totalLiElement.innerHTML = "Discounted Total Price <span>₹" + data.total_amount + "</span>";
+                if(!data.error){
+                    var totalLiElement = document.querySelector(".checkout__total__all li:last-child");
+                    totalLiElement.innerHTML = "Discounted Total Price <span>₹" + data.total_amount + "</span>";
+                    couponInput.val("");
+                }
             },
             error: function (err) {
                 console.log("error", err);
@@ -267,6 +286,46 @@ $(document).ready(function () {
         })
     
     });
+
+    $(document).on("submit", "form.ajax-order", function (e) {
+        console.log('discount');
+        var csrfToken = getCSRFToken(); // Get the CSRF token
+        if (!csrfToken) {
+            console.error("CSRF token not found.");
+            return;
+        }
+
+        e.preventDefault();
+        var selectedAddress = $("#address").val();
+        var selectedPaymentMethod = $("input[name='payment-method']:checked").val();
+
+        $.ajax({
+            url: '/shop/user/order/',
+            type: 'POST',
+            data: {
+                address: selectedAddress,
+                payment_method: selectedPaymentMethod,
+                csrfmiddlewaretoken: csrfToken, // Include CSRF token here
+            },
+            dataType: "json",
+            success: function (data) {
+                console.log('success');
+                Swal.fire({
+                    icon: data.status,
+                    title: data.title,
+                    text: data.message,
+                }).then((result) => {
+                    console.log('ok');  
+                });
+            },
+            error: function (err) {
+                console.log("error", err);
+            },
+
+    
+        })
+
+    })
     // Attach click event handlers to the increment and decrement buttons
     $(".increment-quantity").click(function () {
         var productId = $(this).data("product-id");
