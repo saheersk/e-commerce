@@ -201,20 +201,23 @@ $(document).on("click", ".action-button", function (e) {
 $(document).ready(function () {
     //Address path
     $("#new-address").click(function () {
-        window.location.href = "/user/address/?next=" + window.location.pathname
-    })
+        window.location.href = "/user-profile/address/add/?next=" + window.location.pathname;
+    });
 
     //copy coupon
     $(".copy-coupon").click(function () {
         var buttonElement = $(this);
         var couponId = buttonElement.attr("data-coupon");
-    
+
         try {
-            navigator.clipboard.writeText(couponId).then(function () {
-                buttonElement.text("Copied!");
-            }).catch(function (err) {
-                console.error("Unable to copy: ", err);
-            });
+            navigator.clipboard
+                .writeText(couponId)
+                .then(function () {
+                    buttonElement.text("Copied!");
+                })
+                .catch(function (err) {
+                    console.error("Unable to copy: ", err);
+                });
         } catch (err) {
             console.error("Unable to copy: ", err);
         }
@@ -235,7 +238,7 @@ $(document).ready(function () {
     }
 
     $(document).on("submit", "form.ajax-discount", function (e) {
-        console.log('discount');
+        console.log("discount");
         var csrfToken = getCSRFToken(); // Get the CSRF token
         if (!csrfToken) {
             console.error("CSRF token not found.");
@@ -246,10 +249,10 @@ $(document).ready(function () {
 
         var couponInput = $("input[name='coupon']");
         var coupon = couponInput.val();
-    
+
         $.ajax({
-            url: '/shop/user/discount/',
-            type: 'POST',
+            url: "/shop/user/discount/",
+            type: "POST",
             data: {
                 coupon: coupon,
                 csrfmiddlewaretoken: csrfToken, // Include CSRF token here
@@ -272,23 +275,77 @@ $(document).ready(function () {
                     icon: data.status,
                     title: data.title,
                 });
-                if(!data.error){
+                if (!data.error) {
                     var totalLiElement = document.querySelector(".checkout__total__all li:last-child");
                     totalLiElement.innerHTML = "Discounted Total Price <span>₹" + data.total_amount + "</span>";
                     couponInput.val("");
                 }
             },
             error: function (err) {
+                console.log("err");
+            },
+        });
+    });
+
+    $(document).on("submit", "form.ajax-address", function (e) {
+        e.preventDefault();
+
+        var form = $(this);
+        var formData = form.serialize();
+
+        $.ajax({
+            url: "/user-profile/address/add/",
+            type: "POST",
+            data: formData,
+            dataType: "json",
+            success: function (data) {
+                if (data.status == "error") {
+                    $("#error-message").empty();
+                    var errorList = $("#error-message");
+                    errorList.append(data.message);
+                } else {
+                    var urlParams = new URLSearchParams(window.location.search);
+                    var nextURL = urlParams.get("next");
+
+                    if (nextURL) {
+                        console.log("Next URL:", nextURL);
+
+                        // Redirect to the "next" URL after a short delay
+                        setTimeout(function () {
+                            window.location.href = nextURL;
+                            Swal.fire({
+                                icon: data.status,
+                                title: data.title,
+                                text: data.message,
+                            });
+                        }, 2000);
+                    }
+                }
+
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: "top-end",
+                    showConfirmButton: false,
+                    timer: 3000,
+                    timerProgressBar: true,
+                    didOpen: (toast) => {
+                        toast.addEventListener("mouseenter", Swal.stopTimer);
+                        toast.addEventListener("mouseleave", Swal.resumeTimer);
+                    },
+                });
+                Toast.fire({
+                    icon: data.status,
+                    title: data.title,
+                });
+            },
+            error: function (err) {
                 console.log("error", err);
             },
-
-    
-        })
-    
+        });
     });
 
     $(document).on("submit", "form.ajax-order", function (e) {
-        console.log('discount');
+        console.log("discount");
         var csrfToken = getCSRFToken(); // Get the CSRF token
         if (!csrfToken) {
             console.error("CSRF token not found.");
@@ -299,33 +356,53 @@ $(document).ready(function () {
         var selectedAddress = $("#address").val();
         var selectedPaymentMethod = $("input[name='payment-method']:checked").val();
 
-        $.ajax({
-            url: '/shop/user/order/',
-            type: 'POST',
-            data: {
-                address: selectedAddress,
-                payment_method: selectedPaymentMethod,
-                csrfmiddlewaretoken: csrfToken, // Include CSRF token here
-            },
-            dataType: "json",
-            success: function (data) {
-                console.log('success');
-                Swal.fire({
-                    icon: data.status,
-                    title: data.title,
-                    text: data.message,
-                }).then((result) => {
-                    console.log('ok');  
-                });
-            },
-            error: function (err) {
-                console.log("error", err);
-            },
-
-    
-        })
-
-    })
+        var confirmButtonText = "Yes";
+        var confirmButtonColor = "#DD6B55";
+        
+        console.log(selectedAddress, selectedPaymentMethod, 'paym');
+        if (selectedPaymentMethod === undefined || selectedAddress === undefined) {
+            Swal.fire({
+                icon: "error",
+                title: "Confirm filled all option",
+                text: "Select payment method and address",
+            })
+        }
+        else{
+            Swal.fire({
+                title: "Confirm Your Order",
+                text: "Order your product now",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonText: confirmButtonText,
+                confirmButtonColor: confirmButtonColor,
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: "/shop/user/order/",
+                        type: "POST",
+                        data: {
+                            address: selectedAddress,
+                            payment_method: selectedPaymentMethod,
+                            csrfmiddlewaretoken: csrfToken, // Include CSRF token here
+                        },
+                        dataType: "json",
+                        success: function (data) {
+                            console.log("success");
+                            Swal.fire({
+                                icon: data.status,
+                                title: data.title,
+                                text: data.message,
+                            }).then((result) => {
+                                window.location.href = "/user-profile/my-order/"
+                            });
+                        },
+                        error: function (err) {
+                            console.log("error", err);
+                        },
+                    });
+                }});
+        }
+    });
     // Attach click event handlers to the increment and decrement buttons
     $(".increment-quantity").click(function () {
         var productId = $(this).data("product-id");
@@ -397,6 +474,52 @@ $(document).ready(function () {
             },
         });
     }
+    $('.cancel-order').click(function (event) {
+        event.preventDefault(); // Prevent the default form submission
+
+        var csrfToken = getCSRFToken(); // Get the CSRF token
+        if (!csrfToken) {
+            console.error("CSRF token not found.");
+            return;
+        }
+
+        var orderId = $(this).data("order-id");
+
+        var confirmButtonText = "Yes";
+        var confirmButtonColor = "#DD6B55";
+
+        Swal.fire({
+            title: "Confirm Cancellation",
+            text: "Are you sure you want to cancel product?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: confirmButtonText,
+            confirmButtonColor: confirmButtonColor,
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: `/user-profile/my-order/cancel/${orderId}/`,
+                    method: "POST",
+                    dataType: "json",
+                    data: {
+                        csrfmiddlewaretoken: csrfToken,
+                    },
+                    success: function (data) {
+                        console.log("success");
+                        Swal.fire({
+                            icon: data.status,
+                            title: data.title,
+                            text: data.message,
+                        })
+                        const cancelStatus = document.querySelector(`#cancel-status-${orderId}`);
+                        cancelStatus.textContent = "Cancelled"
+                    },
+                    error: function () {
+                        console.log("error");
+                    },
+                });
+            } })
+    });
 
     $(".remove-product").click(function (event) {
         event.preventDefault(); // Prevent the default form submission
@@ -410,44 +533,91 @@ $(document).ready(function () {
         var productId = $(this).data("product-id");
         var clickedButton = $(this);
 
-        $.ajax({
-            url: "/shop/user/cart/remove/" + productId + "/",
-            method: "POST",
-            dataType: "json",
-            data: {
-                csrfmiddlewaretoken: csrfToken,
-            },
-            success: function (data) {
-                console.log("success");
-                if (data.success) {
-                    console.log("if");
-                    var confirmButtonText = "Yes";
-                    var confirmButtonColor = "#DD6B55";
+        var confirmButtonText = "Yes";
+        var confirmButtonColor = "#DD6B55";
 
-                    Swal.fire({
-                        title: data.title,
-                        text: data.text,
-                        icon: data.type,
-                        showCancelButton: true,
-                        confirmButtonText: confirmButtonText,
-                        confirmButtonColor: confirmButtonColor,
-                    }).then((result) => {
-                        if (result.isConfirmed) {
+        Swal.fire({
+            title: "Confirm Product Delete",
+            text: "Are you sure you want to remove product?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: confirmButtonText,
+            confirmButtonColor: confirmButtonColor,
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: "/shop/user/cart/remove/" + productId + "/",
+                    method: "POST",
+                    dataType: "json",
+                    data: {
+                        csrfmiddlewaretoken: csrfToken,
+                    },
+                    success: function (data) {
+                        console.log("success");
+                        if (data.success) {
                             clickedButton.closest("tr").remove();
                             const cartCounts = document.querySelectorAll(".cart-count");
 
                             cartCounts.forEach(function (cartCount) {
                                 cartCount.textContent = data.cart_count;
                             });
+                        } else {
+                            console.log("else");
                         }
-                    });
-                } else {
-                    console.log("else");
-                }
-            },
-            error: function () {
-                console.log("error");
-            },
+                    },
+                    error: function () {
+                        console.log("error");
+                    },
+                });
+            }
+        });
+    });
+
+    $(".remove-address").click(function (event) {
+        event.preventDefault(); // Prevent the default form submission
+
+        var csrfToken = getCSRFToken(); // Get the CSRF token
+        if (!csrfToken) {
+            console.error("CSRF token not found.");
+            return;
+        }
+
+        var addressId = $(this).data("address-id");
+        var clickedButton = $(this);
+
+        var confirmButtonText = "Yes";
+        var confirmButtonColor = "#DD6B55";
+        Swal.fire({
+            title: "Confirm Address Deleted",
+            text: "Are you sure you want to delete this address?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: confirmButtonText,
+            confirmButtonColor: confirmButtonColor,
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: `/user-profile/address/delete/${addressId}/`,
+                    method: "POST",
+                    dataType: "json",
+                    data: {
+                        csrfmiddlewaretoken: csrfToken,
+                    },
+                    success: function (data) {
+                        console.log("success");
+                        clickedButton.closest("li").remove();
+
+                        Swal.fire({
+                            icon: data.status,
+                            title: data.title,
+                            text: data.message,
+                        });
+                    },
+                    error: function () {
+                        console.log("err");
+                    },
+                });
+            }
         });
     });
 

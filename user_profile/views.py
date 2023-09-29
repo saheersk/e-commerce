@@ -1,7 +1,7 @@
 import re
 import json
 
-from django.shortcuts import render
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.contrib.auth import update_session_auth_hash
@@ -9,6 +9,9 @@ from django.contrib.auth import update_session_auth_hash
 from user.models import Address 
 from user_profile.forms import CustomUserEditForm
 from main.functions import generate_form_error
+from user_profile.forms import AddressForm
+from shop.models import Order, Cart, OrderStatus
+
 
 @login_required(login_url='user/login/')
 def profile_details(request):
@@ -111,9 +114,6 @@ def profile_edit(request):
         form = CustomUserEditForm(request.POST, request.FILES, instance=request.user)
         if form.is_valid():
             user = form.save(commit=False)  
-            # if form.cleaned_data.get('profile_picture'):
-            #     user.profile_picture = form.cleaned_data.get('profile_picture')
-            # user.save()
             if 'profile_picture' in request.FILES:
                 user.profile_picture = request.FILES['profile_picture']
                 print(user.profile_picture, 'pic')
@@ -122,8 +122,8 @@ def profile_edit(request):
 
             response_data = {
                 "status" : "success",
-                "title" : "Successfully Changed Password",
-                "message" : 'Password was successfully changed',
+                "title" : "Successfully Updated",
+                "message" : 'Profile has been updated successfully',
                 "redirect" : "yes",
                 "redirect_url": '/user-profile/profile/',
             }
@@ -145,4 +145,179 @@ def profile_edit(request):
             "form": form,
         }
         return render(request, 'profile/edit-profile.html', context)
+    
 
+
+@login_required(login_url='user/login/')
+def profile_address_add(request):
+    if request.method == "POST":
+        form = AddressForm(request.POST)
+        print('sus')
+        if form.is_valid():
+            instance = form.save(commit=False)
+
+            print(instance, 'instance')
+
+            default = request.POST.get('is_default')
+            if default == 'on':
+                address = Address.objects.get(user=request.user, is_default=True)
+                address.is_default = False
+                address.save()
+                instance.is_default = True
+
+            instance.user = request.user
+            instance.save()
+
+            response_data = {
+                "status" : "success",
+                "title" : "Successfully Updated",
+                "message" : 'Profile has been updated successfully',
+            }
+
+            return HttpResponse(json.dumps(response_data), content_type="application/json")
+        else:
+            error_message = generate_form_error(form)
+            response_data = {
+                "status" : "error",
+                "title" : "Address Field Error.",
+                "message" : str(error_message),
+                }
+            return HttpResponse(json.dumps(response_data), content_type="application/json")
+    else:
+        form = AddressForm()
+        context = {
+            "title" : "Male Fashion | Address",
+            "form" : form,
+        }
+
+        return render(request, 'user/address-input.html', context)
+
+
+@login_required(login_url='user/login/')
+def profile_address(request):
+    addresses = Address.objects.filter(user=request.user, is_default=False)
+    default_address = Address.objects.get(user=request.user, is_default=True)
+
+    context = {
+        "title" : "Male Fashion | My Address",
+        "addresses" : addresses,
+        "default_address" : default_address
+
+    }
+    return render(request, 'profile/user-address.html', context)
+
+
+@login_required(login_url='user/login/')
+def profile_address_edit(request, pk):
+    address = get_object_or_404(Address, id=pk)
+    if request.method == "POST":
+        form = AddressForm(request.POST, instance=address)
+        if form.is_valid():
+            instance = form.save(commit=False)
+
+            default = request.POST.get('is_default')
+            if default == 'on':
+                address = Address.objects.get(user=request.user, is_default=True)
+                address.is_default = False
+                address.save()
+                instance.is_default = True
+
+            instance.user = request.user
+            instance.save()
+
+            response_data = {
+                "status" : "success",
+                "title" : "Successfully Updated",
+                "message" : 'Profile has been updated successfully',
+            }
+
+            return HttpResponse(json.dumps(response_data), content_type="application/json")
+        else:
+            error_message = generate_form_error(form)
+            response_data = {
+                "status" : "error",
+                "title" : "Address Field Error.",
+                "message" : str(error_message),
+                }
+            return HttpResponse(json.dumps(response_data), content_type="application/json")
+    else:
+        form = AddressForm(instance=address)
+        context = {
+            "error" : False,
+            "title" : "Male Fashion | Address",
+            "form" : form,
+        }
+
+        return render(request, 'profile/edit-address.html', context)
+    
+
+@login_required(login_url='user/login/')
+def profile_address_default(request, pk):
+    address = get_object_or_404(Address, id=pk)
+    default_address = Address.objects.get(user=request.user, is_default=True)
+
+    default_address.is_default = False
+    address.is_default = True
+
+    address.save()
+    default_address.save()
+
+    response_data = {
+        "status" : "success",
+        "title" : "Address Updated",
+        "message" : 'Password was successfully changed',
+    }
+    
+    return HttpResponse(json.dumps(response_data), content_type="application/json")
+
+
+@login_required(login_url='user/login/')
+def profile_address_delete(request, pk):
+    address = get_object_or_404(Address, id=pk)
+
+    if address.is_default == False:
+        address.delete()
+
+    response_data = {
+        "status" : "success",
+        "title" : "Successfully deleted",
+        "message" : 'Address was successfully deleted',
+    }
+    
+    return HttpResponse(json.dumps(response_data), content_type="application/json")
+
+
+@login_required(login_url='user/login/')
+def profile_order(request):
+    if request.method == "POST":
+        pass
+    else:
+        orders = Order.objects.filter(user=request.user)
+
+        request.session['cart_count'] = Cart.objects.filter(user=request.user, is_deleted=False).count() if request.user.is_authenticated else 0
+
+        context = {
+            "title" : "Male Fashion | My Orders",
+            "orders" : orders,
+        }
+        return render(request, 'profile/user-order.html', context)
+    
+
+@login_required(login_url='user/login/')
+def profile_order_cancel(request, pk):
+    order = get_object_or_404(Order, id=pk)
+    status = OrderStatus.objects.get(status="Cancelled")
+
+    order.order_status = status
+    order.save()
+
+    response_data = {
+        "status" : "success",
+        "title" : "Successfully Cancelled",
+        "message" : 'Your order has been cancelled',
+    }
+    
+    return HttpResponse(json.dumps(response_data), content_type="application/json")
+
+
+    

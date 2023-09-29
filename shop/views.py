@@ -247,10 +247,9 @@ def product_cart_remove(request, pk):
         count = request.session['cart_count'] = cart_count - 1
 
     response_data = {
-            "success" : True,
-            "title" : "Successfully Changed",
-            "text" : "Product Updated successfully",
-            "type" : "warning",
+            "status" : "success",
+            "title" : "Successfully Removed",
+            "message" : "Product has been Successfully removed.",
             "cart_count" : count
         }
 
@@ -394,8 +393,8 @@ def product_order(request):
                             user=user,
                             shipping_address=shipping_address,
                             order_status=order_status,
-                            product_qty=item.qty,
-                            product_price_per_unit=item.product.price,
+                            product_qty = item.qty,
+                            order_total_price=item.product.price * item.qty
                         )
                 item.product.stock_unit -= item.qty
                 total_amount += item.total_price_of_product
@@ -415,9 +414,9 @@ def product_order(request):
                 item.save()
             
             response_data = {
+                    "status" : "success",
                     "title" : "Order Purchased",
                     "message" : "Your Product will be deliver shortly",
-                    "status" : "success",
                 }
 
             return HttpResponse(json.dumps(response_data), content_type="application/json")

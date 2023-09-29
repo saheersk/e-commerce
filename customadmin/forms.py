@@ -3,7 +3,7 @@ import re
 from django import forms
 
 from user.models import CustomUser
-from shop.models import Category, Product, ProductImage
+from shop.models import Category, Product, ProductImage, Order
 
 from phonenumber_field.formfields import PhoneNumberField
 from phonenumber_field.phonenumber import to_python
@@ -112,3 +112,9 @@ class AdminProductImage(forms.ModelForm):
         model = ProductImage
         fields = ['image']
 
+
+class AdminOrderFrom(forms.ModelForm):
+
+    class Meta:
+        model = Order
+        fields = ['order_status']

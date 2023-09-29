@@ -1,0 +1,49 @@
+{% extends "base.html" %} {% block content %} {% load static %} {% include 'web/includes/header.html' %}
+
+<div class="d-flex" style="height: calc(70vh - 130px)">
+    {% include 'profile/includes/sidebar.html' %}
+    <div class="col-lg-10 mt-5">
+        <h1 class="mb-4 fs-1">Order List</h1>
+        <div class="table-responsive" style="max-height: 700px">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Product Image</th>
+                        <th>Product</th>
+                        <th>Price</th>
+                        <th>Order Date</th>
+                        <th>Status</th>
+                        <th>Cancel</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in orders %}
+                    <tr>
+                        <td>
+                            <img
+                                src="{{ order.product.featured_image.url }}"
+                                alt="{{ order.product.title }}"
+                                width="100"
+                                height="100"
+                            />
+                        </td>
+                        <td>{{ order.product.title }}</td>
+                        <td>₹{{ order.order_total_price }} </td>
+                        <td>{{ order.purchased_date|date:"j F Y" }}</td>
+                        <td>
+                            <span id="cancel-status-{{order.id}}">
+                                {{ order.order_status }}
+                            </span>
+                        </td>
+                        <td>
+                            <button data-order-id="{{order.id}}" class="btn btn-primary cancel-order" >Cancel</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

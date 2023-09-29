@@ -123,7 +123,7 @@ class Order(models.Model):
     order_status = models.ForeignKey(OrderStatus, on_delete=models.CASCADE)
     shipping_address = models.ForeignKey(Address, on_delete=models.CASCADE)
     product_qty = models.PositiveBigIntegerField()
-    product_price_per_unit = models.PositiveBigIntegerField()
+    order_total_price = models.PositiveBigIntegerField()
     coupon = models.ForeignKey(Coupon, on_delete=models.SET_NULL, null=True, blank=True)
     purchased_date = models.DateTimeField(auto_now_add=True)
 

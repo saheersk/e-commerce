@@ -31,4 +31,9 @@ urlpatterns = [
     path('product/products/add/', views.admin_product_add, name='admin_product_add'),
     path('product/products/edit/<int:pk>/', views.admin_product_edit, name='admin_product_edit'),
     path('product/products/delete/<int:pk>/', views.admin_product_delete, name='admin_product_delete'),
+
+    #Order
+    path('order/orders/', views.admin_order, name='admin_order'),
+    path('order/orders/edit/<int:pk>/', views.admin_order_edit, name='admin_order_edit'),
+
 ]

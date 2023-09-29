@@ -1,7 +1,7 @@
 {% extends "base.html" %} {% block content %} {% load static %} {% include 'web/includes/header.html' %}
 <div class="container col-lg-12 col-md-12 pt-5">
     <h6 class="checkout__title">Billing Details</h6>
-    <form action="{% url 'user:user_address' %}" method="post" class="">
+    <form action="" method="post" class="ajax-address">
         {% csrf_token %}
         <div class="row">
             <div class="col-lg-6">
@@ -53,12 +53,11 @@
             <input type="checkbox" name="is_default" />
             <p class='ml-2 mb-0'>Set as Default(Optional)</p>
         </div>
-        {% if error %}
-            {{message}}
-        {% endif %}
+        <div id="error-message">
+        </div>
         <div class="pb-5 d-flex justify-content-center">
             <button type="submit" class="site-btn text-center mt-3">Add New Address</button>
         </div>
-    </form>
+    </form>    
 </div>
 {% include 'web/includes/footer.html' %} {% endblock %}

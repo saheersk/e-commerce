@@ -7,10 +7,10 @@ from django.contrib.auth import authenticate, login as auth_login, logout as aut
 from django.db.models import Q
 from django.forms import formset_factory
 
-from customadmin.forms import AdminCustomUserForm, AdminCustomUpdateUserForm, AdminCategory, AdminProduct, AdminProductImage, AdminCustomBlockUserForm
+from customadmin.forms import AdminCustomUserForm, AdminCustomUpdateUserForm, AdminCategory, AdminProduct, AdminProductImage, AdminOrderFrom
 from user.models import CustomUser
 from user.functions import generate_form_error
-from shop.models import Category, Product, ProductImage
+from shop.models import Category, Product, ProductImage, Order
 
 
 #Admin User
@@ -493,3 +493,43 @@ def admin_product_delete(request, pk):
         }
 
     return HttpResponse(json.dumps(response_data), content_type="application/json")
+
+
+#Order
+def admin_order(request):
+    if request.user.is_superuser and request.user.is_authenticated:
+        search_query = request.GET.get('search')
+
+
+        orders = Order.objects.all()
+        if search_query:
+            orders = orders.filter(Q(user__first_name__icontains=search_query) | Q(product__title__icontains=search_query) | Q(order_status__status__icontains=search_query))
+              
+        context = {
+            "title" : "Male Fashion | Admin Order",
+            'heading': ['Full Name', 'Product Title', 'Price', 'Order status', ],
+            "orders" : orders
+        }
+
+        return render(request, 'customadmin/admin-table-order.html', context)
+    elif request.user.is_authenticated:
+        return redirect('web:index')
+    else:
+        return redirect('customadmin:admin_login')
+
+
+def admin_order_edit(request, pk):
+    order = get_object_or_404(Order, id=pk)
+    if request.method == 'POST':
+        form = AdminOrderFrom(request.POST, instance=order)
+        if form.is_valid():
+            form.save()
+            return redirect('customadmin:admin_order')
+    else:
+        form = AdminOrderFrom(instance=order)
+        context = {
+            'title' : "Male Fashion | Admin Order Edit",
+            "form" : form
+        }
+
+        return render(request, 'customadmin/admin-edit.html', context)

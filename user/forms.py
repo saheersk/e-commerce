@@ -2,7 +2,7 @@ import re
 
 from django import forms
 
-from user.models import CustomUser, Address
+from user.models import CustomUser
 
 
 class CustomUserForm(forms.ModelForm):
@@ -33,22 +33,7 @@ class CustomUserForm(forms.ModelForm):
                 self.add_error("email", "Email is already taken.")
 
 
-class AddressForm(forms.ModelForm):
 
-    class Meta:
-        model = Address
-        fields = ['first_name', 'last_name', 'phone_number', 'state', 'city', 'address_line1', 'address_line2', 'pin_code']
-
-    def clean(self):
-        cleaned_data = super().clean()
-
-        required_fields = ['first_name', 'last_name', 'phone_number', 'state', 'city', 'address_line1', 'address_line2', 'pin_code']
-        for field_name in required_fields:
-            if not cleaned_data.get(field_name):
-                self.add_error(field_name, "This field is required.")
-                break
-
-        return cleaned_data
 
     
 

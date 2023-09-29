@@ -1,0 +1,41 @@
+{% extends "base.html" %} {% block content %} {% load static %} {% include 'web/includes/header.html' %}
+<div class="d-flex" style="height: 80vh">
+    {% include 'profile/includes/sidebar.html' %}
+    <div class="container">
+        <h3>Address List</h3>
+        <ul class="list-group mt-3">
+            <!-- Address Item 1 -->
+            <li class="list-group-item d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <strong>{{default_address.first_name}} {{default_address.last_name}}</strong><br />
+                    {{default_address.address_line1}} {{default_address.address_line2}},
+                    {{default_address.city}}, {{default_address.state}}, {{default_address.pin_code}}
+                </div>
+                <div>
+                    <a href="{% url 'user_profile:profile_address_edit' default_address.id %}" class="btn btn-primary btn-sm">Edit</a>
+                    <button class="btn btn-success btn-sm">Default Address</button>
+                </div>
+            </li>
+
+            <!-- Address Item 2 -->
+            {% for address in addresses %}
+            <li class="list-group-item d-flex justify-content-between align-items-center mb-2">
+                <div>
+                    <strong>{{address.first_name}} {{address.last_name}}</strong><br />
+                    {{address.address_line1}} {{address.address_line2}},
+                    {{address.city}}, {{address.state}}, {{address.pin_code}}
+                </div>
+                <div>
+                    <a href="{% url 'user_profile:profile_address_edit' address.id %}" class="btn btn-primary btn-sm">Edit</a>
+                    <button data-address-id="{{address.id}}" class="btn btn-danger btn-sm remove-address">Delete</button>
+                    <button class="btn btn-secondary btn-sm">Set as Default</button>
+                </div>
+            </li>
+            {% endfor %}
+            <!-- Add more address items as needed -->
+        </ul>
+        <button id="new-address" class="site-btn text-center mt-3" style="color:white">Add New Address</button>
+    </div>
+</div>
+
+{% include 'web/includes/footer.html' %} {% endblock %}
