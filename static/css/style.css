@@ -3443,7 +3443,7 @@ div.pagination div.pages span.active {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #5aab7b;
+    background:#b7b7b7;
     border-radius: 4px;
     margin-right: 10px;
 }

@@ -20,7 +20,7 @@ def product_all(request):
 
     products = Product.objects.filter(is_show=True, category__is_blocked=False, is_deleted=False)
 
-    if category_param:
+    if category_param and category_param != 'All':
         products = products.filter(category__name=category_param)
 
     if sort_by_price == 'low-to-high':
@@ -31,7 +31,7 @@ def product_all(request):
     if q:
         products = products.filter(Q(title__icontains=q))
 
-    instances = paginate_instances(request, products, per_page=3)
+    instances = paginate_instances(request, products, per_page=1)
     categories = Category.objects.filter(is_blocked=False, is_deleted=False)
     print(request.session.get('cart_count'))
     context = {

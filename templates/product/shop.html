@@ -15,40 +15,64 @@
                     </div>
                     <div class="shop__sidebar__accordion">
                         <div class="accordion" id="accordionExample">
-                            <div class="card">
-                                <div class="card-heading">
-                                    <a data-toggle="collapse" data-target="#collapseOne">Categories</a>
-                                </div>
-                                <div id="collapseOne" class="collapse show" data-parent="#accordionExample">
-                                    <div class="card-body">
-                                        <div class="shop__sidebar__categories">
-                                            <ul class="nice-scroll">
-                                                <li><a href="{% url 'shop:product_all' %}">All</a></li>
-                                                {% for category in categories %}
-                                                <li><a href="?category={{category}}">{{category}}</a></li>
-                                                {% endfor %}
-                                            </ul>
+                            <form method="get">
+                                <div class="card">
+                                    <div class="card-heading">
+                                        <a data-toggle="collapse" data-target="#collapseOne">Categories</a>
+                                    </div>
+                                    <div id="collapseOne" class="collapse show" data-parent="#accordionExample">
+                                        <div class="card-body">
+                                            <div class="shop__sidebar__categories">
+                                                <ul class="nice-scroll">
+                                                    <li>
+                                                        <label>
+                                                            <input type="checkbox" name="category" value="All" checked>
+                                                            All
+                                                        </label>
+                                                    </li>
+                                                    {% for category in categories %}
+                                                    <li>
+                                                        <label>
+                                                            <input type="checkbox" name="category" value="{{ category }}">
+                                                            {{ category }}
+                                                        </label>
+                                                    </li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
                                         </div>
                                     </div>
-                                    
                                 </div>
-                            </div>
-                            <div class="card">
-                                <div class="card-heading">
-                                    <a data-toggle="collapse" data-target="#collapseOne">Sort</a>
-                                </div>
-                                <div id="collapseOne" class="collapse show" data-parent="#accordionExample">
-                                    <div class="card-body">
-                                        <div class="shop__sidebar__categories">
-                                            <ul class="nice-scroll">
-                                                <li><a href="?sort_by_price=low-to-high">Low to High</a></li>
-                                                <li><a href="?sort_by_price=high-to-low">High to Low</a></li>
-                                            </ul>
+                            
+                                <div class="card">
+                                    <div class="card-heading">
+                                        <a data-toggle="collapse" data-target="#collapseTwo">Sort</a>
+                                    </div>
+                                    <div id="collapseTwo" class="collapse show" data-parent="#accordionExample">
+                                        <div class="card-body">
+                                            <div class="shop__sidebar__brand">
+                                                <ul class="nice-scroll">
+                                                    <li>
+                                                        <label>
+                                                            <input type="radio" name="sort_by_price" value="low-to-high">
+                                                            Low to High
+                                                        </label>
+                                                    </li>
+                                                    <li>
+                                                        <label>
+                                                            <input type="radio" name="sort_by_price" value="high-to-low">
+                                                            High to Low
+                                                        </label>
+                                                    </li>
+                                                </ul>
+                                            </div>
                                         </div>
                                     </div>
-                                    
                                 </div>
-                            </div>
+                            
+                                <button class="site-btn text-center mt-3" type="submit">Submit</button>
+                            </form>
+                            
                         </div>
                     </div>
                 </div>
@@ -91,11 +115,11 @@
                     </div>
                     {% endfor %}
                 </div>
+                {% load_pagination products %}
             </div>
         </div>
     </div>
 </section>
-{% load_pagination instances %}
 <!-- Shop Section End -->
 {% include 'web/includes/footer.html' %} 
  {% endblock %}

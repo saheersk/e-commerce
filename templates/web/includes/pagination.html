@@ -1,6 +1,5 @@
 {% load static %}
 {% load paginator_tags %}
-{{instances.has_other_pages}}
 {% if instances.has_other_pages %}
           <div class="pagination">
             {% if instances.has_previous %}
@@ -14,6 +13,7 @@
               </span>
               Previous
             </a>
+
             {% else %}
             <div class="prev disabled">
               <span class="arrow">
@@ -59,6 +59,4 @@
             </div>
             {% endif %}
           </div>
-          {% else %}
-          <h2>Hello</h2>
           {% endif %}

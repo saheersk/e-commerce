@@ -31,7 +31,6 @@ def change_params(context, page):
 @register.inclusion_tag("web/includes/pagination.html", takes_context=True)
 def load_pagination(context, instances):
     request = context['request']
-    print(instances)
     return {
         "instances": instances,
         "request": request

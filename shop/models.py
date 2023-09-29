@@ -24,6 +24,14 @@ class Category(models.Model):
         verbose_name_plural = 'categories'
 
 
+class ProductSize(models.Model):
+    name = models.CharField(max_length=50)
+    stock_unit = models.IntegerField()
+
+    def __str__(self):
+        return self.name
+    
+
 class Product(models.Model):
     title = models.CharField(max_length=150)
     featured_image = models.ImageField(upload_to='Product/featured-images')
@@ -128,7 +136,7 @@ class Order(models.Model):
     purchased_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return self.user.first_name
+        return self.product.title
     
 
 class PaymentMethod(models.Model):

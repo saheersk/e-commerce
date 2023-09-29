@@ -40,6 +40,7 @@
             
         </div>
     </div>
+   
     <div class="product__details__content">
         <div class="container">
             <div class="row d-flex justify-content-center">
@@ -54,10 +55,27 @@
                             <i class="fa fa-star-o"></i>
                             <span> - 5 Reviews</span>
                         </div>
-                        <h3>{{product.price}}</h3>
+                        <h3>₹{{product.price}}</h3>
                         <p>
                             {{product.short_description}}
                         </p>
+                        <div class="product__details__option">
+                            <div class="product__details__option__size">
+                                <span>Size:</span>
+                                <label for="xxl">xxl
+                                    <input type="radio" id="xxl">
+                                </label>
+                                <label class="active" for="xl">xl
+                                    <input type="radio" id="xl">
+                                </label>
+                                <label for="l">l
+                                    <input type="radio" id="l">
+                                </label>
+                                <label for="sm">s
+                                    <input type="radio" id="sm">
+                                </label>
+                            </div>
+                        </div>
                         <div class="product__details__cart__option">
                             <div class="quantity">
                                 <div class="pro-qty">
