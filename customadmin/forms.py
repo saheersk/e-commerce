@@ -103,7 +103,7 @@ class AdminCategory(forms.ModelForm):
 class AdminProduct(forms.ModelForm):
     class Meta:
         model = Product
-        fields = ['title', 'featured_image', 'description', 'short_description', 'category', 'price', 'stock_unit']
+        fields = ['title', 'featured_image', 'description', 'short_description', 'category', 'price']
 
 
 class AdminProductImage(forms.ModelForm):

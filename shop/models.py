@@ -27,6 +27,7 @@ class Category(models.Model):
 class ProductSize(models.Model):
     name = models.CharField(max_length=50)
     stock_unit = models.IntegerField()
+    
 
     def __str__(self):
         return self.name
@@ -39,7 +40,7 @@ class Product(models.Model):
     price = models.PositiveIntegerField()
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     short_description = models.CharField(max_length=200)
-    stock_unit = models.IntegerField()
+    size = models.ForeignKey(ProductSize, on_delete=models.CASCADE) 
     is_show = models.BooleanField(default=True)
     created_date = models.DateTimeField(auto_now_add=True)
     updated_date = models.DateTimeField(auto_now=True)

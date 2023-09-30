@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from shop.models import Category, ProductImage, Product, Cart, Order, OrderStatus, Payment, PaymentMethod
+from shop.models import Category, ProductImage, Product, Cart, Order, OrderStatus, Payment, PaymentMethod, ProductSize
 
 
 class ProductImageAdmin(admin.TabularInline):
@@ -15,8 +15,13 @@ class CategoryAdmin(admin.ModelAdmin):
 admin.site.register(Category, CategoryAdmin)
 
 
+class ProductSizeAdmin(admin.ModelAdmin):
+    list_display = ['id', 'name', 'stock_unit']
+
+admin.site.register(ProductSize, ProductSizeAdmin)
+
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ['id', 'title', 'category', 'stock_unit', 'is_show']
+    list_display = ['id', 'title', 'category', 'is_show', 'size']
     inlines = [ProductImageAdmin]
 
 admin.site.register(Product, ProductAdmin)
