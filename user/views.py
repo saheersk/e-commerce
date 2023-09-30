@@ -5,11 +5,29 @@ from datetime import datetime
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 from django.contrib.auth.hashers import make_password
+from django.contrib.auth.tokens import default_token_generator
+from django.contrib.auth import get_user_model
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
+from django.urls import reverse
+from django.shortcuts import render, redirect
+from django.contrib.auth.tokens import default_token_generator
+from django.contrib.auth import get_user_model
+from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
+from django.http import HttpResponse
+from django.conf import settings
+
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
 
 from user.models import CustomUser
 from user.forms import CustomUserForm
 from main.functions import generate_form_error
 from user.utils import send_otp
+from user_profile.forms import PasswordResetRequestForm
+
+
+User = get_user_model()
 
 
 def login(request):
@@ -58,9 +76,8 @@ def signup(request):
             instance = form.save(commit=False)
 
             password = make_password(instance.password)
-
             user = CustomUser.objects.create_user(
-                username=instance.first_name,
+                username=instance.first_name + instance.last_name,
                 password=password,
                 email=instance.email,
                 first_name=instance.first_name,
@@ -174,3 +191,69 @@ def logout(request):
     auth_logout(request)
     return redirect("web:index")
 
+
+def password_reset_request(request):
+    if request.method == 'POST':
+        form = PasswordResetRequestForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data['email']
+            try:
+                user = User.objects.get(email=email)
+            except User.DoesNotExist:
+                return HttpResponse("User with this email does not exist.")
+
+            token = default_token_generator.make_token(user)
+
+            uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
+
+            reset_url = reverse('user:password_reset_confirm', kwargs={'uidb64': uidb64, 'token': token})
+
+            subject = 'Password Reset'
+            message = f'Click the following link to reset your password:\n{request.build_absolute_uri(reset_url)}'
+            from_email = 'saheerabcd3@gmail.com'  #
+            recipient_list = [user.email]  
+
+            msg = Mail(
+                from_email=from_email,
+                to_emails=recipient_list,
+                subject=subject,
+                plain_text_content=message
+            )
+
+            try:
+                sg = SendGridAPIClient(api_key=settings.SENDGRID_API_KEY)
+                response = sg.send(msg)
+                print(response.status_code)
+                print(response.body)
+                print(response.headers)
+            except Exception as e:
+                print(str(e))
+
+            return redirect('user:password_reset_done') 
+    else:
+        form = PasswordResetRequestForm()
+
+    return render(request, 'user/forgot-password/password_reset_request.html', {'form': form})
+
+def password_reset_confirm(request, uidb64, token):
+    try:
+        uid = str(urlsafe_base64_decode(uidb64), 'utf-8')
+        user = CustomUser.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    if user is not None and default_token_generator.check_token(user, token):
+        if request.method == 'POST':
+            new_password = request.POST.get('password')
+            confirm_password = request.POST.get('confirm_password')
+
+            if new_password == confirm_password:
+                user.set_password(new_password)
+                user.save()
+                return redirect('user:password_reset_complete') 
+            else:
+                return HttpResponse('Passwords do not match. Please try again.')
+        else:
+            return render(request, 'user/forgot-password/password_reset_confirm.html')
+    else:
+        return HttpResponse('Password reset link is invalid or has expired.')

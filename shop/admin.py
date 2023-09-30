@@ -29,7 +29,7 @@ admin.site.register(Cart, CartAdmin)
 
 
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ['id', 'user', 'order_status']
+    list_display = ['id', 'user', 'order_total_price', 'order_status']
 
 admin.site.register(Order, OrderAdmin)
 

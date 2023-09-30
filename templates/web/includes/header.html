@@ -81,8 +81,7 @@
                                     <a href="{% url 'web:about' %}">About Us</a>
                                 </li>
                                 <li><a href="{% url 'shop:product_cart' %}">Shopping Cart</a></li>
-                                <li><a href="#">My Order</a></li>
-                                <li><a href="#">Check Out</a></li>
+                                <li><a href="{% url 'user_profile:profile_order' %}">My Order</a></li>
                             </ul>
                         </li>
                         <li {% if active_menu_item == 'contact' %}class="active"{% endif %}>

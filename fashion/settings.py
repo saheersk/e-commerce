@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'imagekit',
+    'sendgrid',
     
     'web',
     'user',
@@ -114,6 +115,13 @@ AUTH_USER_MODEL = 'user.CustomUser'
 
 EMAIL_BACKEND = 'sendgrid_backend.SendgridBackend'
 SENDGRID_API_KEY = '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'
+
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.sendgrid.net'  # SendGrid SMTP server
+# EMAIL_PORT = 587  # SendGrid SMTP port
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'saheerabcd3@gmail.com'
+# EMAIL_HOST_PASSWORD = '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'
 
 
 

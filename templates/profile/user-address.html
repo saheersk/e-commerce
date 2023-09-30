@@ -28,7 +28,7 @@
                 <div>
                     <a href="{% url 'user_profile:profile_address_edit' address.id %}" class="btn btn-primary btn-sm">Edit</a>
                     <button data-address-id="{{address.id}}" class="btn btn-danger btn-sm remove-address">Delete</button>
-                    <button class="btn btn-secondary btn-sm">Set as Default</button>
+                    <button data-default-id="{{address.id}}" class="btn btn-secondary btn-sm default-address">Set as Default</button>
                 </div>
             </li>
             {% endfor %}

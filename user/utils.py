@@ -21,10 +21,15 @@ def send_otp(request, email):
 
     subject = 'Your OTP Verification Code'
     message = f'Your OTP code is: {otp}'
-    from_email = settings.EMAIL_HOST_USER
+    from_email = 'saheerabcd3@gmail.com'  # Replace with your sender email address
     recipient_list = [email]
 
-    msg = Mail(from_email='saheerabcd3@gmail.com', to_emails=recipient_list, subject=subject, plain_text_content=message)
+    msg = Mail(
+        from_email=from_email,
+        to_emails=recipient_list,
+        subject=subject,
+        plain_text_content=message
+    )
 
     try:
         sg = SendGridAPIClient(api_key=settings.SENDGRID_API_KEY)

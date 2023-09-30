@@ -26,3 +26,7 @@ class AddressForm(forms.ModelForm):
                 break
 
         return cleaned_data
+    
+
+class PasswordResetRequestForm(forms.Form):
+    email = forms.EmailField()

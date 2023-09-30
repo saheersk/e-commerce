@@ -554,7 +554,7 @@ $(document).ready(function () {
                     },
                     success: function (data) {
                         console.log("success");
-                        if (data.success) {
+                        if (data.status == 'success') {
                             clickedButton.closest("tr").remove();
                             const cartCounts = document.querySelectorAll(".cart-count");
 
@@ -612,6 +612,55 @@ $(document).ready(function () {
                             title: data.title,
                             text: data.message,
                         });
+                    },
+                    error: function () {
+                        console.log("err");
+                    },
+                });
+            }
+        });
+    });
+
+    $(".default-address").click(function (event) {
+        event.preventDefault(); // Prevent the default form submission
+
+        var csrfToken = getCSRFToken(); // Get the CSRF token
+        if (!csrfToken) {
+            console.error("CSRF token not found.");
+            return;
+        }
+
+        var addressId = $(this).data("default-id");
+        var clickedButton = $(this);
+
+        var confirmButtonText = "Yes";
+        var confirmButtonColor = "#DD6B55";
+        
+        Swal.fire({
+            title: "Confirm Address",
+            text: "Are you sure you want set this as Default Address?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: confirmButtonText,
+            confirmButtonColor: confirmButtonColor,
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: `/user-profile/address/default/${addressId}/`,
+                    method: "POST",
+                    dataType: "json",
+                    data: {
+                        csrfmiddlewaretoken: csrfToken,
+                    },
+                    success: function (data) {
+                        console.log("success");
+                        Swal.fire({
+                            icon: data.status,
+                            title: data.title,
+                            text: data.message,
+                        }).then((res) => {
+                            window.location.reload();
+                        })
                     },
                     error: function () {
                         console.log("err");

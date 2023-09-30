@@ -306,16 +306,13 @@ def product_discount(request):
     if request.method == 'POST':
         code = request.POST.get('coupon')
 
-        # Check if the coupon exists or return an error
         coupon = get_object_or_404(Coupon, code=code)
         
         user = request.user
         products = Cart.objects.filter(user=user, is_deleted=False)
 
-        # Calculate the total amount of the cart
         total_amount = sum(item.product.price * item.qty for item in products)
 
-        # Check if the coupon has already been used by the user
         if CouponUsage.objects.filter(user=user).exists():
             response_data = {
                 "error": True,
@@ -326,7 +323,6 @@ def product_discount(request):
 
         current_datetime = timezone.now()
 
-        # Check if the coupon is valid
         if current_datetime > coupon.valid_to:
             response_data = {
                 "title": "Coupon not available",
@@ -334,7 +330,6 @@ def product_discount(request):
             }
             return HttpResponse(json.dumps(response_data), content_type="application/json")
 
-        # Check if the cart meets the minimum purchase amount requirement
         if total_amount <= coupon.min_purchase_amount:
             response_data = {
                 "title": f"Minimum amount for this coupon is {coupon.min_purchase_amount}",
@@ -342,7 +337,6 @@ def product_discount(request):
             }
             return HttpResponse(json.dumps(response_data), content_type="application/json")
 
-        # Apply the discount based on the coupon type
         discount_amount = 0
         if coupon.discount_type == 'amount':
             discount = coupon.amount_or_percent / 2
@@ -356,7 +350,6 @@ def product_discount(request):
                 discount_amount += item.total_price_of_product 
                 item.save()
 
-        # Create a coupon usage record for the user
         CouponUsage.objects.create(user=user, coupon=coupon)
 
         response_data = {
@@ -396,18 +389,19 @@ def product_order(request):
                             product_qty = item.qty,
                             order_total_price=item.product.price * item.qty
                         )
-                item.product.stock_unit -= item.qty
                 total_amount += item.total_price_of_product
-
-            Payment.objects.create(
-                    order=order,
-                    user=user,
-                    payment_method=payment_type,
-                    transaction_id="COD",
-                    purchased_price=total_amount
-                )
-            
+                Payment.objects.create(
+                            order=order,
+                            user=user,
+                            payment_method=payment_type,
+                            transaction_id="COD",
+                            purchased_price=total_amount
+                        )
+                
             for item in products:
+                product = Product.objects.get(id=item.product.id)
+                product.stock_unit -= item.qty
+                product.save()
                 item.is_deleted = True
                 item.qty = 1
                 item.total_price_of_product = item.product.price * item.qty
