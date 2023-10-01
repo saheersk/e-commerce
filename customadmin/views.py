@@ -7,10 +7,12 @@ from django.contrib.auth import authenticate, login as auth_login, logout as aut
 from django.db.models import Q
 from django.forms import formset_factory
 
-from customadmin.forms import AdminCustomUserForm, AdminCustomUpdateUserForm, AdminCategory, AdminProduct, AdminProductImage, AdminOrderFrom
+from customadmin.forms import AdminCustomUserForm, AdminCustomUpdateUserForm, AdminCategory, AdminProduct, AdminProductImage, AdminOrderFrom, AdminProductVariantFrom, AdminBannerForm
 from user.models import CustomUser
+from web.models import Contact, Banner
 from user.functions import generate_form_error
-from shop.models import Category, Product, ProductImage, Order
+from shop.models import Category, Product, ProductImage, Order, ProductVariant
+from main.functions import paginate_instances
 
 
 #Admin User
@@ -84,10 +86,10 @@ def admin_user(request):
                 Q(last_name__icontains=search_query) |
                 Q(email__icontains=search_query)
             )
-
+        instances = paginate_instances(request, users, per_page=8)
         context = {
             "title": "Male Fashion | Admin User",
-            'users': users,
+            'users': instances,
             'heading': ['First Name', 'Last Name', 'Email', 'Phone Number', 'Superuser', 'Blocked']
         }
         return render(request, 'customadmin/admin-table-user.html', context)
@@ -241,8 +243,9 @@ def admin_category(request):
             categories = categories.filter(
                 Q(name__icontains=search_query)
             )
+        instances = paginate_instances(request, categories, per_page=8)
         context = {
-            'categories': categories,
+            'categories': instances,
             'heading': ['Name', "Blocked"]
         }
         return render(request, 'customadmin/admin-table-category.html', context)
@@ -344,9 +347,11 @@ def admin_product(request):
         if search_query:
             products = products.filter( Q(title__icontains=search_query))
 
+        instances = paginate_instances(request, products, per_page=8)
+
         context = {
-            'products': products,
-            'heading': ['Title', 'Category', 'Stock Unit', 'Show']
+            'products': instances,
+            'heading': ['Title', 'Category' , 'Show']
         }
         return render(request, 'customadmin/admin-table-products.html', context)
     elif request.user.is_authenticated:
@@ -504,11 +509,13 @@ def admin_order(request):
         orders = Order.objects.all()
         if search_query:
             orders = orders.filter(Q(user__first_name__icontains=search_query) | Q(product__title__icontains=search_query) | Q(order_status__status__icontains=search_query))
-              
+        
+        instances = paginate_instances(request, orders, per_page=6)
+
         context = {
             "title" : "Male Fashion | Admin Order",
             'heading': ['Full Name', 'Product Title', 'Price', 'Order status', ],
-            "orders" : orders
+            "orders" : instances
         }
 
         return render(request, 'customadmin/admin-table-order.html', context)
@@ -533,3 +540,211 @@ def admin_order_edit(request, pk):
         }
 
         return render(request, 'customadmin/admin-edit.html', context)
+    
+
+#Product Variant
+def admin_product_variant(request):
+    if request.user.is_superuser and request.user.is_authenticated:
+        variants =ProductVariant.objects.all()
+
+        instances = paginate_instances(request, variants, per_page=6)
+        context = {
+            "title" : "Male Fashion | Product Variant",
+            "heading" : ['Variant Name', 'Product', 'Stock Unit', 'Size', 'Featured'],
+            "variants" : instances
+        }
+
+        return render(request, 'customadmin/admin-table-variant.html', context)
+    elif request.user.is_authenticated:
+        return redirect('web:index')
+    else:
+        return redirect('customadmin:admin_login')
+    
+
+def admin_product_variant_add(request):
+    if request.user.is_superuser and request.user.is_authenticated:
+        if request.method == 'POST':
+            form = AdminProductVariantFrom(request.POST)
+            if form.is_valid():
+                form.save()
+                return HttpResponseRedirect(reverse("customadmin:admin_product_variant"))
+            else:
+                message = generate_form_error(form)
+                form = AdminProductVariantFrom()
+                context = {
+                    "title": "Male Fashion | Admin Product Variant Add",
+                    "error" : True,
+                    "message" : message,
+                    "form": form,
+                }
+                return render(request, 'customadmin/admin-add.html', context=context)
+        else:
+            form = AdminProductVariantFrom()
+            context = {
+                "title" : "Male Fashion | Admin Product Variant Add",
+                "form" : form,
+            }
+            return render(request, 'customadmin/admin-add.html', context)
+    elif request.user.is_authenticated:
+        return redirect('web:index')
+    else:
+        return redirect('customadmin:admin_login')
+
+
+
+def admin_product_variant_edit(request, pk):
+    if request.user.is_superuser and request.user.is_authenticated:
+        variant = get_object_or_404(ProductVariant, id=pk)
+        if request.method == 'POST':
+            form = AdminProductVariantFrom(request.POST, instance=variant)
+            if form.is_valid():
+                form.save()
+                return HttpResponseRedirect(reverse("customadmin:admin_product_variant"))
+            else:
+                message = generate_form_error(form)
+                form = AdminProductVariantFrom()
+                context = {
+                    "title": "Male Fashion | Admin Variant Edit",
+                    "error" : True,
+                    "message" : message,
+                    "form": form,
+                }
+                return render(request, 'customadmin/admin-add.html', context=context)
+        else:
+            form = AdminProductVariantFrom(instance=variant)
+            context = {
+                "title": "Male Fashion | Admin Variant Edit",
+                "form": form,
+            }
+            return render(request, 'customadmin/admin-add.html', context)
+    elif request.user.is_authenticated:
+        return redirect('web:index')
+    else:
+        return redirect('customadmin:admin_login')
+    
+
+def admin_product_variant_delete(request, pk):
+    variant = get_object_or_404(ProductVariant, id=pk)
+    variant.is_featured = not variant.is_featured
+    variant.save()
+
+    response_data = {
+            "title" : "Successfully Changed",
+            "message" : "Variant Updated successfully",
+            "status" : "success",
+        }
+
+    return HttpResponse(json.dumps(response_data), content_type="application/json")
+
+
+def admin_contact(request):
+    if request.user.is_superuser and request.user.is_authenticated:
+        contacts = Contact.objects.all()
+
+        context = {
+            "title" : "Male Fashion | Contact",
+            "heading" : ["Name", "Email", "message"],
+            "contacts" : contacts
+        }
+        return render(request, 'customadmin/admin-table-contact.html',context)
+    elif request.user.is_authenticated:
+        return redirect('web:index')
+    else:
+        return redirect('customadmin:admin_login')
+    
+
+def admin_banner(request):
+    if request.user.is_superuser and request.user.is_authenticated:
+        banners = Banner.objects.all()
+
+        context ={
+            "title": "Male Fashion | Banner",
+            "heading": ["Title", "Category", "Featured"],
+            "banners": banners
+        }
+
+        return render(request, 'customadmin/admin-table-banner.html', context)
+    elif request.user.is_authenticated:
+        return redirect('web:index')
+    else:
+        return redirect('customadmin:admin_login')
+    
+
+def admin_banner_add(request):
+    if request.user.is_superuser and request.user.is_authenticated:
+        if request.method == 'POST':
+            form = AdminBannerForm(request.POST)
+            if form.is_valid():
+                form.save()
+                return HttpResponseRedirect(reverse("customadmin:admin_banner"))
+            else:
+                message = generate_form_error(form)
+                form = AdminBannerForm()
+                context = {
+                    "title": "Male Fashion | Admin Banner Add",
+                    "error" : True,
+                    "message" : message,
+                    "form": form,
+                }
+                return render(request, 'customadmin/admin-add.html', context=context)
+        else:
+            form = AdminBannerForm()
+            context = {
+                "title" : "Male Fashion | Admin Banner Add",
+                "form" : form,
+            }
+            return render(request, 'customadmin/admin-add.html', context)
+    elif request.user.is_authenticated:
+        return redirect('web:index')
+    else:
+        return redirect('customadmin:admin_login')
+    
+
+def admin_banner_edit(request, pk):
+    if request.user.is_superuser and request.user.is_authenticated:
+        banner = get_object_or_404(Banner, id=pk)
+        if request.method == 'POST':
+            form = AdminBannerForm(request.POST, request.FILES ,instance=banner)
+            if form.is_valid():
+                instance = form.save(commit=False)  
+                if 'image' in request.FILES:
+                    instance.image = request.FILES['image']
+
+                instance.save()
+
+                return HttpResponseRedirect(reverse("customadmin:admin_banner"))
+            else:
+                message = generate_form_error(form)
+                form = AdminBannerForm()
+                context = {
+                    "title": "Male Fashion | Admin Variant Edit",
+                    "error" : True,
+                    "message" : message,
+                    "form": form,
+                }
+                return render(request, 'customadmin/admin-add.html', context=context)
+        else:
+            form = AdminBannerForm(instance=banner)
+            context = {
+                "title": "Male Fashion | Admin Variant Edit",
+                "form": form,
+            }
+            return render(request, 'customadmin/admin-add.html', context)
+    elif request.user.is_authenticated:
+        return redirect('web:index')
+    else:
+        return redirect('customadmin:admin_login')
+    
+
+def admin_banner_delete(request, pk):
+    banner = get_object_or_404(Banner, id=pk)
+    banner.is_featured = not banner.is_featured
+    banner.save()
+
+    response_data = {
+            "title" : "Successfully Changed",
+            "message" : "Variant Updated successfully",
+            "status" : "success",
+        }
+
+    return HttpResponse(json.dumps(response_data), content_type="application/json")

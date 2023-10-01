@@ -26,14 +26,14 @@
                                                 <ul class="nice-scroll">
                                                     <li>
                                                         <label>
-                                                            <input type="checkbox" name="category" value="All" checked>
+                                                            <input type="checkbox" name="category" value="All" id="allCategories" {% if 'All' in request.GET.getlist.category %}checked{% endif %}>
                                                             All
                                                         </label>
                                                     </li>
                                                     {% for category in categories %}
                                                     <li>
                                                         <label>
-                                                            <input type="checkbox" name="category" value="{{ category }}">
+                                                            <input type="checkbox" name="category" value="{{ category }}" class="category-checkbox" {% if category in category_params %}checked{% endif %}>
                                                             {{ category }}
                                                         </label>
                                                     </li>
@@ -54,13 +54,13 @@
                                                 <ul class="nice-scroll">
                                                     <li>
                                                         <label>
-                                                            <input type="radio" name="sort_by_price" value="low-to-high">
+                                                            <input type="radio" name="sort_by_price" value="low-to-high" {% if request.GET.sort_by_price == 'low-to-high' %}checked{% endif %}>
                                                             Low to High
                                                         </label>
                                                     </li>
                                                     <li>
                                                         <label>
-                                                            <input type="radio" name="sort_by_price" value="high-to-low">
+                                                            <input type="radio" name="sort_by_price" value="high-to-low" {% if request.GET.sort_by_price == 'high-to-low' %}checked{% endif %}>
                                                             High to Low
                                                         </label>
                                                     </li>
@@ -72,6 +72,7 @@
                             
                                 <button class="site-btn text-center mt-3" type="submit">Submit</button>
                             </form>
+                            
                             
                         </div>
                     </div>
@@ -120,6 +121,26 @@
         </div>
     </div>
 </section>
+<script>
+    const allCategories = document.getElementById('allCategories');
+    const categoryCheckboxes = document.querySelectorAll('.category-checkbox');
+
+    categoryCheckboxes.forEach((checkbox) => {
+        checkbox.addEventListener('change', () => {
+            if (checkbox.checked) {
+                allCategories.checked = false;
+            }
+        });
+    });
+
+    allCategories.addEventListener('change', () => {
+        if (allCategories.checked) {
+            categoryCheckboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+        }
+    });
+</script>
 <!-- Shop Section End -->
 {% include 'web/includes/footer.html' %} 
  {% endblock %}

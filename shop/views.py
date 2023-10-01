@@ -15,13 +15,17 @@ from main.functions import paginate_instances
 
 def product_all(request):
     sort_by_price = request.GET.get('sort_by_price')
-    category_param = request.GET.get('category')
+    category_params = request.GET.getlist('category')  # Get a list of selected categories
     q = request.GET.get('q')
 
     products = Product.objects.filter(is_show=True, category__is_blocked=False, is_deleted=False)
 
-    if category_param and category_param != 'All':
-        products = products.filter(category__name=category_param)
+    print(request.GET.getlist('category')  , 'cat')
+    if 'shirt' in category_params:
+        print('yes')
+
+    if category_params and 'All' not in category_params:
+        products = products.filter(category__name__in=category_params)
 
     if sort_by_price == 'low-to-high':
         products = products.order_by('price')
@@ -31,17 +35,19 @@ def product_all(request):
     if q:
         products = products.filter(Q(title__icontains=q))
 
-    instances = paginate_instances(request, products, per_page=1)
+    instances = paginate_instances(request, products, per_page=6)
     categories = Category.objects.filter(is_blocked=False, is_deleted=False)
-    print(request.session.get('cart_count'))
+
     context = {
         'title': 'Male Fashion | Products',
         'products': instances,
         'categories': categories,
         'active_menu_item': "shop",
+        'category_params': category_params
     }
     
     return render(request, 'product/shop.html', context)
+
 
    
 def product_details(request, slug):

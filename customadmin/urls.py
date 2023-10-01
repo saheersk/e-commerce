@@ -31,9 +31,23 @@ urlpatterns = [
     path('product/products/add/', views.admin_product_add, name='admin_product_add'),
     path('product/products/edit/<int:pk>/', views.admin_product_edit, name='admin_product_edit'),
     path('product/products/delete/<int:pk>/', views.admin_product_delete, name='admin_product_delete'),
+    #Product Variant
+    path('product/variant/', views.admin_product_variant, name='admin_product_variant'),
+    path('product/variant/add/', views.admin_product_variant_add, name='admin_product_variant_add'),
+    path('product/variant/edit/<int:pk>/', views.admin_product_variant_edit, name='admin_product_variant_edit'),
+    path('product/variant/delete/<int:pk>/', views.admin_product_variant_delete, name='admin_product_variant_delete'),
 
     #Order
     path('order/orders/', views.admin_order, name='admin_order'),
     path('order/orders/edit/<int:pk>/', views.admin_order_edit, name='admin_order_edit'),
+
+    #Contact
+    path('contact/details/', views.admin_contact, name='admin_contact'),
+
+    #Banner
+    path('banner/details/', views.admin_banner, name='admin_banner'),
+    path('banner/details/add/', views.admin_banner_add, name='admin_banner_add'),
+    path('banner/details/edit/<int:pk>/', views.admin_banner_edit, name='admin_banner_edit'),
+    path('banner/details/delete/<int:pk>/', views.admin_banner_delete, name='admin_banner_delete'),
 
 ]

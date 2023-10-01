@@ -1,4 +1,5 @@
 {% extends "customadmin/admin-base.html" %} {% block content %} {% load static %}
+{% load paginator_tags %}
 <!-- Wrapper -->
 <main id="main-wrapper" class="main-wrapper">
     {% include 'customadmin/includes/admin-header.html' %} {% include 'customadmin/includes/sidebar.html' %}
@@ -10,7 +11,7 @@
                     <div class="col-lg-12 col-md-12 col-12">
                         <!-- Page header -->
                         <div class="mb-5">
-                            <h3 class="mb-0">Products</h3>
+                            <h3 class="mb-0">Product Management</h3>
                         </div>
                     </div>
                 </div>
@@ -56,7 +57,6 @@
                                                 <tr>
                                                     <td>{{product.title}}</td>
                                                     <td>{{product.category}}</td>
-                                                    <td>{{product.stock_unit}}</td>
                                                     {% if product.is_show %}
                                                     <td>
                                                         <span class="badge badge-success-soft">Active</span>
@@ -113,7 +113,9 @@
                                 </div>
                             </div>
                         </div>
+                        {% load_pagination products %}
                     </div>
+
                 </div>
             </div>
         </div>

@@ -986,7 +986,7 @@ select {
 }
 .product__item__pic .product-img {
 	/* height: 180px; */
-	width: 200px;
+	/* width: 200px; */
 }
 .product__item__pic .product-img img {
 	display: block;

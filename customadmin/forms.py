@@ -3,7 +3,8 @@ import re
 from django import forms
 
 from user.models import CustomUser
-from shop.models import Category, Product, ProductImage, Order
+from web.models import Banner
+from shop.models import Category, Product, ProductImage, Order, ProductVariant
 
 from phonenumber_field.formfields import PhoneNumberField
 from phonenumber_field.phonenumber import to_python
@@ -103,7 +104,7 @@ class AdminCategory(forms.ModelForm):
 class AdminProduct(forms.ModelForm):
     class Meta:
         model = Product
-        fields = ['title', 'featured_image', 'description', 'short_description', 'category', 'price', 'stock_unit']
+        fields = ['title', 'featured_image', 'description', 'short_description', 'category', 'price']
 
 
 class AdminProductImage(forms.ModelForm):
@@ -118,3 +119,18 @@ class AdminOrderFrom(forms.ModelForm):
     class Meta:
         model = Order
         fields = ['order_status']
+
+
+class AdminProductVariantFrom(forms.ModelForm):
+
+    class Meta:
+        model = ProductVariant
+        exclude = ['variant_name']
+
+
+
+class AdminBannerForm(forms.ModelForm):
+
+    class Meta:
+        model = Banner
+        fields = '__all__'
