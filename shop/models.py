@@ -114,6 +114,7 @@ class Cart(models.Model):
     user =  models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     qty = models.PositiveIntegerField(default=1)
     total_price_of_product = models.PositiveIntegerField()
+    size = models.CharField(max_length=100)
     added_date = models.DateTimeField(auto_now_add=True)
     is_deleted = models.BooleanField(default=False)
 
@@ -139,20 +140,29 @@ class OrderStatus(models.Model):
 
     def __str__(self):
         return self.status
-    
 
-class Order(models.Model):
+
+class OrderItem(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    user =  models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField()
+    size = models.CharField(max_length=100)
     order_status = models.ForeignKey(OrderStatus, on_delete=models.CASCADE)
-    shipping_address = models.ForeignKey(Address, on_delete=models.CASCADE)
-    product_qty = models.PositiveBigIntegerField()
-    order_total_price = models.PositiveBigIntegerField()
-    coupon = models.ForeignKey(Coupon, on_delete=models.SET_NULL, null=True, blank=True)
-    purchased_date = models.DateTimeField(auto_now_add=True)
+    total_product_price = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
         return self.product.title
+    
+
+class Order(models.Model):
+    order_items = models.ManyToManyField(OrderItem)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    shipping_address = models.ForeignKey(Address, on_delete=models.CASCADE)
+    coupon = models.ForeignKey(Coupon, on_delete=models.SET_NULL, null=True, blank=True)
+    total_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    purchased_date = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return str(self.id)
     
 
 class PaymentMethod(models.Model):

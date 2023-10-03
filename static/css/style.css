@@ -3518,7 +3518,29 @@ div.pagination div.pages a:hover {
 
 
 /*--------------------------------- Responsive Media Quaries -----------------------------*/
+.quantity .pro-qty-2 {
+	width: 80px;
+	display: flex;
+}
 
+ .quantity .pro-qty-2 .right-arrow {
+	/* rotate: 180deg; */
+	display: inline-block;
+	width: 24px;
+	height: 24px;
+}
+ .quantity .pro-qty-2 .left-arrow {
+	display: inline-block;
+	width: 24px;
+	height: 24px;
+}
+ .quantity .pro-qty-2 input {
+	width: 50px;
+	border: none;
+	text-align: center;
+	color: #111111;
+	font-size: 16px;
+}
 
 @media only screen and (min-width: 1200px) {
 	.container {

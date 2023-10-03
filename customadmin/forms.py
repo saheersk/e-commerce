@@ -118,7 +118,7 @@ class AdminOrderFrom(forms.ModelForm):
 
     class Meta:
         model = Order
-        fields = ['order_status']
+        fields = '__all__'
 
 
 class AdminProductVariantFrom(forms.ModelForm):

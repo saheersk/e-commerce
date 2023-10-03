@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from shop.models import Category, ProductImage, Product, Cart, Order, OrderStatus, Payment, PaymentMethod, ProductVariant
+from shop.models import Category, ProductImage, Product, Cart, Order, OrderStatus, Payment, PaymentMethod, ProductVariant, OrderItem
 
 
 class ProductImageAdmin(admin.TabularInline):
@@ -29,9 +29,11 @@ admin.site.register(Cart, CartAdmin)
 
 
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ['id', 'user', 'order_total_price', 'order_status']
+    list_display = ['id', 'user']
 
 admin.site.register(Order, OrderAdmin)
+
+admin.site.register(OrderItem)
 
 
 class OrderStatusAdmin(admin.ModelAdmin):

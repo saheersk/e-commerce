@@ -19,5 +19,6 @@ urlpatterns = [
 
     #My order
     path('my-order/', views.profile_order, name='profile_order'),
+    path('my-order/details/<int:pk>/', views.profile_order_details, name='profile_order_details'),
     path('my-order/cancel/<int:pk>/', views.profile_order_cancel, name='profile_order_cancel'),
 ]

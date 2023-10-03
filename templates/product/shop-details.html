@@ -59,33 +59,34 @@
                         <p>
                             {{product.short_description}}
                         </p>
+
                         <div class="product__details__option">
                             <div class="product__details__option__size">
                                 <span>Size:</span>
-                                <label for="xxl">xxl
-                                    <input type="radio" id="xxl">
-                                </label>
-                                <label class="active" for="xl">xl
-                                    <input type="radio" id="xl">
-                                </label>
-                                <label for="l">l
-                                    <input type="radio" id="l">
-                                </label>
-                                <label for="sm">s
-                                    <input type="radio" id="sm">
-                                </label>
+                                {% for variant in variants %}
+                                    <label for="size_{{ variant.size }}" class="size-label{% if forloop.first %} active{% endif %}">
+                                        {{ variant.size }}
+                                        <input type="radio" id="size_{{ variant.size }}" name="size" value="{{ variant.size }}"  {% if forloop.first %}checked{% endif %} />
+                                    </label>
+                                {% endfor %}
                             </div>
                         </div>
                         <div class="product__details__cart__option">
                             <div class="quantity">
-                                <div class="pro-qty">
-                                    <input type="text" value="1" />
+                                <div class="pro-qty-2">
+                                    <div class="decrement-quantity-product left-arrow" data-product-id="{{ product.id }}">
+                                        <img src="{% static 'img/icon/left-chevron.png' %}" alt="arrow" />
+                                    </div>
+                                    <input type="text" value="1" id="quantity-{{ product.id }}" />
+                                    <div class="increment-quantity-product right-arrow" data-product-id="{{ product.id }}">
+                                        <img src="{% static 'img/icon/right-chevron.png' %}" alt="arrow" />
+                                    </div>
                                 </div>
                             </div>
-                            <a href="#" class="primary-btn">add to cart</a>
+                            <button class="primary-btn add-to-cart" data-product-id="{{ product.id }}" >Add to cart</button>
                         </div>
                         <div class="product__details__btns__option">
-                            <a href="#"><i class="fa fa-heart"></i> add to wishlist</a>
+                            <a href="{% url 'shop:product_wishlist_add' product.id %}"><i class="fa fa-heart"></i> add to wishlist</a>
                         </div>
                         <div class="product__details__last__option">
                                 <li><span>Categories:</span> {{product.category}}</li>
@@ -244,26 +245,4 @@
         </div>
     </div>
 </section>
-<!-- Related Section End -->
-
-<script>
-    $(document).ready(function() {
-        // Add a click event listener to each thumbnail
-        $(".product__thumb__pic").on("click", function() {
-            // Remove the "active" class from all thumbnails
-            $(".product__thumb__pic").removeClass("active");
-    
-            // Add the "active" class to the clicked thumbnail
-            $(this).addClass("active");
-    
-            // Get the index of the clicked thumbnail
-            var index = $(this).parent().index();
-    
-            // Show the corresponding large image by activating its tab
-            $(".tab-pane").removeClass("active");
-            $(".tab-pane").eq(index).addClass("active");
-        });
-    });
-    </script>
-
 {% include 'web/includes/footer.html' %} {% endblock %}

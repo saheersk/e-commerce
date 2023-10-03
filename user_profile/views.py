@@ -10,7 +10,7 @@ from user.models import Address
 from user_profile.forms import CustomUserEditForm
 from main.functions import generate_form_error
 from user_profile.forms import AddressForm
-from shop.models import Order, Cart, OrderStatus
+from shop.models import Order, Cart, OrderStatus, OrderItem
 
 
 @login_required(login_url='user/login/')
@@ -302,6 +302,16 @@ def profile_order(request):
         }
         return render(request, 'profile/user-order.html', context)
     
+
+@login_required(login_url='user/login/')
+def profile_order_details(request, pk):
+    orders = Order.objects.filter(user=request.user, id=pk)
+    context = {
+        "title" : "Male Fashion | My Orders",
+        "orders" : orders
+    }
+    return render(request, 'profile/user-order-details.html', context)
+
 
 @login_required(login_url='user/login/')
 def profile_order_cancel(request, pk):

@@ -223,6 +223,38 @@ $(document).ready(function () {
         }
     });
 
+    $(".decrement-quantity-product").click(function () {
+        var inputElement = $(this).siblings("input");
+        var currentQuantity = parseInt(inputElement.val());
+        if (currentQuantity > 1) {
+            inputElement.val(currentQuantity - 1);
+        }
+    });
+
+    // Handle increment quantity
+    $(".increment-quantity-product").click(function () {
+        var inputElement = $(this).siblings("input");
+        var currentQuantity = parseInt(inputElement.val());
+        if (currentQuantity < 10) {
+            inputElement.val(currentQuantity + 1);
+        }
+    });
+
+    $(".product__thumb__pic").on("click", function() {
+        // Remove the "active" class from all thumbnails
+        $(".product__thumb__pic").removeClass("active");
+
+        // Add the "active" class to the clicked thumbnail
+        $(this).addClass("active");
+
+        // Get the index of the clicked thumbnail
+        var index = $(this).parent().index();
+
+        // Show the corresponding large image by activating its tab
+        $(".tab-pane").removeClass("active");
+        $(".tab-pane").eq(index).addClass("active");
+    });
+
     // Function to get the CSRF token from the page's cookies
     function getCSRFToken() {
         var csrfToken = null;
@@ -474,6 +506,7 @@ $(document).ready(function () {
             },
         });
     }
+
     $('.cancel-order').click(function (event) {
         event.preventDefault(); // Prevent the default form submission
 
@@ -553,10 +586,26 @@ $(document).ready(function () {
                         csrfmiddlewaretoken: csrfToken,
                     },
                     success: function (data) {
-                        console.log("success");
                         if (data.status == 'success') {
+                            console.log("success");
                             clickedButton.closest("tr").remove();
                             const cartCounts = document.querySelectorAll(".cart-count");
+
+                            // const totalPriceOfEachProduct = document.querySelector(`#total_price_of_product_${productId}`);
+                            // console.log(totalPriceOfEachProduct);
+                            // var productAmount = totalPriceOfEachProduct.getAttribute("data-product-amount");
+                            // // totalPriceOfEachProduct.textContent = "₹" + ;
+
+                            // const subTotal = document.querySelector(`#sub_total_price`);
+
+                            // var amount = subTotal.getAttribute("data-total-amount")
+                            // print(amount, 'amount')
+                            // const total_amount = parseInt(amount) - parseInt(productAmount)
+
+                            // const total = document.querySelector(`#total_price`);
+                            // console.log('');
+                            // subTotal.textContent = "₹" + total_amount
+                            // total.textContent = "₹" + total_amount
 
                             cartCounts.forEach(function (cartCount) {
                                 cartCount.textContent = data.cart_count;
@@ -766,22 +815,27 @@ $(document).ready(function () {
         });
     });
 
-    $(".add-to-cart").click(function (event) {
-        event.preventDefault(); // Prevent the default link behavior
-
-        var csrfToken = getCSRFToken(); // Get the CSRF token
+    $(".add-to-cart").click(function () {
+        console.log('hi');
+        var csrfToken = getCSRFToken(); 
         if (!csrfToken) {
             console.error("CSRF token not found.");
             return;
         }
         var productId = $(this).data("product-id");
+        var selectedSize = $('input[name="size"]:checked').val();
+        var selectedQuantity = $("#quantity-" + productId).val(); 
 
+        console.log(selectedQuantity, selectedSize, 'size')
+        
         $.ajax({
             url: `/shop/user/cart/add/${productId}/`,
             method: "POST", // You can use POST or other appropriate method
             dataType: "json",
             data: {
                 csrfmiddlewaretoken: csrfToken,
+                size: selectedSize, // Include the selected size
+                quantity: selectedQuantity, // Include the selected quantity
             },
             success: function (data) {
                 if (data.success) {
@@ -809,11 +863,13 @@ $(document).ready(function () {
                         title: "Added to cart",
                     });
                 } else {
+                    // Handle the case when adding to the cart is not successful
                 }
             },
             error: function () {
-                // alert('An error occurred while processing your request.');
+                // Handle the error case
             },
         });
     });
+
 });

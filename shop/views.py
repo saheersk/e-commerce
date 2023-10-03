@@ -7,7 +7,7 @@ from django.db.models import Sum, Q
 from django.db.models import Sum, F, ExpressionWrapper, DecimalField
 from django.utils import timezone
 
-from shop.models import Product, ProductImage, Category, Wishlist, Cart, OrderStatus, Order, Payment, PaymentMethod
+from shop.models import Product, ProductImage, Category, Wishlist, Cart, OrderStatus, Order, Payment, PaymentMethod, ProductVariant, OrderItem
 from user.models import Address, Coupon, CustomUser, CouponUsage
 from main.functions import paginate_instances
 
@@ -55,10 +55,14 @@ def product_details(request, slug):
     product_images = ProductImage.objects.filter(product=product)
     related_products = Product.objects.filter(category=product.category).exclude(pk=product.pk)[:4]
 
+    variants = ProductVariant.objects.filter(product=product)
+
+
     context = {
         'title': f'Male Fashion | {product.title}',
         'product': product,
         'product_images': product_images,
+        'variants': variants,
         'related_products': related_products
     }
     return render(request, 'product/shop-details.html', context)
@@ -129,6 +133,8 @@ def product_wishlist_remove(request, pk):
 def product_cart(request):
     products = Cart.objects.filter(user=request.user, is_deleted=False)
 
+    request.session['cart_count'] = Cart.objects.filter(user=request.user, is_deleted=False).count() if request.user.is_authenticated else 0
+
     total_amount = products.aggregate(
         total_amount=Sum(
             ExpressionWrapper(
@@ -154,16 +160,21 @@ def product_cart(request):
 @login_required(login_url="user/login/")
 def product_cart_add(request, pk):
     product = get_object_or_404(Product, id=pk)
+    size = request.POST.get('size')
+    qty = request.POST.get('quantity')
+    print(size, qty, 'qty')
     if Cart.objects.filter(product=product).exists():
         instance = Cart.objects.get(product=product)
         instance.is_deleted = False
-        instance.qty = 1
+        instance.qty = int(qty)
+        instance.size = size
         instance.total_price_of_product =  instance.product.price * instance.qty
         instance.save()
     else:
         Cart.objects.create(
             product=product,
             user=request.user,
+            size=size,
             total_price_of_product=product.price
         )
     
@@ -185,10 +196,12 @@ def product_cart_add(request, pk):
 def update_product_quantity(request, pk):
     product = get_object_or_404(Cart, id=pk)
 
-    action = request.POST.get('action') 
+    variant = ProductVariant.objects.get(product=product.product, size=product.size)
 
+    action = request.POST.get('action') 
+    print(action, 'action')
     if action == 'increment':
-        if product.product.stock_unit - product.qty > 0:
+        if variant.stock_unit - product.qty > 0:
             if product.qty < 10:
                 product.qty += 1
             else:
@@ -238,6 +251,8 @@ def update_product_quantity(request, pk):
     }
 
     return JsonResponse(data)
+
+
 
 
 @login_required(login_url="user/login/")
@@ -386,26 +401,37 @@ def product_order(request):
 
         if payment_method == "cash":
             total_amount = 0
+            order = Order.objects.create(
+                        user=user,
+                        shipping_address=shipping_address,
+                    )
+            
             for item in products:
-                order = Order.objects.create(
-                            product=item.product,
-                            user=user,
-                            shipping_address=shipping_address,
-                            order_status=order_status,
-                            product_qty = item.qty,
-                            order_total_price=item.product.price * item.qty
-                        )
+                order_item = OrderItem.objects.create(
+                        product=item.product,
+                        quantity=item.qty,
+                        order_status=order_status,
+                        size=item.size,
+                        total_product_price=item.product.price * item.qty
+                    )
+                order.orderItems.add(order_item)
                 total_amount += item.total_price_of_product
-                Payment.objects.create(
+
+
+            order.total_price = total_amount
+
+            order.save()
+
+            Payment.objects.create(
                             order=order,
                             user=user,
                             payment_method=payment_type,
                             transaction_id="COD",
                             purchased_price=total_amount
-                        )
+                )
                 
             for item in products:
-                product = Product.objects.get(id=item.product.id)
+                product = ProductVariant.objects.get(product=item.product, size=item.size)
                 product.stock_unit -= item.qty
                 product.save()
                 item.is_deleted = True

@@ -30,62 +30,67 @@
                             <tr>
                                 <th>Product</th>
                                 <th>Quantity</th>
+                                <th>Size</th>
                                 <th>Total</th>
                                 <th></th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for product in products %}
-                            <tr>
-                                <td class="product__cart__item">
-                                    <div class="product__cart__item__pic">
-                                        <img
-                                            src="{{product.product.featured_image.url}}"
-                                            alt="{{product.product.title}}"
-                                        />
-                                    </div>
-                                    <div class="product__cart__item__text">
-                                        <h6>{{product.product.title}}</h6>
-                                        <h5>₹{{product.product.price}}</h5>
-                                    </div>
-                                </td>
-                                <td class="quantity__item">
-                                    <div class="quantity">
-                                        <div class="pro-qty-2">
-                                            <div
-                                                class="decrement-quantity left-arrow"
-                                                data-product-id="{{ product.id }}"
-                                            >
-                                                <img src="{% static 'img/icon/left-chevron.png' %}" alt="arrow" />
-                                            </div>
-                                            <input
-                                                type="text"
-                                                value="{{ product.qty }}"
-                                                id="quantity-{{ product.id }}"
+                                <tr>
+                                    <td class="product__cart__item">
+                                        <div class="product__cart__item__pic">
+                                            <img
+                                                src="{{ product.product.featured_image.url }}"
+                                                alt="{{ product.product.title }}"
                                             />
-                                            <div
-                                                class="increment-quantity right-arrow"
-                                                data-product-id="{{ product.id }}"
-                                            >
-                                                <img src="{% static 'img/icon/left-chevron.png' %}" alt="arrow" />
+                                        </div>
+                                        <div class="product__cart__item__text">
+                                            <h6>{{ product.product.title }}</h6>
+                                            <h5>₹{{ product.product.price }}</h5>
+                                        </div>
+                                    </td>
+                                    <td class="quantity__item">
+                                        <div class="quantity">
+                                            <div class="pro-qty-2">
+                                                <div
+                                                    class="decrement-quantity left-arrow"
+                                                    data-product-id="{{ product.id }}"
+                                                >
+                                                    <img src="{% static 'img/icon/left-chevron.png' %}" alt="arrow" />
+                                                </div>
+                                                <input
+                                                    type="text"
+                                                    value="{{ product.qty }}"
+                                                    id="quantity-{{ product.id }}"
+                                                />
+                                                <div
+                                                    class="increment-quantity right-arrow"
+                                                    data-product-id="{{ product.id }}"
+                                                >
+                                                    <img src="{% static 'img/icon/left-chevron.png' %}" alt="arrow" />
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                </td>
-                                <td class="cart__price" id="total_price_of_product_{{product.id}}">₹{{product.total_price_of_product}}</td>
-                                <td class="cart__close">
-                                    <button
-                                        class="btn btn-ghost btn-icon btn-sm rounded-circle texttooltip danger remove-product"
-                                        data-product-id="{{ product.id }}"
-                                    >
-                                        <i class="fa fa-close"></i>
-                                        <div id="trashOne" class="d-none">
-                                            <span>Delete</span>
-                                        </div>
-                                    </button>
-                                </td>
-                            </tr>
+                                    </td>
+                                    <td class="size__item" style="width:140px">
+                                        {{product.size}}
+                                    </td>
+                                    <td class="cart__price" id="total_price_of_product_{{ product.id }}" data-product-amount="{{product.total_price_of_product}}">₹{{ product.total_price_of_product }}</td>
+                                    <td class="cart__close">
+                                        <button
+                                            class="btn btn-ghost btn-icon btn-sm rounded-circle texttooltip danger remove-product"
+                                            data-product-id="{{ product.id }}"
+                                        >
+                                            <i class="fa fa-close"></i>
+                                            <div id="trashOne" class="d-none">
+                                                <span>Delete</span>
+                                            </div>
+                                        </button>
+                                    </td>
+                                </tr>
                             {% endfor %}
+
                         </tbody>
                     </table>
                 </div>
@@ -108,7 +113,7 @@
                 <div class="cart__total">
                     <h6>Cart total</h6>
                     <ul>
-                        <li>Subtotal <span id="sub_total_price">₹{{total_amount}}</span></li>
+                        <li>Subtotal <span id="sub_total_price" data-total-amount="{{total_amount}}" >₹{{total_amount}}</span></li>
                         <li>Total <span id="total_price">₹{{total_amount}}</span></li>
                     </ul>
                     <a href="{% url 'shop:product_checkout' %}" class="primary-btn">Proceed to checkout</a>

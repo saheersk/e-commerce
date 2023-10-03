@@ -1,0 +1,65 @@
+{% extends "profile-base.html" %}  
+{% block content %} {% load static %} {% include 'web/includes/header.html' %}
+<section style="background-color: #eee;">
+  <div class="container py-5">
+      {% for order in orders %}
+      <div class="row justify-content-center mb-3">
+          <div class="col-md-12 col-xl-10">
+              <div class="card shadow-0 border rounded-3">
+                  <div class="card-body d-flex flex-wrap">
+                      {% for item in order.order_items.all %}
+                      <div class="row mb-3 w-50">
+                          <div class="col-md-10 col-lg-10 col-xl-10 ">
+                              <div class="bg-image hover-zoom ripple rounded ripple-surface">
+                                  <img src="{{item.product.featured_image.url}}" class="w-100" />
+                                  <a href="#!">
+                                      <div class="hover-overlay">
+                                          <div
+                                              class="mask"
+                                              style="background-color: rgba(253, 253, 253, 0.15);"
+                                          ></div>
+                                      </div>
+                                  </a>
+                              </div>
+                              <h5>{{item.product.title}}</h5>
+                              <p class="mb-2"><b>Quantity: </b>{{item.quantity}}</p>
+                              <p>Status: <span class="mt-4 <%=order.status%>">{{item.order_status}}</span></p>
+                              <div class="d-flex flex-row align-items-center mb-1">
+                                  <h4 class="mb-1 me-1">₹{{item.product.price}}</h4>
+                              </div>
+                              <div class="d-flex flex-column mb-2">
+                                  <a href="/shop/<%=order.products.product[0].slug%>" class="w-100">
+                                      <button class="btn btn-dark w-100"  type="button">Cancel</button>
+                                  </a>
+                              </div>
+                          </div>
+                      </div>
+                      {% endfor %}
+                      <div class="row w-100">
+                        <div class="col-md-12 col-lg-12 col-xl-12">
+                            <div class="col-md-10 col-lg-10 col-xl-10 w-100">
+                                <div class="d-flex flex-row align-items-center mb-1">
+                                    <h4 class="mb-1 me-1">{{order.total_price}}</h4>
+                                </div>
+                                <p class="mb-4 mb-md-0">
+                                    <b>{{order.shipping_address.first_name}}</b>
+                                    {{order.shipping_address.city}}, {{order.shipping_address.state}}<br>
+                                    {{order.shipping_address.address_line1}}<br>
+                                    {{order.shipping_address.address_line2}}<br>
+                                    {{order.shipping_address.pin_code}}<br>
+                                    <b>Phone Number : {{order.shipping_address.phone_number}}</b><br>
+                                    <b>Order Date : {{ order.purchased_date|date:"j F Y" }}</b>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+              </div>
+          </div>
+      </div>
+      {% endfor %}
+  </div>
+</section>
+
+  {% include 'web/includes/footer.html' %} 
+ {% endblock %}
