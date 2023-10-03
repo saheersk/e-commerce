@@ -6,6 +6,9 @@ from django.http import HttpResponse, JsonResponse
 from django.db.models import Sum, Q
 from django.db.models import Sum, F, ExpressionWrapper, DecimalField
 from django.utils import timezone
+from django.conf import settings
+
+import razorpay
 
 from shop.models import Product, ProductImage, Category, Wishlist, Cart, OrderStatus, Order, Payment, PaymentMethod, ProductVariant, OrderItem
 from user.models import Address, Coupon, CustomUser, CouponUsage
@@ -334,7 +337,7 @@ def product_discount(request):
 
         total_amount = sum(item.product.price * item.qty for item in products)
 
-        if CouponUsage.objects.filter(user=user).exists():
+        if request.session.get('coupon'):
             response_data = {
                 "error": True,
                 "title": "Already used one coupon",
@@ -371,7 +374,8 @@ def product_discount(request):
                 discount_amount += item.total_price_of_product 
                 item.save()
 
-        CouponUsage.objects.create(user=user, coupon=coupon)
+        # CouponUsage.objects.create(user=user, coupon=coupon)
+        request.session['coupon'] = coupon.code
 
         response_data = {
             "error": False,
@@ -439,6 +443,9 @@ def product_order(request):
                 item.total_price_of_product = item.product.price * item.qty
                 item.save()
             
+            if 'coupon' in request.session:
+                del request.session['coupon']
+            
             response_data = {
                     "status" : "success",
                     "title" : "Order Purchased",
@@ -453,4 +460,28 @@ def product_order(request):
         pass
 
 
-    
+def create_payment(request):
+    if request.method == "POST":
+        client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+
+        amount = int(request.POST.get('amount')) * 100  
+
+        order = client.order.create({'amount': amount, 'currency': 'INR', 'payment_capture': '1'})
+        print(order['id'], 'id', settings.RAZORPAY_KEY_ID)    
+        response_data = {
+            'razorpayKey': str(settings.RAZORPAY_KEY_ID),
+            'currency': order['currency'],
+            'order_id': order['id'],
+            'amount': order['amount']
+        }
+
+    return HttpResponse(json.dumps(response_data), content_type="application/json")
+
+
+
+def payment_verify(request):
+    if request.method == "POST":
+        payment_response = request.POST.get('payment_response')
+
+
+

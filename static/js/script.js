@@ -390,8 +390,13 @@ $(document).ready(function () {
 
         var confirmButtonText = "Yes";
         var confirmButtonColor = "#DD6B55";
+
+        var totalAmountElement = document.getElementById("total-amount");
+        var totalAmount = totalAmountElement.getAttribute("data-total-amount");
+
+        console.log("Total Amount:", totalAmount);
         
-        console.log(selectedAddress, selectedPaymentMethod, 'paym');
+        console.log(selectedAddress, selectedPaymentMethod, 'paytm');
         if (selectedPaymentMethod === undefined || selectedAddress === undefined) {
             Swal.fire({
                 icon: "error",
@@ -409,29 +414,64 @@ $(document).ready(function () {
                 confirmButtonColor: confirmButtonColor,
             }).then((result) => {
                 if (result.isConfirmed) {
+                
                     $.ajax({
-                        url: "/shop/user/order/",
+                        url: "/shop/user/create-payment/",
                         type: "POST",
                         data: {
-                            address: selectedAddress,
-                            payment_method: selectedPaymentMethod,
+                            amount: totalAmount,
                             csrfmiddlewaretoken: csrfToken, // Include CSRF token here
                         },
                         dataType: "json",
                         success: function (data) {
                             console.log("success");
-                            Swal.fire({
-                                icon: data.status,
-                                title: data.title,
-                                text: data.message,
-                            }).then((result) => {
-                                window.location.href = "/user-profile/my-order/"
-                            });
+                            
+
+                                const options = {
+                                    key: data.razorpayKey,
+                                    amount: data.amount,
+                                    currency: data.currency,
+                                    order_id: data.order_id,
+                                    handler: function (response) {
+                                        console.log(response);
+                                        // window.location.href = "/user-profile/my-order/"
+                                        alert('Payment successful!');
+                                    },
+                                };
+            
+                                const rzp = new Razorpay(options);
+                                rzp.on('payment.failed', function (response) {
+                                    // Handle the payment failure
+                                    console.log(response);
+                                    alert('Payment failed!');
+                                });
+            
+                                rzp.open();
+                                // window.location.href = "/user-profile/my-order/"
+
+                            // $.ajax({
+                            //     url: "/shop/user/order/",
+                            //     type: "POST",
+                            //     data: {
+                            //         address: selectedAddress,
+                            //         payment_method: selectedPaymentMethod,
+                            //         csrfmiddlewaretoken: csrfToken, // Include CSRF token here
+                            //     },
+                            //     dataType: "json",
+                            //     success: function (data) {
+                            //         console.log("success");
+                                    
+                            //     },
+                            //     error: function (err) {
+                            //         console.log("error", err);
+                            //     },
+                            // });
                         },
                         error: function (err) {
                             console.log("error", err);
                         },
                     });
+                    
                 }});
         }
     });

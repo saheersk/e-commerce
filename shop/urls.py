@@ -27,4 +27,8 @@ urlpatterns = [
 
     #discount
     path('user/discount/', views.product_discount, name='product_discount'),
+
+    #payment
+    path('user/create-payment/', views.create_payment, name='create_payment'),
+    path('user/payment/verify/', views.payment_verify, name='payment_verify'),
 ]

@@ -110,11 +110,9 @@
                             <li>Subtotal <span>₹{{total_amount}}</span></li>
                             <li></li>
                             {% if discount %}
-                            <li>Discounted Price <span>₹{{discount_amount}}</span></li>
-                            {% elif discount_amount != total_amount %}
-                            <li>Total <span>₹{{discount_amount}}</span></li>
+                                <li>Discounted Price <span>₹{{ discount_amount }}</span></li>
                             {% else %}
-                            <li>Total <span>₹{{total_amount}}</span></li>
+                                <li>Total <span id="total-amount" data-total-amount="{{ total_amount }}" >₹{{ total_amount }}</span></li>
                             {% endif %}
                         </ul>
                         <form method="post" action="" class="ajax-order">
