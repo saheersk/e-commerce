@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from user.models import CustomUser, Address, Coupon, CouponUsage
+from user.models import CustomUser, Address, Coupon, CouponUsage, Wallet, WalletHistory
 
 class CustomUserAdmin(UserAdmin):
     list_display = ('id', 'first_name', 'last_name', 'email', 'phone_number')
@@ -48,3 +48,13 @@ class CouponUsageAdmin(admin.ModelAdmin):
 admin.site.register(CouponUsage, CouponUsageAdmin)
 
 
+class WalletAdmin(admin.ModelAdmin):
+    list_display = ['user', 'balance']
+
+admin.site.register(Wallet, WalletAdmin)
+
+
+class WalletHistoryAdmin(admin.ModelAdmin):
+    list_display = ['wallet', 'amount', 'transaction_operation']
+
+admin.site.register(WalletHistory, WalletHistoryAdmin)

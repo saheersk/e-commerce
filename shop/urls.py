@@ -23,7 +23,9 @@ urlpatterns = [
 
     #Order
     path('user/checkout/', views.product_checkout, name='product_checkout'),
-    path('user/order/', views.product_order, name='product_order'),
+    path('user/order/cash-on-delivery/', views.product_order_cod, name='product_order_cod'),
+    path('user/order/digital/', views.product_order_digital, name='product_order_digital'),
+    path('user/order/wallet/', views.product_order_wallet, name='product_order_wallet'),
 
     #discount
     path('user/discount/', views.product_discount, name='product_discount'),

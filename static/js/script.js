@@ -414,7 +414,30 @@ $(document).ready(function () {
                 confirmButtonColor: confirmButtonColor,
             }).then((result) => {
                 if (result.isConfirmed) {
-                
+                if(selectedPaymentMethod == "cash"){
+                    $.ajax({
+                        url: "/shop/user/order/cash-on-delivery/",
+                        type: "POST",
+                        data: {
+                            address: selectedAddress,
+                            csrfmiddlewaretoken: csrfToken, // Include CSRF token here
+                        },
+                        dataType: "json",
+                        success: function (data) {
+                            console.log("success payment");
+
+                            window.location.href = '/user-profile/my-order/'
+                            
+                        },
+                        error: function (err) {
+                            console.log("error success", err);
+                        },
+                    });
+                }
+                else if(selectedPaymentMethod == "wallet"){
+                    console.log('wallet');
+                }
+                else{
                     $.ajax({
                         url: "/shop/user/create-payment/",
                         type: "POST",
@@ -433,9 +456,41 @@ $(document).ready(function () {
                                     currency: data.currency,
                                     order_id: data.order_id,
                                     handler: function (response) {
-                                        console.log(response);
-                                        // window.location.href = "/user-profile/my-order/"
-                                        alert('Payment successful!');
+                                        console.log(response.razorpay_order_id, response);
+                                        $.ajax({
+                                            url: "/shop/user/payment/verify/",
+                                            type: "POST",
+                                            data: {
+                                                payment_details: response,
+                                                csrfmiddlewaretoken: csrfToken, // Include CSRF token here
+                                            },
+                                            dataType: "json",
+                                            success: function (data) {
+                                                console.log("success payment");
+                                                $.ajax({
+                                                    url: "/shop/user/order/digital/",
+                                                    type: "POST",
+                                                    data: {
+                                                        payment_id: data.payment_id,
+                                                        address: selectedAddress,
+                                                        csrfmiddlewaretoken: csrfToken, // Include CSRF token here
+                                                    },
+                                                    dataType: "json",
+                                                    success: function (data) {
+                                                        console.log("success payment");
+
+                                                        window.location.href = '/user-profile/my-order/'
+                                                        
+                                                    },
+                                                    error: function (err) {
+                                                        console.log("error success", err);
+                                                    },
+                                                });
+                                            },
+                                            error: function (err) {
+                                                console.log("error success", err);
+                                            },
+                                        });
                                     },
                                 };
             
@@ -447,31 +502,12 @@ $(document).ready(function () {
                                 });
             
                                 rzp.open();
-                                // window.location.href = "/user-profile/my-order/"
-
-                            // $.ajax({
-                            //     url: "/shop/user/order/",
-                            //     type: "POST",
-                            //     data: {
-                            //         address: selectedAddress,
-                            //         payment_method: selectedPaymentMethod,
-                            //         csrfmiddlewaretoken: csrfToken, // Include CSRF token here
-                            //     },
-                            //     dataType: "json",
-                            //     success: function (data) {
-                            //         console.log("success");
-                                    
-                            //     },
-                            //     error: function (err) {
-                            //         console.log("error", err);
-                            //     },
-                            // });
                         },
                         error: function (err) {
                             console.log("error", err);
                         },
                     });
-                    
+                }
                 }});
         }
     });

@@ -110,7 +110,7 @@
                             <li>Subtotal <span>₹{{total_amount}}</span></li>
                             <li></li>
                             {% if discount %}
-                                <li>Discounted Price <span>₹{{ discount_amount }}</span></li>
+                                <li>Discounted Price <span id="total-amount" data-total-amount="{{ discount_amount }}">₹{{ discount_amount }}</span></li>
                             {% else %}
                                 <li>Total <span id="total-amount" data-total-amount="{{ total_amount }}" >₹{{ total_amount }}</span></li>
                             {% endif %}
@@ -133,7 +133,7 @@
                             <div class="checkout__input__radio">
                                 <label for="digital">
                                     <input type="radio" id="digital" value="digital" name="payment-method" />
-                                    Digital
+                                    Online Payment
                                     <span class="checkmark"></span>
                                 </label>
                             </div>

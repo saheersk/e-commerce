@@ -20,7 +20,7 @@ from django.conf import settings
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
-from user.models import CustomUser
+from user.models import CustomUser, Wallet
 from user.forms import CustomUserForm
 from main.functions import generate_form_error
 from user.utils import send_otp
@@ -84,6 +84,8 @@ def signup(request):
                 last_name = instance.last_name,
                 phone_number=instance.phone_number,
             )
+            
+            Wallet.objects.create(user=user, balance=0)
             
             request.session['email'] = instance.email
             send_otp(request, instance.email)

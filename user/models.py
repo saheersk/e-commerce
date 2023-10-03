@@ -105,3 +105,28 @@ class Address(models.Model):
 
     def __str__(self):
         return self.first_name + " " + self.last_name
+
+
+class Wallet(models.Model):
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE)
+    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+
+    def __str__(self):
+        return f"Wallet of {self.user.first_name}"
+    
+
+class WalletHistory(models.Model):
+    TRANSACTION_OPERATION = [
+        ('credit', 'Credit'),
+        ('debit', 'Debit'),
+    ]
+    wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    transaction_operation = models.CharField(max_length=100, choices=TRANSACTION_OPERATION)
+    transaction_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.wallet.user.first_name
+    
+    class Meta:
+        verbose_name_plural = 'Wallet Histories'

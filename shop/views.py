@@ -9,6 +9,9 @@ from django.utils import timezone
 from django.conf import settings
 
 import razorpay
+import hmac
+import hashlib
+import binascii
 
 from shop.models import Product, ProductImage, Category, Wishlist, Cart, OrderStatus, Order, Payment, PaymentMethod, ProductVariant, OrderItem
 from user.models import Address, Coupon, CustomUser, CouponUsage
@@ -391,10 +394,9 @@ def product_discount(request):
 
 
 
-def product_order(request):
+def product_order_cod(request):
     if request.method == 'POST':
         user = request.user
-        payment_method = request.POST.get('payment_method')
         address = request.POST.get('address')
 
         products = Cart.objects.filter(user=user, is_deleted=False)
@@ -402,15 +404,13 @@ def product_order(request):
         order_status = OrderStatus.objects.get(status="Pending")
         payment_type = PaymentMethod.objects.get(payment_type="COD")
 
-
-        if payment_method == "cash":
-            total_amount = 0
-            order = Order.objects.create(
+        total_amount = 0
+        order = Order.objects.create(
                         user=user,
                         shipping_address=shipping_address,
                     )
             
-            for item in products:
+        for item in products:
                 order_item = OrderItem.objects.create(
                         product=item.product,
                         quantity=item.qty,
@@ -418,23 +418,23 @@ def product_order(request):
                         size=item.size,
                         total_product_price=item.product.price * item.qty
                     )
-                order.orderItems.add(order_item)
+                order.order_items.add(order_item)
                 total_amount += item.total_price_of_product
 
 
-            order.total_price = total_amount
+        order.total_price = total_amount
 
-            order.save()
+        order.save()
 
-            Payment.objects.create(
-                            order=order,
-                            user=user,
-                            payment_method=payment_type,
-                            transaction_id="COD",
-                            purchased_price=total_amount
-                )
+        Payment.objects.create(
+                order=order,
+                user=user,
+                payment_method=payment_type,
+                transaction_id="COD",
+                purchased_price=total_amount
+            )
                 
-            for item in products:
+        for item in products:
                 product = ProductVariant.objects.get(product=item.product, size=item.size)
                 product.stock_unit -= item.qty
                 product.save()
@@ -443,21 +443,84 @@ def product_order(request):
                 item.total_price_of_product = item.product.price * item.qty
                 item.save()
             
-            if 'coupon' in request.session:
+        if 'coupon' in request.session:
                 del request.session['coupon']
             
-            response_data = {
+        response_data = {
                     "status" : "success",
                     "title" : "Order Purchased",
                     "message" : "Your Product will be deliver shortly",
                 }
 
-            return HttpResponse(json.dumps(response_data), content_type="application/json")
+        return HttpResponse(json.dumps(response_data), content_type="application/json")
+
+
+def product_order_digital(request):
+    if request.method == 'POST':
+        user = request.user
+        address = request.POST.get('address')
+        payment_id = request.POST.get('payment_id')
+
+        print(payment_id, 'payment_id')
+
+        products = Cart.objects.filter(user=user, is_deleted=False)
+        shipping_address = Address.objects.get(user=user, id=address)
+        order_status = OrderStatus.objects.get(status="Pending")
+        payment_type = PaymentMethod.objects.get(payment_type="COD")
+
+        total_amount = 0
+        order = Order.objects.create(
+                        user=user,
+                        shipping_address=shipping_address,
+                    )
             
-        else:
-            pass
-    else:
-        pass
+        for item in products:
+                order_item = OrderItem.objects.create(
+                        product=item.product,
+                        quantity=item.qty,
+                        order_status=order_status,
+                        size=item.size,
+                        total_product_price=item.product.price * item.qty
+                    )
+                order.order_items.add(order_item)
+                total_amount += item.total_price_of_product
+
+
+        order.total_price = total_amount
+
+        order.save()
+
+        Payment.objects.create(
+                order=order,
+                user=user,
+                payment_method=payment_type,
+                transaction_id=payment_id,
+                purchased_price=total_amount
+            )
+                
+        for item in products:
+                product = ProductVariant.objects.get(product=item.product, size=item.size)
+                product.stock_unit -= item.qty
+                product.save()
+                item.is_deleted = True
+                item.qty = 1
+                item.total_price_of_product = item.product.price * item.qty
+                item.save()
+            
+        if 'coupon' in request.session:
+                del request.session['coupon']
+            
+        response_data = {
+                    "status" : "success",
+                    "title" : "Order Purchased",
+                    "message" : "Your Product will be deliver shortly",
+                }
+
+        return HttpResponse(json.dumps(response_data), content_type="application/json")
+    
+
+def product_order_wallet(request):
+    pass
 
 
 def create_payment(request):
@@ -478,10 +541,24 @@ def create_payment(request):
     return HttpResponse(json.dumps(response_data), content_type="application/json")
 
 
-
 def payment_verify(request):
-    if request.method == "POST":
-        payment_response = request.POST.get('payment_response')
+    data = request.POST
+    razorpay_payment_id = data.getlist('payment_details[razorpay_payment_id]')[0]
+    razorpay_order_id = data.getlist('payment_details[razorpay_order_id]')[0]
+    razorpay_signature = data.getlist('payment_details[razorpay_signature]')[0]
 
+    message = f"{razorpay_order_id}|{razorpay_payment_id}"
+    hashed = hmac.new(settings.RAZORPAY_KEY_SECRET.encode(), message.encode(), hashlib.sha256)
+    generated_signature = binascii.hexlify(hashed.digest()).decode()
 
+    if generated_signature == razorpay_signature:
+        response_data = {
+            'status': 'success',
+            'message': 'Payment successful',
+            'order_id': razorpay_order_id,
+            'payment_id': razorpay_payment_id,
+        }
+        return JsonResponse(response_data)
+
+    return JsonResponse({'status': 'error', 'message': 'Payment verification failed'})
 
