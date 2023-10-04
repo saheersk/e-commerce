@@ -492,7 +492,7 @@ def product_order_digital(request):
                         total_product_price=item.product.price * item.qty
                     )
                 order.order_items.add(order_item)
-                total_amount += item.total_price_of_product
+                total_amount += float(item.total_price_of_product)
 
 
         order.total_price = total_amount
@@ -566,7 +566,7 @@ def product_order_wallet(request):
                             total_product_price=item.product.price * item.qty
                         )
                 order.order_items.add(order_item)
-                total_amount += item.total_price_of_product
+                total_amount += float(item.total_price_of_product)
 
             order.total_price = total_amount
 
@@ -627,7 +627,7 @@ def create_payment(request):
     if request.method == "POST":
         client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
 
-        amount = int(request.POST.get('amount')) * 100  
+        amount = float(request.POST.get('amount')) * 100  
 
         order = client.order.create({'amount': amount, 'currency': 'INR', 'payment_capture': '1'})
         print(order['id'], 'id', settings.RAZORPAY_KEY_ID)    

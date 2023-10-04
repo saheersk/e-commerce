@@ -48,35 +48,41 @@
                                             <tbody>
                                                 {% for order in orders %}
                                                 <tr>
-                                                    <td>{{order.user.first_name}} {{order.user.last_name}}</td>
-
                                                     <td>
-                                                        {% for item in order.order_items.all %}
-                                                        {{item.product.title}}
-                                                        <br>
-                                                        {% endfor %}
+                                                        {{order.ordered_product.product.title}}
                                                     </td>
 
-                                                    <td>₹{{order.total_price}}</td>
+                                                    <td>{{order.reason}}</td>
                                                         <td>
-                                                        {% for item in order.order_items.all %}
-                                                                    {% if item.order_status.status == 'Delivered' %}
-                                                                    <span class="text-success">{{ item.order_status }}</span>
-                                                                {% elif item.order_status.status == 'Returned' or item.order_status.status == 'Cancelled' %}
-                                                                <span class="text-danger">{{ item.order_status }}</span>
-                                                                {% elif item.order_status.status == 'Requested For Cancelling' or item.order_status.status == 'Requested For Returning' %}
-                                                                <span class="text-warning">{{ item.order_status }}</span>
-                                                                {% elif item.order_status.status == 'Shipped' %}
-                                                                <span class="text-primary">{{ item.order_status }}</span>
-                                                                {% elif item.order_status.status == 'Pending' %}
-                                                                <span class="text-warning">{{ item.order_status }}</span>
-                                                                {% endif %}
+                                                            {% if order.status == "completed" %}
+                                                                <span id='status-completed' class="text-success text-capitalize">{{ order.status }}</span>
+                                                            {% else %}
+                                                                <span id='status-pending' class="text-warning text-capitalize">{{ order.status }}</span>
+                                                            {% endif %}
                                                         </br>
-                                                            {% endfor %}
                                                         </td>
                                                     <td>
+                                                        {% if order.status == "cancel" or order.status == 'return' %}
+                                                            <a
+                                                                type="button"
+                                                                data-item-id="{{order.id}}"
+                                                                class="btn bg-warning approve-product"
+                                                                data-template="editOne"
+                                                            >
+                                                                Approve
+                                                            </a>
+                                                        {% elif order.status == "approved" %}
+                                                            <a
+                                                                type="button"
+                                                                data-item-id="{{order.id}}"
+                                                                class="btn bg-danger refund-product"
+                                                                data-template="editOne"
+                                                            >
+                                                                Refund
+                                                            </a>
+                                                        {% else %}
                                                         <a
-                                                            href="{% url 'customadmin:admin_order_edit' order.id %}"
+                                                            href=""
                                                             class="btn btn-ghost btn-icon btn-sm rounded-circle texttooltip"
                                                             data-template="editOne"
                                                         >
@@ -85,6 +91,7 @@
                                                                 <span>Edit</span>
                                                             </div>
                                                         </a>
+                                                        {% endif %}
                                                     </td>
                                                 </tr>
                                                 {% endfor %}

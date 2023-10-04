@@ -319,6 +319,56 @@ $(document).ready(function () {
         });
     });
 
+    $(document).on("submit", "form.ajax-cancel", function (e) {
+        e.preventDefault();
+
+        var form = $(this);
+        var formData = form.serialize();
+
+        var csrfToken = getCSRFToken(); // Get the CSRF token
+        if (!csrfToken) {
+            console.error("CSRF token not found.");
+            return;
+        }
+
+        var orderId = $(this).find('[data-order-id]').data('order-id');
+        console.log(orderId);
+
+        var confirmButtonText = "Yes";
+        var confirmButtonColor = "#DD6B55";
+        Swal.fire({
+            title: "Confirm Cancellation",
+            text: "Are you sure you want to cancel product?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: confirmButtonText,
+            confirmButtonColor: confirmButtonColor,
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: `/user-profile/my-order/cancel/${orderId}/`,
+                    method: "POST",
+                    dataType: "json",
+                    data: formData,
+                    success: function (data) {
+                        console.log("success");
+                        Swal.fire({
+                            icon: data.status,
+                            title: data.title,
+                            text: data.message,
+                        }).then((result) => {
+                            window.location.href = `/user-profile/my-order/details/${orderId}/`
+                        })
+                    },
+                    error: function () {
+                        console.log("error");
+                    },
+                });
+            } })
+
+       
+    })
+
     $(document).on("submit", "form.ajax-address", function (e) {
         e.preventDefault();
 
@@ -561,6 +611,7 @@ $(document).ready(function () {
             }});
         }
     });
+
     // Attach click event handlers to the increment and decrement buttons
     $(".increment-quantity").click(function () {
         var productId = $(this).data("product-id");
@@ -633,55 +684,7 @@ $(document).ready(function () {
         });
     }
 
-    $('.cancel-order').click(function (event) {
-        event.preventDefault(); // Prevent the default form submission
-
-        var csrfToken = getCSRFToken(); // Get the CSRF token
-        if (!csrfToken) {
-            console.error("CSRF token not found.");
-            return;
-        }
-
-        var orderId = $(this).data("order-id");
-
-        var confirmButtonText = "Yes";
-        var confirmButtonColor = "#DD6B55";
-
-        Swal.fire({
-            title: "Confirm Cancellation",
-            text: "Are you sure you want to cancel product?",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonText: confirmButtonText,
-            confirmButtonColor: confirmButtonColor,
-        }).then((result) => {
-            if (result.isConfirmed) {
-                $.ajax({
-                    url: `/user-profile/my-order/cancel/${orderId}/`,
-                    method: "POST",
-                    dataType: "json",
-                    data: {
-                        csrfmiddlewaretoken: csrfToken,
-                    },
-                    success: function (data) {
-                        console.log("success");
-                        Swal.fire({
-                            icon: data.status,
-                            title: data.title,
-                            text: data.message,
-                        })
-                        const cancelStatus = document.querySelector(`#cancel-status-${orderId}`);
-                        cancelStatus.textContent = "Cancelled"
-                    },
-                    error: function () {
-                        console.log("error");
-                    },
-                });
-            } })
-    });
-
     $(".remove-product").click(function (event) {
-        event.preventDefault(); // Prevent the default form submission
 
         var csrfToken = getCSRFToken(); // Get the CSRF token
         if (!csrfToken) {

@@ -4,7 +4,7 @@ from django import forms
 
 from user.models import CustomUser
 from web.models import Banner
-from shop.models import Category, Product, ProductImage, Order, ProductVariant
+from shop.models import Category, Product, ProductImage, OrderItem, ProductVariant
 
 from phonenumber_field.formfields import PhoneNumberField
 from phonenumber_field.phonenumber import to_python
@@ -114,11 +114,10 @@ class AdminProductImage(forms.ModelForm):
         fields = ['image']
 
 
-class AdminOrderFrom(forms.ModelForm):
-
+class AdminOrderItemFrom(forms.ModelForm):
     class Meta:
-        model = Order
-        fields = '__all__'
+        model = OrderItem
+        fields = ['order_status']
 
 
 class AdminProductVariantFrom(forms.ModelForm):

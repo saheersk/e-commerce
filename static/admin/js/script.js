@@ -90,3 +90,88 @@ $(document).on("click", ".action-button", function (e) {
         }
     });
 });
+
+$(document).ready(function () {
+
+    function getCSRFToken() {
+        var csrfToken = null;
+        var cookies = document.cookie.split(";");
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i].trim();
+            if (cookie.startsWith("csrftoken=")) {
+                csrfToken = cookie.substring("csrftoken=".length, cookie.length);
+                break;
+            }
+        }
+        return csrfToken;
+    }
+
+
+    $('.approve-product').click(function () {
+        var csrfToken = getCSRFToken(); // Get the CSRF token
+        if (!csrfToken) {
+            console.error("CSRF token not found.");
+            return;
+        }
+        var itemId = $(this).data("item-id");
+        console.log(itemId, 'id');
+    
+        var confirmButtonText = "Yes";
+        var confirmButtonColor = "#DD6B55";
+    
+        Swal.fire({
+            title: "Confirm Product Approve",
+            text: "Are you sure you want approve?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: confirmButtonText,
+            confirmButtonColor: confirmButtonColor,
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: `/customadmin/order/orders-cancelled-or-returned/approve/${itemId}/`,
+                    method: "POST",
+                    dataType: "json",
+                    data: {
+                        csrfmiddlewaretoken: csrfToken,
+                    },
+                    success: function (data) {
+                        if (data.status == 'success') {
+                            const statusCompleted = document.querySelector('#status-completed');
+                            const statusPending = document.querySelector('#status-pending');
+                            if (data.status == 'completed') {
+                                statusCompleted.textContent = data.order_status
+                            }
+                            else{
+                                statusPending.textContent = data.order_status
+                            }
+
+                            const Toast = Swal.mixin({
+                                toast: true,
+                                position: "top-end",
+                                showConfirmButton: false,
+                                timer: 3000,
+                                timerProgressBar: true,
+                                didOpen: (toast) => {
+                                    toast.addEventListener("mouseenter", Swal.stopTimer);
+                                    toast.addEventListener("mouseleave", Swal.resumeTimer);
+                                },
+                            });
+                            Toast.fire({
+                                icon: data.status,
+                                title: data.title,
+                            });
+    
+                        } else {
+                            console.log("else");
+                        }
+                    },
+                    error: function () {
+                        console.log("error");
+                    },
+                });
+            }
+        });
+    })
+
+})

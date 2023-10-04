@@ -7,12 +7,13 @@ from django.contrib.auth import authenticate, login as auth_login, logout as aut
 from django.db.models import Q
 from django.forms import formset_factory
 
-from customadmin.forms import AdminCustomUserForm, AdminCustomUpdateUserForm, AdminCategory, AdminProduct, AdminProductImage, AdminOrderFrom, AdminProductVariantFrom, AdminBannerForm
-from user.models import CustomUser
+from customadmin.forms import AdminCustomUserForm, AdminCustomUpdateUserForm, AdminCategory, AdminProduct, AdminProductImage, AdminOrderItemFrom, AdminProductVariantFrom, AdminBannerForm
+from user.models import CustomUser, Wallet
 from web.models import Contact, Banner
 from user.functions import generate_form_error
-from shop.models import Category, Product, ProductImage, Order, ProductVariant
+from shop.models import Category, Product, ProductImage, Order, ProductVariant, OrderItem, OrderManagement, OrderStatus
 from main.functions import paginate_instances
+from customadmin.utils import send_user_refund_mail
 
 
 #Admin User
@@ -526,14 +527,14 @@ def admin_order(request):
 
 
 def admin_order_edit(request, pk):
-    order = get_object_or_404(Order, id=pk)
+    order = get_object_or_404(OrderItem, id=pk)
     if request.method == 'POST':
-        form = AdminOrderFrom(request.POST, instance=order)
+        form = AdminOrderItemFrom(request.POST, instance=order)
         if form.is_valid():
             form.save()
             return redirect('customadmin:admin_order')
     else:
-        form = AdminOrderFrom(instance=order)
+        form = AdminOrderItemFrom(instance=order)
         context = {
             'title' : "Male Fashion | Admin Order Edit",
             "form" : form
@@ -744,6 +745,97 @@ def admin_banner_delete(request, pk):
     response_data = {
             "title" : "Successfully Changed",
             "message" : "Variant Updated successfully",
+            "status" : "success",
+        }
+
+    return HttpResponse(json.dumps(response_data), content_type="application/json")
+
+
+def admin_order_center(request):
+    orders = OrderManagement.objects.filter(Q(status="return") | Q(status="cancel") | Q(status="completed") | Q(status="approved"))
+    context = {
+        "title": "Male Fashion | Admin Order Resolution",
+        "heading": ['Product', 'Reason', 'Status'],
+        "orders": orders
+    }
+    return render(request, 'customadmin/admin-table-returned.html', context)
+
+def admin_order_center_edit(request, pk):
+    pass
+
+
+def admin_order_center_approve(request, pk):
+    order = get_object_or_404(OrderManagement, id=pk)
+
+    if order.status == "cancel":
+        product_variant = ProductVariant.objects.get(product=order.ordered_product.product, size=order.ordered_product.size)
+        product_variant.stock_unit += order.ordered_product.quantity 
+        product_variant.save()
+        
+        order_data = Order.objects.get(order_items=order.ordered_product)
+        print(order_data, 'order')
+        wallet =  Wallet.objects.get(user=order_data.user)
+        wallet.balance += order.ordered_product.total_product_price
+        wallet.save()
+
+        order_status = OrderStatus.objects.get(status="Completed")
+        order.ordered_product.order_status = order_status
+        order.ordered_product.save()
+
+        order.status = "completed"
+        order.save()
+
+        send_user_refund_mail(request, order.ordered_product.total_product_price, order_data.user.email)
+
+        response_data = {
+            "title" : "Amount Refunded",
+            "order_status": order.status,
+            "status" : "success",
+        }
+
+        return HttpResponse(json.dumps(response_data), content_type="application/json")
+    else:
+        order_status = OrderStatus.objects.get(status="Approved")
+        order.ordered_product.order_status = order_status
+        order.ordered_product.save()
+
+        order.status = "approved"
+        order.save()
+
+        response_data = {
+            "title" : "Approved Returned",
+            "order_status": order.status,
+            "status" : "success",
+        }
+
+    return HttpResponse(json.dumps(response_data), content_type="application/json")
+
+
+def admin_order_center_completed(request, pk):
+    order = get_object_or_404(OrderManagement, id=pk)
+    
+    product_variant = ProductVariant.objects.get(product=order.ordered_product.product, size=order.ordered_product.size)
+    product_variant.stock_unit += order.ordered_product.quantity 
+    product_variant.save()
+        
+    order_data = Order.objects.get(order_items=order.ordered_product)
+    print(order_data, 'order')
+    wallet =  Wallet.objects.get(user=order_data.user)
+    wallet.balance += order.ordered_product.total_product_price
+    wallet.save()
+
+    order_status = OrderStatus.objects.get(status="Completed")
+    order.ordered_product.order_status = order_status
+    order.ordered_product.save()
+
+    order.status = "completed"
+    order.save()
+
+    send_user_refund_mail(request, order.ordered_product.total_product_price, order_data.user.email)
+
+    response_data = {
+            "title" : "Amount Refunded",
+            "order_status": order.status,
             "status" : "success",
         }
 

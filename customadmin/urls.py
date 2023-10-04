@@ -40,6 +40,12 @@ urlpatterns = [
     #Order
     path('order/orders/', views.admin_order, name='admin_order'),
     path('order/orders/edit/<int:pk>/', views.admin_order_edit, name='admin_order_edit'),
+    path('order/orders-cancelled-or-returned/', views.admin_order_center, name='admin_order_center'),
+    path('order/orders-cancelled-or-returned/edit/<int:pk>/', views.admin_order_center_edit, name='admin_order_center_edit'),
+    path('order/orders-cancelled-or-returned/approve/<int:pk>/', views.admin_order_center_approve, name='admin_order_center_approve'),
+    path('order/orders-cancelled-or-returned/completed/<int:pk>/', views.admin_order_center_completed, name='admin_order_center_completed'),
+
+
 
     #Contact
     path('contact/details/', views.admin_contact, name='admin_contact'),

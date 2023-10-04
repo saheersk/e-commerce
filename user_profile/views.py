@@ -9,8 +9,8 @@ from django.contrib.auth import update_session_auth_hash
 from user.models import Address 
 from user_profile.forms import CustomUserEditForm
 from main.functions import generate_form_error
-from user_profile.forms import AddressForm
-from shop.models import Order, Cart, OrderStatus, OrderItem
+from user_profile.forms import AddressForm, OrderManagementForm
+from shop.models import Order, Cart, OrderStatus, OrderItem, Payment
 
 
 @login_required(login_url='user/login/')
@@ -152,7 +152,6 @@ def profile_edit(request):
 def profile_address_add(request):
     if request.method == "POST":
         form = AddressForm(request.POST)
-        print('sus')
         if form.is_valid():
             instance = form.save(commit=False)
 
@@ -292,7 +291,7 @@ def profile_order(request):
     if request.method == "POST":
         pass
     else:
-        orders = Order.objects.filter(user=request.user)
+        orders = Order.objects.filter(user=request.user).order_by('-id')
 
         request.session['cart_count'] = Cart.objects.filter(user=request.user, is_deleted=False).count() if request.user.is_authenticated else 0
 
@@ -315,19 +314,108 @@ def profile_order_details(request, pk):
 
 @login_required(login_url='user/login/')
 def profile_order_cancel(request, pk):
-    order = get_object_or_404(Order, id=pk)
-    status = OrderStatus.objects.get(status="Cancelled")
+    product = get_object_or_404(OrderItem, id=pk)
 
-    order.order_status = status
-    order.save()
+    order = Order.objects.get(user=request.user, order_items=product)
 
-    response_data = {
-        "status" : "success",
-        "title" : "Successfully Cancelled",
-        "message" : 'Your order has been cancelled',
-    }
+    payment = Payment.objects.get(order=order)
     
-    return HttpResponse(json.dumps(response_data), content_type="application/json")
+    if request.method == 'POST':
+        form = OrderManagementForm(request.POST)
+        if form.is_valid():
+            instance = form.save(commit=False)
+
+            instance.ordered_product = product 
+            if payment.payment_method.payment_type== "COD":
+                instance.status = "cancelled"
+
+                status = OrderStatus.objects.get(status="Cancelled")
+                product.order_status = status
+                product.save()
+            else:
+                instance.status = "requested for cancel"
+
+                status = OrderStatus.objects.get(status="Requested For Cancelling")
+                product.order_status = status
+                product.save()
+
+            instance.save()
+
+            response_data = {
+                "status": "success",
+                "title": "Successfully Cancelled",
+                "message": 'Your Product has been Cancelled',
+            }
+
+            return HttpResponse(json.dumps(response_data), content_type="application/json")
+        else:
+            error_message = generate_form_error(form)
+            print(error_message, 'error')
+            response_data = {
+                "status" : "error",
+                "title" : "Address Field Error.",
+                "message" : str(error_message),
+                }
+            return HttpResponse(json.dumps(response_data), content_type="application/json")
+    else:
+        form = OrderManagementForm()
+        context = {
+            "title": "Male Fashion | Product Cancel",
+            "product": product,
+            "form": form
+        }
+
+        return render(request, 'profile/user-order-cancel.html', context)
 
 
+
+
+@login_required(login_url='user/login/')
+def profile_order_return(request, pk):
+    product = get_object_or_404(OrderItem, id=pk)
+
+    order = Order.objects.get(user=request.user, order_items=product)
+
+    payment = Payment.objects.get(order=order)
+    
+    if request.method == 'POST':
+        form = OrderManagementForm(request.POST)
+        if form.is_valid():
+            instance = form.save(commit=False)
+
+            instance.ordered_product = product 
+
+            instance.status = "requested for return"
+
+            status = OrderStatus.objects.get(status="Requested For Returning")
+            product.order_status = status
+            product.save()
+
+            instance.save()
+
+            response_data = {
+                "status": "success",
+                "title": "Successfully Cancelled",
+                "message": 'Your Product has been Cancelled',
+            }
+
+            return HttpResponse(json.dumps(response_data), content_type="application/json")
+        else:
+            error_message = generate_form_error(form)
+            print(error_message, 'error')
+            response_data = {
+                "status" : "error",
+                "title" : "Address Field Error.",
+                "message" : str(error_message),
+                }
+            return HttpResponse(json.dumps(response_data), content_type="application/json")
+    else:
+        form = OrderManagementForm()
+        context = {
+            "title": "Male Fashion | Product Return",
+            "product": product,
+            "form": form
+        }
+
+        return render(request, 'profile/user-order-return.html', context)
     

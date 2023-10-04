@@ -1,6 +1,7 @@
 from django import forms
 
 from user.models import CustomUser, Address
+from shop.models import OrderManagement
 
 
 class CustomUserEditForm(forms.ModelForm):
@@ -30,3 +31,9 @@ class AddressForm(forms.ModelForm):
 
 class PasswordResetRequestForm(forms.Form):
     email = forms.EmailField()
+
+
+class OrderManagementForm(forms.ModelForm):
+    class Meta:
+        model = OrderManagement
+        fields = ['reason', 'message']

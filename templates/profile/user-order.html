@@ -1,7 +1,6 @@
-{% extends "profile-base.html" %}  
-{% block content %} {% load static %} {% include 'web/includes/header.html' %}
+{% extends "profile-base.html" %} {% block content %} {% load static %} {% include 'web/includes/header.html' %}
 
-<div class="d-flex" style="height: calc(70vh - 130px)">
+<div class="d-flex" style="height: calc(70vh - 150px)">
     {% include 'profile/includes/sidebar.html' %}
     <div class="col-lg-10 mt-5">
         <h1 class="mb-4 fs-1">Order List</h1>
@@ -9,37 +8,61 @@
             <div class="container py-5">
                 <section>
                     {% for order in orders  %}
-                        <div class="row justify-content-center mb-3">
-                            <div class="col-md-12 col-xl-10">
+                    <div class="row justify-content-center mb-3">
+                        <div class="col-md-12 col-xl-10">
                             <div class="card shadow-0 border rounded-3">
                                 <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-6 col-lg-6 col-xl-6">
-                                    {% for item in order.order_items.all %}
-                                        <h5>{{item.product.title}}  Qty: {{item.quantity}}</h5>
-                                        <h5 class="mb-3"> Size: {{item.size}}</h5>
-                                    {% endfor %}
+                                    <div class="row">
+                                        <div class="col-md-6 col-lg-6 col-xl-6">
+                                            {% for item in order.order_items.all %}
+                                                <h5>{{item.product.title}} Qty: {{item.quantity}}</h5>
+                                                <h5 class="mb-1">Size: {{item.size}}</h5>
+                                                <h5 class="mb-4">
+                                                    Status:
+                                                    {% if item.order_status.status == 'Delivered' %}
+                                                        <span class="text-success">{{ item.order_status }}</span>
+                                                    {% elif item.order_status.status == 'Returned' or item.order_status.status == 'Cancelled' %}
+                                                    <span class="text-danger">{{ item.order_status }}</span>
+                                                    {% elif item.order_status.status == 'Requested For Cancelling' or item.order_status.status == 'Requested For Returning' %}
+                                                    <span class="text-warning">{{ item.order_status }}</span>
+                                                    {% elif item.order_status.status == 'Shipped' %}
+                                                    <span class="text-primary">{{ item.order_status }}</span>
+                                                    {% elif item.order_status.status == 'Pending' %}
+                                                    <span class="text-warning">{{ item.order_status }}</span>
+                                                    {% endif %}
+                                                </h5>
+                                            {% endfor %}
                                         </div>
                                         <div class="col-md-6 col-lg-3 col-xl-3 border-sm-start-none border-start">
-                                        <div class="d-flex flex-row align-items-center mb-1">
-                                            <h4 class="mb-1 me-1">₹{{order.total_price}}</h4>
+                                            <div class="d-flex flex-row align-items-center mb-1">
+                                                <h4 class="mb-1 me-1">₹{{order.total_price}}</h4>
+                                            </div>
+                                            <div class="d-flex flex-column mt-4">
+                                                <a
+                                                    href="{% url 'user_profile:profile_order_details' order.id %}"
+                                                    class="btn btn-primary btn-sm"
+                                                    type="button"
+                                                    >Details</a
+                                                >
+                                            </div>
+                                            <div class="d-flex flex-column mt-4">
+                                                <a
+                                                    href="{% url 'shop:generate_invoice_pdf' order.id %}"
+                                                    class="btn btn-primary btn-sm"
+                                                    type="button"
+                                                    >Download Invoice</a
+                                                >
+                                            </div>
                                         </div>
-                                        <div class="d-flex flex-column mt-4">
-                                            <a href="{% url 'user_profile:profile_order_details' order.id %}" class="btn btn-primary btn-sm" type="button">Details</a>
-                                        </div>
-                                        <div class="d-flex flex-column mt-4">
-                                            <a href="{% url 'shop:generate_invoice_pdf' order.id %}" class="btn btn-primary btn-sm" type="button">Download Invoice</a>
-                                        </div>
-                                        </div>
+                                    </div>
                                 </div>
-                                </div>
-                                
-                            </div>
                             </div>
                         </div>
+                    </div>
                     {% endfor %}
-              </section>
+                </section>
+            </div>
         </div>
     </div>
+    {% endblock %}
 </div>
-{% endblock %}

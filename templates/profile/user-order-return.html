@@ -1,0 +1,36 @@
+{% extends "profile-base.html" %}  
+{% block content %} {% load static %} {% include 'web/includes/header.html' %}
+    <div class="d-flex">
+        {% include 'profile/includes/sidebar.html' %}
+        <div class="ml-5 w-50">
+            <h1 class="mt-5">Return Your Order</h1>
+            <p class="text-muted">Please provide a reason for returning your order and any additional comments or messages.</p>
+            <div class="mt-3 mb-3">
+                <h4>Your Product</h4>
+                    <ul>
+                        <li>
+                            {{ product.product.title }} - Quantity: {{ product.quantity }} - Price: ${{ product.total_product_price }}
+                        </li>
+                    </ul>
+            </div>
+            <form method='POST' class="ajax-return">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="cancelReason">Reason for returing</label>
+                    <select name='reason' class="form-control" id="cancelReason">
+                        <option value="Size Different<">Size Different</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="mt-3" for="cancelMessage">Additional Comments</label>
+                    <textarea class="form-control" id="cancelMessage" name="message" rows="4"></textarea>
+                </div>
+                <button type="submit" data-order-id="{{product.id}}"  class="btn btn-danger mb-5 cancel-order">Return Order</button>
+            </form>
+        <div>   
+    </div>
+        {% comment %} {% include 'web/includes/footer.html' %}  {% endcomment %}
+
+    <!-- Include Bootstrap JavaScript (optional) -->
+    {% endblock %}

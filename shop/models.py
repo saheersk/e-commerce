@@ -179,7 +179,27 @@ class Payment(models.Model):
     transaction_id = models.CharField(max_length=150)
     purchased_price =models.DecimalField(max_digits=10, decimal_places=2)
     payment_date = models.DateTimeField(auto_now_add=True)
-    
+
 
     def __str__(self):
         return self.user.first_name
+    
+
+class OrderManagement(models.Model):
+    STATUS = (
+            ('completed', 'Completed'),
+            ('approved', 'Approved'),
+            ('rejected', 'Rejected'),
+            ('cancelled', 'Cancelled'),
+            ('returned', 'Returned'),
+            ('cancel', 'Cancel'),
+            ('return', 'Return'),
+        )
+    
+    ordered_product = models.ForeignKey(OrderItem, on_delete=models.CASCADE)
+    reason = models.CharField(max_length=100)
+    message = models.TextField()
+    status = models.CharField(max_length=100, choices=STATUS)
+
+    def __str__(self):
+        return self.reason

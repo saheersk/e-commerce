@@ -23,23 +23,37 @@
                               </div>
                               <h5>{{item.product.title}}</h5>
                               <p class="mb-2"><b>Quantity: </b>{{item.quantity}}</p>
-                              <p>Status: <span class="mt-4 <%=order.status%>">{{item.order_status}}</span></p>
+                              <p>Status: <span class="mt-4">{{item.order_status}}</span></p>
                               <div class="d-flex flex-row align-items-center mb-1">
                                   <h4 class="mb-1 me-1">₹{{item.product.price}}</h4>
                               </div>
-                              <div class="d-flex flex-column mb-2">
-                                  <a href="/shop/<%=order.products.product[0].slug%>" class="w-100">
-                                      <button class="btn btn-dark w-100"  type="button">Cancel</button>
-                                  </a>
-                              </div>
-                          </div>
+                              {% if item.order_status.status == "Delivered" %}
+                                <div class="d-flex flex-column mb-2">
+                                    <a href="{% url 'user_profile:profile_order_return' item.id %}" class="w-100">
+                                        <button class="btn btn-dark w-100"  type="button">Return Order</button>
+                                    </a>
+                                </div>
+                                {% elif item.order_status.status == "Requested For Cancelling" or item.order_status.status == "Requested For Returned"  %}
+                                    <p class="text-danger fs-4" >The amount be will refunded to your wallet after verification</p>
+                                {% elif item.order_status.status == "Returned"  %}
+                                    <p class="text-success fs-4" >The amount was refund to wallet</p>
+                                {% elif item.order_status.status != "Cancelled" %}
+                                    <div class="d-flex flex-column mb-2">
+                                        <a href="{% url 'user_profile:profile_order_cancel' item.id %}" class="w-100">
+                                            <button class="btn btn-dark w-100"  type="button">Cancel</button>
+                                        </a>
+                                    </div>
+                                {% else %}
+                                    <p class="text-danger fs-4" >*The Product is cancelled</p>
+                                {% endif %}
+                            </div>
                       </div>
                       {% endfor %}
                       <div class="row w-100">
                         <div class="col-md-12 col-lg-12 col-xl-12">
                             <div class="col-md-10 col-lg-10 col-xl-10 w-100">
                                 <div class="d-flex flex-row align-items-center mb-1">
-                                    <h4 class="mb-1 me-1">{{order.total_price}}</h4>
+                                    <h4 class="mb-1 me-1">₹{{order.total_price}}</h4>
                                 </div>
                                 <p class="mb-4 mb-md-0">
                                     <b>{{order.shipping_address.first_name}}</b>
