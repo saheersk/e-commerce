@@ -1,4 +1,8 @@
 import json 
+import io
+import hmac
+import hashlib
+import binascii
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
@@ -7,16 +11,15 @@ from django.db.models import Sum, Q
 from django.db.models import Sum, F, ExpressionWrapper, DecimalField
 from django.utils import timezone
 from django.conf import settings
+from django.template.loader import get_template
 
 import razorpay
-import hmac
-import hashlib
-import binascii
+from xhtml2pdf import pisa
 
 from shop.models import Product, ProductImage, Category, Wishlist, Cart, OrderStatus, Order, Payment, PaymentMethod, ProductVariant, OrderItem
-from user.models import Address, Coupon, CustomUser, CouponUsage
+from user.models import Address, Coupon, CustomUser, CouponUsage, Wallet
 from main.functions import paginate_instances
-
+from shop.utils import generate_invoice_to_send_email
 
 
 def product_all(request):
@@ -41,7 +44,7 @@ def product_all(request):
     if q:
         products = products.filter(Q(title__icontains=q))
 
-    instances = paginate_instances(request, products, per_page=6)
+    instances = paginate_instances(request, products, per_page=8)
     categories = Category.objects.filter(is_blocked=False, is_deleted=False)
 
     context = {
@@ -304,6 +307,7 @@ def product_checkout(request):
     )['total_amount'] or 0
 
     print(total_amount, 'amount')
+    wallet = request.session.get('wallet')
 
     discount_amount = 0
     for item in products:
@@ -317,6 +321,7 @@ def product_checkout(request):
     print(discount, discount_amount, total_amount, 'amount')
 
     context = {
+        "wallet" : wallet,
         "title" : "Male Fashion | Product Checkout",
         "user_addresses": user_addresses,
         "user_default_address": user_default_address,
@@ -409,7 +414,9 @@ def product_order_cod(request):
                         user=user,
                         shipping_address=shipping_address,
                     )
-            
+        
+        request.session['wallet'] = False
+
         for item in products:
                 order_item = OrderItem.objects.create(
                         product=item.product,
@@ -446,6 +453,8 @@ def product_order_cod(request):
         if 'coupon' in request.session:
                 del request.session['coupon']
             
+        generate_invoice_to_send_email(request, order.id)
+
         response_data = {
                     "status" : "success",
                     "title" : "Order Purchased",
@@ -461,14 +470,14 @@ def product_order_digital(request):
         address = request.POST.get('address')
         payment_id = request.POST.get('payment_id')
 
-        print(payment_id, 'payment_id')
+        request.session['wallet'] = False
 
         products = Cart.objects.filter(user=user, is_deleted=False)
         shipping_address = Address.objects.get(user=user, id=address)
         order_status = OrderStatus.objects.get(status="Pending")
-        payment_type = PaymentMethod.objects.get(payment_type="COD")
+        payment_type = PaymentMethod.objects.get(payment_type="Online")
 
-        total_amount = 0
+        total_amount = 0.00
         order = Order.objects.create(
                         user=user,
                         shipping_address=shipping_address,
@@ -509,7 +518,8 @@ def product_order_digital(request):
             
         if 'coupon' in request.session:
                 del request.session['coupon']
-            
+
+        generate_invoice_to_send_email(request, order.id)
         response_data = {
                     "status" : "success",
                     "title" : "Order Purchased",
@@ -520,7 +530,97 @@ def product_order_digital(request):
     
 
 def product_order_wallet(request):
-    pass
+    if request.method == 'POST':
+        user = request.user
+        address = request.POST.get('address')
+
+        products = Cart.objects.filter(user=user, is_deleted=False)
+        wallet = Wallet.objects.get(user=request.user)
+        shipping_address = Address.objects.get(user=user, id=address)
+        order_status = OrderStatus.objects.get(status="Pending")
+        payment_type = PaymentMethod.objects.get(payment_type="Wallet")
+
+        total_amount = 0
+
+        for item in products:
+             total_amount += item.total_price_of_product
+
+
+        order = Order.objects.create(
+                        user=user,
+                        shipping_address=shipping_address,
+                    )
+            
+        if wallet.balance > total_amount:
+            wallet.balance -= total_amount
+            wallet.save()
+
+            request.session['wallet'] = False
+
+            for item in products:
+                order_item = OrderItem.objects.create(
+                            product=item.product,
+                            quantity=item.qty,
+                            order_status=order_status,
+                            size=item.size,
+                            total_product_price=item.product.price * item.qty
+                        )
+                order.order_items.add(order_item)
+                total_amount += item.total_price_of_product
+
+            order.total_price = total_amount
+
+            order.save()
+
+            Payment.objects.create(
+                    order=order,
+                    user=user,
+                    payment_method=payment_type,
+                    transaction_id='wallet',
+                    purchased_price=total_amount
+                )
+                    
+            for item in products:
+                    product = ProductVariant.objects.get(product=item.product, size=item.size)
+                    product.stock_unit -= item.qty
+                    product.save()
+                    item.is_deleted = True
+                    item.qty = 1
+                    item.total_price_of_product = item.product.price * item.qty
+                    item.save()
+                
+            if 'coupon' in request.session:
+                    del request.session['coupon']
+            
+            generate_invoice_to_send_email(request, order.id)
+            response_data = {
+                        "wallet": True,
+                        "status" : "success",
+                        "title" : "Order Purchased",
+                        "message" : "Your Product will be deliver shortly",
+                    }
+
+            return HttpResponse(json.dumps(response_data), content_type="application/json")
+        else:
+            total_amount = 0.00
+            for item in products:
+                item.total_price_of_product -= wallet.balance // 2
+                item.save()
+                total_amount += float(item.total_price_of_product)
+
+            wallet.balance = 0
+            request.session['wallet'] = True
+            wallet.save()
+
+            response_data = {
+                        "wallet": False,
+                        "status" : "success",
+                        "title" : "Order Purchased",
+                        "message" : "Your Product will be deliver shortly",
+                        "total_amount" : float(total_amount)
+                    }
+
+            return HttpResponse(json.dumps(response_data), content_type="application/json")
 
 
 def create_payment(request):
@@ -543,6 +643,7 @@ def create_payment(request):
 
 def payment_verify(request):
     data = request.POST
+    print(data)
     razorpay_payment_id = data.getlist('payment_details[razorpay_payment_id]')[0]
     razorpay_order_id = data.getlist('payment_details[razorpay_order_id]')[0]
     razorpay_signature = data.getlist('payment_details[razorpay_signature]')[0]
@@ -562,3 +663,28 @@ def payment_verify(request):
 
     return JsonResponse({'status': 'error', 'message': 'Payment verification failed'})
 
+
+
+#invoice
+def generate_invoice_pdf(request, pk):
+    order = get_object_or_404(Order, id=pk)
+    invoice_id = hashlib.sha1(str(order.id).encode()).hexdigest()
+
+    total_amount = 0
+    for item in order.order_items.all():
+        total_amount += item.quantity * item.product.price
+         
+    context = {'order': order, 'invoice_id': invoice_id, 'total_amount': total_amount}
+
+    # return render(request, 'product/invoice-template.html', context)
+
+    template_path = 'product/invoice-template.html' 
+    template = get_template(template_path)
+    context = {'order': order, 'invoice_id': invoice_id, 'total_amount': total_amount}  # Pass data to your template
+    html = template.render(context)
+    pdf_file = io.BytesIO()
+    pisa.CreatePDF(html, dest=pdf_file)
+
+    response = HttpResponse(pdf_file.getvalue(), content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="invoice.pdf"'
+    return response     

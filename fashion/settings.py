@@ -55,6 +55,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'fashion.context_processors.username',
                 'shop.context_processors.cart_count',
+                'user_profile.context_processors.wallet',
             ],
         },
     },

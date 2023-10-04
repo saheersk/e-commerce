@@ -28,7 +28,7 @@ class Product(models.Model):
     title = models.CharField(max_length=150)
     featured_image = models.ImageField(upload_to='Product/featured-images')
     description = models.TextField()
-    price = models.PositiveIntegerField()
+    price = models.DecimalField(max_digits=10, decimal_places=2)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     short_description = models.CharField(max_length=200)
     is_show = models.BooleanField(default=True)
@@ -113,7 +113,7 @@ class Cart(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     user =  models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     qty = models.PositiveIntegerField(default=1)
-    total_price_of_product = models.PositiveIntegerField()
+    total_price_of_product = models.DecimalField(max_digits=10, decimal_places=2)
     size = models.CharField(max_length=100)
     added_date = models.DateTimeField(auto_now_add=True)
     is_deleted = models.BooleanField(default=False)
@@ -177,8 +177,9 @@ class Payment(models.Model):
     user =  models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     payment_method = models.ForeignKey(PaymentMethod, on_delete=models.CASCADE)
     transaction_id = models.CharField(max_length=150)
-    purchased_price = models.PositiveBigIntegerField()
+    purchased_price =models.DecimalField(max_digits=10, decimal_places=2)
     payment_date = models.DateTimeField(auto_now_add=True)
+    
 
     def __str__(self):
         return self.user.first_name

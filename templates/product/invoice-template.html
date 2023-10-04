@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice</title>
+    <style>
+        /* Invoice styling */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        .invoice {
+            width: 80%;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .invoice-header {
+            text-align: center;
+        }
+        .invoice-logo {
+            max-width: 100px;
+            margin: 0 auto;
+        }
+        .invoice-title {
+            font-size: 24px;
+            margin-top: 10px;
+        }
+        .invoice-details {
+            margin-top: 20px;
+            text-align: left;
+        }
+        .invoice-address {
+            margin-bottom: 10px;
+        }
+        .invoice-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .invoice-table th, .invoice-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .invoice-table th {
+            background-color: #f2f2f2;
+        }
+        .invoice-total {
+            text-align: right;
+            margin-top: 20px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="invoice">
+        <div class="invoice-header">
+            <img src="{% static 'img/logo.png' %}" alt="Company Logo" class="invoice-logo">
+            <h1 class="invoice-title">Invoice</h1>
+        </div>
+        <div class="invoice-details">
+            <div class="invoice-address">
+                <strong>Invoice #: {{invoice_id}} </strong><br>
+                <strong>Purchased Date: {{order.purchased_date|date:"F j, Y"}} </strong><br>
+            </div>
+            <div class="invoice-address">
+                <strong>Billing Address:</strong><br>
+                {{order.shipping_address.first_name}} {{order.shipping_address.first_name}}<br>
+                {{order.shipping_address.address_line1}}<br>
+                {{order.shipping_address.address_line2}}<br>
+                {{order.shipping_address.city}}, {{order.shipping_address.state}}<br>
+                Pincode: {{order.shipping_address.pin_code}}<br>
+                Email: {{order.user.email}}<br>
+                Phone: {{order.shipping_address.phone_number}}
+            </div>
+            <div class="invoice-address">
+                <strong>Shipping Address:</strong><br>
+                Male Fashion<br>
+                WareHouse Bengaluru<br>
+                City, State 54321<br>
+                Email: malefashion@example.com<br>
+            </div>
+        </div>
+        <table class="invoice-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Unit Price</th>
+                    <th>Quantity</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in order.order_items.all %}
+                <tr>
+                    <td>{{item.product.title}}</td>
+                    <td>₹{{item.product.price}}</td>
+                    <td>{{item.quantity}}</td>
+                    <td>₹{{item.total_product_price}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div class="invoice-total">
+            <strong>Total Amount: ₹{{total_amount}}</strong>
+        </div>
+        <div class="invoice-total">
+            <strong>Discount Total Amount: ₹{{order.total_price}}</strong>
+        </div>
+    </div>
+</body>
+</html>

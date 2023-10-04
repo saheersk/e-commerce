@@ -123,13 +123,15 @@
                                     <span class="checkmark"></span>
                                 </label>
                             </div>
-                            <div class="checkout__input__radio">
+                            {% if not wallet %}
+                            <div id="wallet" class="checkout__input__radio">
                                 <label for="wallet">
                                     <input type="radio" id="wallet" value="wallet" name="payment-method" />
                                     Wallet
                                     <span class="checkmark"></span>
                                 </label>
                             </div>
+                            {% endif %}
                             <div class="checkout__input__radio">
                                 <label for="digital">
                                     <input type="radio" id="digital" value="digital" name="payment-method" />

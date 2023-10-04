@@ -377,7 +377,6 @@ $(document).ready(function () {
     });
 
     $(document).on("submit", "form.ajax-order", function (e) {
-        console.log("discount");
         var csrfToken = getCSRFToken(); // Get the CSRF token
         if (!csrfToken) {
             console.error("CSRF token not found.");
@@ -425,9 +424,13 @@ $(document).ready(function () {
                         dataType: "json",
                         success: function (data) {
                             console.log("success payment");
-
-                            window.location.href = '/user-profile/my-order/'
-                            
+                            Swal.fire({
+                                icon: "success",
+                                title: "Successfully Purchased",
+                                message: `Your order has been successfully purchased and invoice is sended to your ${data.email}`,
+                            }).then((result) => {
+                                window.location.href = '/user-profile/my-order/'
+                            })
                         },
                         error: function (err) {
                             console.log("error success", err);
@@ -435,7 +438,54 @@ $(document).ready(function () {
                     });
                 }
                 else if(selectedPaymentMethod == "wallet"){
-                    console.log('wallet');
+                    $.ajax({
+                        url: "/shop/user/order/wallet/",
+                        type: "POST",
+                        data: {
+                            address: selectedAddress,
+                            csrfmiddlewaretoken: csrfToken, // Include CSRF token here
+                        },
+                        dataType: "json",
+                        success: function (data) {
+                            console.log("success payment");
+                            if(data.wallet){
+
+                                Swal.fire({
+                                    icon: "success",
+                                    title: "Successfully Purchased",
+                                    message: "Your order has been successfully purchased",
+                                }).then((result) => {
+                                    window.location.href = '/user-profile/my-order/'
+                                })
+                            }
+                            else{
+                                var totalLiElement = document.querySelector(".checkout__total__all li:last-child");
+                                totalLiElement.innerHTML = "Discounted Total Price <span>₹" + data.total_amount + "</span>";
+
+                                $(`#wallet`).remove();
+                                const Toast = Swal.mixin({
+                                    toast: true,
+                                    position: "top-end",
+                                    showConfirmButton: false,
+                                    timer: 3000,
+                                    timerProgressBar: true,
+                                    didOpen: (toast) => {
+                                        toast.addEventListener("mouseenter", Swal.stopTimer);
+                                        toast.addEventListener("mouseleave", Swal.resumeTimer);
+                                    },
+                                });
+            
+                                Toast.fire({
+                                    icon: "success",
+                                    title: "Wallet balance applied",
+                                });
+
+                            }
+                        },
+                        error: function (err) {
+                            console.log("error success", err);
+                        },
+                    });
                 }
                 else{
                     $.ajax({
@@ -508,7 +558,7 @@ $(document).ready(function () {
                         },
                     });
                 }
-                }});
+            }});
         }
     });
     // Attach click event handlers to the increment and decrement buttons

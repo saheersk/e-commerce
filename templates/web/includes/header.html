@@ -23,6 +23,8 @@
         <a href="{% url 'shop:product_wishlist' %}"><img src="{% static 'img/icon/heart.png' %}" alt="" /></a>
         <a href="{% url 'shop:product_cart' %}"><img src="{% static 'img/icon/cart.png' %}" alt="" /> <span class="cart-count">{{cart_count}}</span></a>
         {% comment %} <div class="price">$0.00</div> {% endcomment %}
+        <span>₹{{wallet_amount}}</span>
+
     </div>
     <div id="mobile-menu-wrap"></div>
     <div class="offcanvas__text">
@@ -98,6 +100,7 @@
                     {% comment %}
                     <div class="price">$0.00</div>
                     {% endcomment %}
+                    <span>₹{{wallet_amount}}</span>
                 </div>
             </div>
         </div>

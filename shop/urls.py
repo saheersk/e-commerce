@@ -33,4 +33,7 @@ urlpatterns = [
     #payment
     path('user/create-payment/', views.create_payment, name='create_payment'),
     path('user/payment/verify/', views.payment_verify, name='payment_verify'),
+
+    #Invoice
+    path('user/generate-invoice/<int:pk>/', views.generate_invoice_pdf, name='generate_invoice_pdf'),
 ]
