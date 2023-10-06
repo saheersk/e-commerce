@@ -19,7 +19,7 @@
                                                 <h5 class="mb-1">Size: {{item.size}}</h5>
                                                 <h5 class="mb-4">
                                                     Status:
-                                                    {% if item.order_status.status == 'Delivered' %}
+                                                    {% if item.order_status.status == 'Delivered' or item.order_status.status == 'Refunded'  %}
                                                         <span class="text-success">{{ item.order_status }}</span>
                                                     {% elif item.order_status.status == 'Returned' or item.order_status.status == 'Cancelled' %}
                                                     <span class="text-danger">{{ item.order_status }}</span>

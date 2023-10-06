@@ -73,7 +73,7 @@
                         <div class="col-lg-12">
                             <ul class="coupon-list mt-3 d-flex flex-wrap">
                                 {% for coupon in coupons %}
-                                <li class="coupon-item col-lg-6 mb-2">
+                                <li id="coupon-{{coupon.id}}" class="coupon-item col-lg-6 mb-2 remove-coupon">
                                     <div class="card">
                                         <div class="card-body">
                                             <h5 class="card-title">Coupon Code: {{coupon.code}}</h5>
@@ -108,9 +108,8 @@
                         </ul>
                         <ul class="checkout__total__all">
                             <li>Subtotal <span>₹{{total_amount}}</span></li>
-                            <li></li>
                             {% if discount %}
-                                <li>Discounted Price <span id="total-amount" data-total-amount="{{ discount_amount }}">₹{{ discount_amount }}</span></li>
+                                <li>Discounted Price <span id="discount-total-amount" data-total-amount="{{ discount_amount }}">₹{{ discount_amount }}</span></li>
                             {% else %}
                                 <li>Total <span id="total-amount" data-total-amount="{{ total_amount }}" >₹{{ total_amount }}</span></li>
                             {% endif %}

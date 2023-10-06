@@ -3,6 +3,7 @@ import io
 import hmac
 import hashlib
 import binascii
+from decimal import Decimal
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
@@ -16,7 +17,7 @@ from django.template.loader import get_template
 import razorpay
 from xhtml2pdf import pisa
 
-from shop.models import Product, ProductImage, Category, Wishlist, Cart, OrderStatus, Order, Payment, PaymentMethod, ProductVariant, OrderItem
+from shop.models import Product, ProductImage, Category, Wishlist, Cart, OrderStatus, Order, Payment, PaymentMethod, ProductVariant, OrderItem, WalletHistory
 from user.models import Address, Coupon, CustomUser, CouponUsage, Wallet
 from main.functions import paginate_instances
 from shop.utils import generate_invoice_to_send_email
@@ -183,6 +184,7 @@ def product_cart_add(request, pk):
         Cart.objects.create(
             product=product,
             user=request.user,
+            qty=qty,
             size=size,
             total_price_of_product=product.price
         )
@@ -268,6 +270,7 @@ def update_product_quantity(request, pk):
 def product_cart_remove(request, pk):
     product = get_object_or_404(Cart, id=pk)
 
+    product.qty =1
     product.is_deleted = True
 
     product.save()
@@ -294,7 +297,12 @@ def product_checkout(request):
 
     current_datetime = timezone.now()
 
-    valid_coupons = Coupon.objects.filter(active=True, valid_to__gte=current_datetime)
+    used_coupon_codes = CouponUsage.objects.filter(user=request.user).values_list('coupon__code', flat=True)
+    valid_coupons = Coupon.objects.filter(
+        active=True,
+        valid_to__gte=current_datetime,
+    ).exclude(code__in=used_coupon_codes)
+
     products = Cart.objects.filter(user=request.user, is_deleted=False)
 
     total_amount = products.aggregate(
@@ -334,6 +342,7 @@ def product_checkout(request):
     return render(request, 'product/checkout.html', context)
 
 
+#Discount
 def product_discount(request):
     if request.method == 'POST':
         code = request.POST.get('coupon')
@@ -345,13 +354,22 @@ def product_discount(request):
 
         total_amount = sum(item.product.price * item.qty for item in products)
 
-        if request.session.get('coupon'):
+        if CouponUsage.objects.filter(Q(user=user) & Q(coupon=coupon)).exists():
             response_data = {
-                "error": True,
-                "title": "Already used one coupon",
-                "status": "warning",
+                "title": "Used for previous orders",
+                "status": "error",
             }
             return HttpResponse(json.dumps(response_data), content_type="application/json")
+
+
+        # if request.session.get('coupon'):
+        #     # coupon_code = request.session.get('coupon')
+        #     # if coupon_code == coupon.code:
+        #         response_data = {
+        #             "title": "Already used one coupon",
+        #             "status": "warning",
+        #         }
+        #         return HttpResponse(json.dumps(response_data), content_type="application/json")
 
         current_datetime = timezone.now()
 
@@ -382,11 +400,15 @@ def product_discount(request):
                 discount_amount += item.total_price_of_product 
                 item.save()
 
+        CouponUsage.objects.create(
+                user=request.user,
+                coupon=coupon,
+            )
+
         # CouponUsage.objects.create(user=user, coupon=coupon)
         request.session['coupon'] = coupon.code
 
         response_data = {
-            "error": False,
             "title": "Discount applied",
             "status": "success",
             "total_amount": float(discount_amount),
@@ -398,7 +420,7 @@ def product_discount(request):
         pass
 
 
-
+#Payment
 def product_order_cod(request):
     if request.method == 'POST':
         user = request.user
@@ -540,7 +562,7 @@ def product_order_wallet(request):
         order_status = OrderStatus.objects.get(status="Pending")
         payment_type = PaymentMethod.objects.get(payment_type="Wallet")
 
-        total_amount = 0
+        total_amount = Decimal(0.00)
 
         for item in products:
              total_amount += item.total_price_of_product
@@ -554,6 +576,13 @@ def product_order_wallet(request):
         if wallet.balance > total_amount:
             wallet.balance -= total_amount
             wallet.save()
+            
+            WalletHistory.objects.create(
+                wallet=wallet,
+                order=order,
+                amount=total_amount,
+                transaction_operation='debit'
+            )
 
             request.session['wallet'] = False
 
@@ -566,7 +595,7 @@ def product_order_wallet(request):
                             total_product_price=item.product.price * item.qty
                         )
                 order.order_items.add(order_item)
-                total_amount += float(item.total_price_of_product)
+                total_amount += item.total_price_of_product
 
             order.total_price = total_amount
 
@@ -602,11 +631,18 @@ def product_order_wallet(request):
 
             return HttpResponse(json.dumps(response_data), content_type="application/json")
         else:
-            total_amount = 0.00
+            total_amount = Decimal(0.00)
             for item in products:
                 item.total_price_of_product -= wallet.balance // 2
                 item.save()
-                total_amount += float(item.total_price_of_product)
+                total_amount += item.total_price_of_product
+
+            WalletHistory.objects.create(
+                wallet=wallet,
+                order=order,
+                amount=total_amount,
+                transaction_operation='debit'
+            )
 
             wallet.balance = 0
             request.session['wallet'] = True
@@ -617,7 +653,7 @@ def product_order_wallet(request):
                         "status" : "success",
                         "title" : "Order Purchased",
                         "message" : "Your Product will be deliver shortly",
-                        "total_amount" : float(total_amount)
+                        "total_amount" : total_amount
                     }
 
             return HttpResponse(json.dumps(response_data), content_type="application/json")
@@ -662,7 +698,6 @@ def payment_verify(request):
         return JsonResponse(response_data)
 
     return JsonResponse({'status': 'error', 'message': 'Payment verification failed'})
-
 
 
 #invoice

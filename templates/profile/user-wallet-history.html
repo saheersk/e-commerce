@@ -1,0 +1,42 @@
+{% extends "profile-base.html" %} {% block content %} {% load static %} {% include 'web/includes/header.html' %}
+    <div class="d-flex" style="height: calc(70vh - 150px)">
+        {% include 'profile/includes/sidebar.html' %}
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12 mt-4 mb-4 text-center">
+                    <h4>Balance : <b>₹ {{wallet_amount}}</b></h4>
+                </div>
+                <div class="col-md-12 d-flex align-items-center justify-content-center">
+                    <div class="col-md-6 ">
+                        <div class="col-md-12">
+                            {% if wallet_history.length < 1 %}
+                                <h3 class="text-center">No Transaction History</h3>
+                            {% else %}
+                                {% for wallet in wallet_history %}
+                                    <div class="row p-2 border rounded mb-2">
+                                        <div class="col-md-8 ">
+                                            {% for item in wallet.order.order_items.all %}
+                                                <span><small>Product Name: {{item.product.title}} - {{item.quantity}}</small><br></span>
+                                            {% endfor %}
+                                            <span>Refund amount is credit to your wallet <br></span>
+                                            <span><small>On {{ wallet.transaction_date|date:"j F Y g:i A" }}</small></span>
+                                        </div>
+                                        <div class="col-md-4 d-flex flex-column align-items-end justify-content-end">
+                                            <span class="p-0 m-0 text-end">
+                                                {% if wallet.transaction_operation == 'credit' %}
+                                                    <b class="text-success">+{{wallet.amount}}</b>
+                                                {% else %}
+                                                    <b class="text-danger">-{{wallet.amount}}</b>
+                                                {% endif %}</b></span>
+                                            <span class="text-end text-capitalize">{% if wallet.transaction_operation == 'credit' %}{{wallet.transaction_operation}}{% else %}{{wallet.transaction_operation}}{% endif %}</span>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                               {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

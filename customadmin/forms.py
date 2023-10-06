@@ -2,7 +2,7 @@ import re
 
 from django import forms
 
-from user.models import CustomUser
+from user.models import CustomUser, Coupon
 from web.models import Banner
 from shop.models import Category, Product, ProductImage, OrderItem, ProductVariant
 
@@ -133,3 +133,15 @@ class AdminBannerForm(forms.ModelForm):
     class Meta:
         model = Banner
         fields = '__all__'
+
+
+class AdminCouponForm(forms.ModelForm):
+
+    class Meta:
+        model = Coupon 
+        fields = '__all__'
+
+        widgets = {
+            'valid_from': forms.DateInput(attrs={'type': 'date'}),
+            'valid_to': forms.DateInput(attrs={'type': 'date'}),
+        }

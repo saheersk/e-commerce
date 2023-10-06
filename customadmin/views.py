@@ -1,34 +1,152 @@
 import json
+import csv
+from datetime import datetime
 
 from django.shortcuts import render, reverse, get_object_or_404, redirect
 from django.http import HttpResponseRedirect, HttpResponse
-# from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
-from django.db.models import Q
+from django.db.models import Q, Sum, Count
 from django.forms import formset_factory
+from django.db.models.functions import TruncMonth
+from django.core.serializers.json import DjangoJSONEncoder
 
-from customadmin.forms import AdminCustomUserForm, AdminCustomUpdateUserForm, AdminCategory, AdminProduct, AdminProductImage, AdminOrderItemFrom, AdminProductVariantFrom, AdminBannerForm
-from user.models import CustomUser, Wallet
+from customadmin.forms import AdminCustomUserForm, AdminCustomUpdateUserForm, AdminCategory, AdminProduct, AdminProductImage, AdminOrderItemFrom, AdminProductVariantFrom, AdminBannerForm, AdminCouponForm
+from user.models import CustomUser, Wallet, Coupon
 from web.models import Contact, Banner
 from user.functions import generate_form_error
-from shop.models import Category, Product, ProductImage, Order, ProductVariant, OrderItem, OrderManagement, OrderStatus
+from shop.models import Category, Product, ProductImage, Order, ProductVariant, OrderItem, OrderManagement, OrderStatus, WalletHistory, Payment
 from main.functions import paginate_instances
 from customadmin.utils import send_user_refund_mail
 
-
+class DateTimeEncoder(DjangoJSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return obj.strftime('%Y-%m-%d %H:%M:%S')
+        return super().default(obj)
+    
 #Admin User
-# @login_required(login_url="admin-login/")
+@login_required(login_url="admin-login/")
 def admin_panel(request):
-    if request.user.is_superuser and request.user.is_authenticated:
-        context = {
-            "title": "Male Fashion | Admin Panel",
-            "username": request.user.username if request.user.is_authenticated else None,
-        }
-        return render(request, 'customadmin/admin-panel.html', context)
-    elif request.user.is_authenticated:
-        return redirect('web:index')
+    total_revenue = Order.objects.filter(order_items__order_status__status="Delivered").aggregate(
+                        total_revenue=Sum('total_price')
+                    )
+    print(total_revenue, 'none')
+    monthly_revenue = Order.objects.filter(order_items__order_status__status="Delivered").annotate(
+                            month=TruncMonth('purchased_date')
+                        ).values('month').annotate(
+                            total_revenue=Sum('total_price')
+                        ).order_by('month')
+    
+    current_date = datetime.now()
+    current_month = current_date.month
+    current_year = current_date.year
+
+    current_month_revenue_set = Order.objects.filter(
+        order_items__order_status__status="Delivered",
+        purchased_date__month=current_month,
+        purchased_date__year=current_year
+    ).annotate(
+        month=TruncMonth('purchased_date')
+    ).values('month').annotate(
+        total_revenue=Sum('total_price')
+    ).order_by('month')
+
+    if current_month_revenue_set.exists():
+        current_month_revenue = current_month_revenue_set[0]['total_revenue']  # Use 'total_revenue' here
     else:
-        return redirect('customadmin:admin_login')
+        current_month_revenue = 0
+
+    total_sales_count = Order.objects.filter(order_items__order_status__status="Delivered").count()
+    monthly_sales_count = (
+                            Order.objects
+                            .filter(order_items__order_status__status="Delivered")
+                            .annotate(month=TruncMonth('purchased_date'))
+                            .values('month')
+                            .annotate(sales_count=Count('id'))
+                            .order_by('month')
+                        )
+    sales_data = [{'month': item['month'], 'sales_count': item['sales_count']} for item in monthly_sales_count]
+    sales_data_json = json.dumps({'sales_data': sales_data}, cls=DateTimeEncoder)
+    monthly_sales_count_set = Order.objects.filter(
+                                order_items__order_status__status="Delivered",
+                                purchased_date__month=current_month,
+                                purchased_date__year=current_year
+                            ).annotate(
+                                month=TruncMonth('purchased_date')
+                            ).values('month').annotate(
+                                sales_count=Count('id')
+                            ).order_by('month')
+        # Get the sales_count for the current month
+    if monthly_sales_count_set.exists():
+        current_month_sales_count = monthly_sales_count_set[0]['sales_count']
+    else:
+        current_month_sales_count = 0
+            
+    #Transaction
+    cod_transaction_count = Payment.objects.filter(payment_method__payment_type='COD').count()
+    wallet_transaction_count = Payment.objects.filter(payment_method__payment_type='Wallet').count()
+    online_transaction_count = Payment.objects.filter(payment_method__payment_type='Online').count()
+
+    total_transaction_count = cod_transaction_count + wallet_transaction_count + online_transaction_count
+
+    # Calculate the percentages
+    if total_transaction_count > 0:
+        cod_percentage = (cod_transaction_count / total_transaction_count) * 100
+        wallet_percentage = (wallet_transaction_count / total_transaction_count) * 100
+        online_percentage = (online_transaction_count / total_transaction_count) * 100
+    else:
+        cod_percentage = 0
+        wallet_percentage = 0
+        online_percentage = 0
+
+    top_selling_products = (
+                            OrderItem.objects
+                            .values('product__title', 'product__price', 'total_product_price', 'product__featured_image')  # Include product image
+                            .annotate(
+                                total_quantity_sold=Sum('quantity'),
+                                total_revenue=Sum('total_product_price')  # Use total_product_price for total revenue
+                            )
+                            .order_by('-total_quantity_sold')
+                            [:10]
+                        )
+    top_categories = (
+                        OrderItem.objects
+                        .values('product__category__name')
+                        .annotate(total_products_sold=Count('product')) 
+                        .order_by('-total_products_sold')
+                        [:10] 
+                    )
+    print(top_categories, 'top')
+    total_users = CustomUser.objects.filter(is_superuser=False).count()
+    total_blocked_users = CustomUser.objects.filter(Q(is_superuser=False) & Q(is_blocked=True)).count()
+    total_orders = Order.objects.all().count()
+    total_pending_order = Order.objects.filter(order_items__order_status__status='Pending').count()
+
+    orders_cancel_return = OrderManagement.objects.filter(Q(status="return") | Q(status="cancel"))
+
+    print(monthly_sales_count, cod_percentage, 'count')
+    context = {
+        "title": "Male Fashion | Admin Panel",
+        "username": request.user.username if request.user.is_authenticated else None,
+        "total_revenue": total_revenue,
+        "monthly_revenue": monthly_revenue,
+        "current_month_revenue": current_month_revenue,
+        "current_month_sales_count": current_month_sales_count,
+        "total_sales_count": total_sales_count,
+        "monthly_sales_count": sales_data_json,
+        "cod_percentage": cod_percentage,
+        "wallet_percentage": wallet_percentage,
+        "online_percentage": online_percentage,
+        "top_selling_products": top_selling_products,
+        "top_categories": top_categories,
+        "total_users": total_users,
+        "total_blocked_users": total_blocked_users,
+        "total_orders": total_orders,
+        "total_pending_order": total_pending_order,
+        "orders_cancel_return": orders_cancel_return,
+    }
+    return render(request, 'customadmin/admin-panel.html', context)
 
 
 def admin_login(request):
@@ -506,8 +624,11 @@ def admin_order(request):
     if request.user.is_superuser and request.user.is_authenticated:
         search_query = request.GET.get('search')
 
+        orders = Order.objects.filter(
+                ~Q(order_items__order_status__status="Requested For Cancelling") &
+                ~Q(order_items__order_status__status="Requested For Returning")
+            )
 
-        orders = Order.objects.all()
         if search_query:
             orders = orders.filter(Q(user__first_name__icontains=search_query) | Q(product__title__icontains=search_query) | Q(order_status__status__icontains=search_query))
         
@@ -752,13 +873,22 @@ def admin_banner_delete(request, pk):
 
 
 def admin_order_center(request):
-    orders = OrderManagement.objects.filter(Q(status="return") | Q(status="cancel") | Q(status="completed") | Q(status="approved"))
+    title = request.GET.get('title', '')
+
+    valid_statuses = ['return', 'cancel', 'completed', 'approved']
+
+    orders = OrderManagement.objects.filter(Q(status__in=valid_statuses))
+
+    if title:
+        orders = orders.filter(ordered_product__product__title=title)
+
     context = {
         "title": "Male Fashion | Admin Order Resolution",
         "heading": ['Product', 'Reason', 'Status'],
         "orders": orders
     }
     return render(request, 'customadmin/admin-table-returned.html', context)
+
 
 def admin_order_center_edit(request, pk):
     pass
@@ -767,7 +897,10 @@ def admin_order_center_edit(request, pk):
 def admin_order_center_approve(request, pk):
     order = get_object_or_404(OrderManagement, id=pk)
 
-    if order.status == "cancel":
+    purchased_order = Order.objects.get(order_items=order.ordered_product)
+    payment = Payment.objects.get(order=purchased_order)
+
+    if payment.payment_method.payment_type == "COD":
         product_variant = ProductVariant.objects.get(product=order.ordered_product.product, size=order.ordered_product.size)
         product_variant.stock_unit += order.ordered_product.quantity 
         product_variant.save()
@@ -778,7 +911,16 @@ def admin_order_center_approve(request, pk):
         wallet.balance += order.ordered_product.total_product_price
         wallet.save()
 
-        order_status = OrderStatus.objects.get(status="Completed")
+        purchased_order = Order.objects.get(order_items=order.ordered_product)
+
+        WalletHistory.objects.create(
+                order=purchased_order,
+                wallet=wallet,
+                amount=order.ordered_product.total_product_price,
+                transaction_operation='credit'
+            )
+        
+        order_status = OrderStatus.objects.get(status="Refunded")
         order.ordered_product.order_status = order_status
         order.ordered_product.save()
 
@@ -813,18 +955,28 @@ def admin_order_center_approve(request, pk):
 
 def admin_order_center_completed(request, pk):
     order = get_object_or_404(OrderManagement, id=pk)
-    
+
     product_variant = ProductVariant.objects.get(product=order.ordered_product.product, size=order.ordered_product.size)
     product_variant.stock_unit += order.ordered_product.quantity 
     product_variant.save()
         
     order_data = Order.objects.get(order_items=order.ordered_product)
     print(order_data, 'order')
+
     wallet =  Wallet.objects.get(user=order_data.user)
     wallet.balance += order.ordered_product.total_product_price
     wallet.save()
 
-    order_status = OrderStatus.objects.get(status="Completed")
+    purchased_order = Order.objects.get(order_items=order.ordered_product)
+
+    WalletHistory.objects.create(
+            order=purchased_order,
+            wallet=wallet,
+            amount=order.ordered_product.total_product_price,
+            transaction_operation='credit'
+        )
+    
+    order_status = OrderStatus.objects.get(status="Refunded")
     order.ordered_product.order_status = order_status
     order.ordered_product.save()
 
@@ -840,3 +992,139 @@ def admin_order_center_completed(request, pk):
         }
 
     return HttpResponse(json.dumps(response_data), content_type="application/json")
+
+
+#Coupon
+def admin_coupon(request):
+    coupons = Coupon.objects.all()
+
+    context = {
+        "title" : "Male Fashion | Admin Coupon",
+        "heading": ['Coupon', 'Discount Type', 'Amount or Percentage', 'Valid From', 'Valid To'],
+        "coupons" : coupons
+    }
+
+    return render(request, 'customadmin/admin-table-coupon.html', context)
+
+
+def admin_coupon_add(request):
+    if request.method == 'POST':
+        form = AdminCouponForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect("customadmin:admin_coupon") 
+    else:
+        form = AdminCouponForm()
+        context = {
+            "title": "Male Fashion | Admin Coupon Add",
+            "form": form
+        }
+        return render(request, 'customadmin/admin-add.html', context)
+
+
+def admin_coupon_edit(request, pk):
+    coupon = get_object_or_404(Coupon, id=pk)
+    if request.method == 'POST':
+        form = AdminCouponForm(request.POST, instance=coupon)
+        if form.is_valid():
+            form.save()
+            return redirect("customadmin:admin_coupon") 
+    else:
+        form = AdminCouponForm(instance=coupon)
+        context = {
+            "title": "Male Fashion | Admin Coupon Add",
+            "form": form
+        }
+        return render(request, 'customadmin/admin-add.html', context)
+    
+
+def admin_sales_report(request):
+    order_status = request.GET.get('order_status')
+
+    if order_status:
+        orders = Order.objects.filter(order_items__order_status__status=order_status)
+    else:
+        orders = Order.objects.all()
+    
+    if request.method == 'POST':
+        from_date = request.POST['from_date']
+        to_date = request.POST['to_date']
+
+        request.session['from_date'] = from_date
+        request.session['to_date'] = to_date
+
+        filtered_orders = orders.filter(purchased_date__range=[from_date, to_date])
+
+        context = {
+            "title": "Male Fashion | Sales Report",
+            "orders": filtered_orders,
+        }
+
+        return render(request, 'customadmin/admin-sales-report.html', context)
+    else:
+        context = {
+            "title": "Male Fashion | Sales Report",
+            "orders": orders
+        }
+
+        return render(request, 'customadmin/admin-sales-report.html', context)
+
+
+
+def download_sales_report_csv(request):
+    order_status = request.GET.get('order_status')
+
+    from_date = request.session.get('from_date')
+    to_date = request.session.get('to_date')
+
+    if from_date and to_date:
+        if order_status:
+            orders = Order.objects.filter(
+                order_items__order_status__status=order_status,
+                purchased_date__range=[from_date, to_date]
+            )
+        else:
+            orders = Order.objects.filter(
+                purchased_date__range=[from_date, to_date]
+            )
+    elif order_status:
+        orders = Order.objects.filter(order_items__order_status__status=order_status)
+    else:
+        orders = Order.objects.all()
+
+    data_to_export = orders
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="sales_report.csv"'
+
+    writer = csv.writer(response)
+    # Add CSV header row
+    writer.writerow(['Order ID', 'Customer Name', 'Total Price', 'Product', "Qty", 'Order Status', 'Purchase Date'])
+
+    # Add data rows
+    all_status = []
+    all_product = []
+
+    for order in data_to_export:
+        # Initialize lists for each order
+        status = []
+        product = []
+
+        for item in order.order_items.all():
+            status.append(item.order_status.status)
+            product.append(f"{item.product} ({item.quantity})")
+
+        # Append the status and product lists for the current order to the overall lists
+        all_status.append(status)
+        all_product.append(product)
+
+        writer.writerow([
+            order.id,
+            f"{order.user.first_name} {order.user.last_name}",
+            order.total_price,
+            ', '.join(product),  # Convert the product list to a comma-separated string
+            ', '.join(status),   # Convert the status list to a comma-separated string
+            order.purchased_date
+        ])
+
+    return response

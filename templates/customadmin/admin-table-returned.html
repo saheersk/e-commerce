@@ -66,7 +66,8 @@
                                                             <a
                                                                 type="button"
                                                                 data-item-id="{{order.id}}"
-                                                                class="btn bg-warning approve-product"
+                                                                class="btn bg-warning"
+                                                                id="approve-product"
                                                                 data-template="editOne"
                                                             >
                                                                 Approve
@@ -75,7 +76,7 @@
                                                             <a
                                                                 type="button"
                                                                 data-item-id="{{order.id}}"
-                                                                class="btn bg-danger refund-product"
+                                                                class="btn bg-danger refund-product text-dark"
                                                                 data-template="editOne"
                                                             >
                                                                 Refund
@@ -108,5 +109,8 @@
         </div>
     </div>
 </main>
+<script>
+    var count=0
+</script>
 
 {% endblock %}

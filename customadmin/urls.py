@@ -26,6 +26,12 @@ urlpatterns = [
     path('category/categories/edit/<int:pk>/', views.admin_category_edit, name='admin_category_edit'),
     path('category/categories/delete/<int:pk>/', views.admin_category_delete, name='admin_category_delete'),
 
+    #Coupon
+    path('coupon/coupons/', views.admin_coupon, name='admin_coupon'),
+    path('coupon/coupons/add/', views.admin_coupon_add, name='admin_coupon_add'),
+    path('coupon/coupons/edit/<int:pk>/', views.admin_coupon_edit, name='admin_coupon_edit'),
+
+
     #Admin Product
     path('product/products/', views.admin_product, name='admin_product'),
     path('product/products/add/', views.admin_product_add, name='admin_product_add'),
@@ -45,7 +51,9 @@ urlpatterns = [
     path('order/orders-cancelled-or-returned/approve/<int:pk>/', views.admin_order_center_approve, name='admin_order_center_approve'),
     path('order/orders-cancelled-or-returned/completed/<int:pk>/', views.admin_order_center_completed, name='admin_order_center_completed'),
 
-
+    #sales
+    path('order/orders/sales-report/', views.admin_sales_report, name='admin_sales_report'),
+    path('order/orders/sales-report/download_csv/', views.download_sales_report_csv, name='download_sales_report_csv'),
 
     #Contact
     path('contact/details/', views.admin_contact, name='admin_contact'),

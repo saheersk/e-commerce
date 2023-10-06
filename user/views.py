@@ -85,7 +85,7 @@ def signup(request):
                 phone_number=instance.phone_number,
             )
             
-            Wallet.objects.create(user=user, balance=0)
+            Wallet.objects.create(user=user, balance=1000)
             
             request.session['email'] = instance.email
             send_otp(request, instance.email)

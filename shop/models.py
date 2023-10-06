@@ -8,7 +8,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from PIL import Image
 from io import BytesIO
 
-from user.models import CustomUser, Address, Coupon
+from user.models import CustomUser, Address, Coupon, Wallet
 
 
 class Category(models.Model):
@@ -99,7 +99,7 @@ class ProductImage(models.Model):
                     img = img.resize((300, 533), Image.LANCZOS)
 
                     thumbnail_img = img.copy()
-                    thumbnail_img.thumbnail((100, 120), Image.LANCZOS)
+                    thumbnail_img.thumbnail((200, 240), Image.LANCZOS)
 
                     thumb_filename = os.path.basename(self.image.path)
                     thumb_io = BytesIO()
@@ -203,3 +203,20 @@ class OrderManagement(models.Model):
 
     def __str__(self):
         return self.reason
+
+class WalletHistory(models.Model):
+    TRANSACTION_OPERATION = [
+        ('credit', 'Credit'),
+        ('debit', 'Debit'),
+    ]
+    wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    transaction_operation = models.CharField(max_length=100, choices=TRANSACTION_OPERATION)
+    transaction_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.wallet.user.first_name
+    
+    class Meta:
+        verbose_name_plural = 'Wallet Histories'

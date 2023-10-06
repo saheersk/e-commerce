@@ -22,4 +22,7 @@ urlpatterns = [
     path('my-order/details/<int:pk>/', views.profile_order_details, name='profile_order_details'),
     path('my-order/cancel/<int:pk>/', views.profile_order_cancel, name='profile_order_cancel'),
     path('my-order/return/<int:pk>/', views.profile_order_return, name='profile_order_return'),
-]
+
+    #payment
+    path('my-order/wallet/history/', views.profile_wallet_history, name='profile_wallet_history'),
+]   

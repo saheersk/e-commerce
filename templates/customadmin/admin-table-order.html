@@ -15,9 +15,9 @@
                         </div>
                     </div>
                 </div>
-                <div>
+            <div>
                     <!-- row -->
-                    <div class="row">
+            <div class="row">
                         <div class="col-12">
                             <div class="card">
                                 <div class="search-bar w-25 mt-2 mb-2 ml-2">
@@ -30,6 +30,20 @@
                                         />
                                     </form>
                                 </div>
+                                {% comment %} <div class="dropdown-filters">
+                                    <select class="form-select" id="userFilter">
+                                        <option value="">All Users</option>
+                                        <!-- Add options for users here -->
+                                    </select>
+                                
+                                    <select class="form-select" id="statusFilter">
+                                        <option value="">All Statuses</option>
+                                        <option value="Delivered">Delivered</option>
+                                        <option value="Returned">Returned</option>
+                                        <option value="Cancelled">Cancelled</option>
+                                        <!-- Add more status options here -->
+                                    </select>
+                                </div> {% endcomment %}
                                 <div class="card-body">
                                     <div class="table-responsive table-card">
                                         <table
@@ -60,13 +74,13 @@
                                                     <td>₹{{order.total_price}}</td>
                                                         <td>
                                                         {% for item in order.order_items.all %}
-                                                                    {% if item.order_status.status == 'Delivered' %}
+                                                                {% if item.order_status.status == 'Delivered' %}
                                                                     <span class="text-success">{{ item.order_status }}</span>
-                                                                {% elif item.order_status.status == 'Returned' or item.order_status.status == 'Cancelled' %}
+                                                                {% elif item.order_status.status == 'Returned' or item.order_status.status == 'Cancelled'  %}
                                                                 <span class="text-danger">{{ item.order_status }}</span>
                                                                 {% elif item.order_status.status == 'Requested For Cancelling' or item.order_status.status == 'Requested For Returning' %}
                                                                 <span class="text-warning">{{ item.order_status }}</span>
-                                                                {% elif item.order_status.status == 'Shipped' %}
+                                                                {% elif item.order_status.status == 'Shipped' or item.order_status.status == 'Refunded'  %}
                                                                 <span class="text-primary">{{ item.order_status }}</span>
                                                                 {% elif item.order_status.status == 'Pending' %}
                                                                 <span class="text-warning">{{ item.order_status }}</span>

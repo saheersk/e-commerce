@@ -73,7 +73,7 @@ $(document).on("click", ".action-button", function (e) {
                             Swal.fire(title, message, "error");
 
                             if (stable != "true") {
-                                window.setTimeout(function () { }, 2000);
+                                window.setTimeout(function () {}, 2000);
                             }
                         }
                     },
@@ -81,8 +81,7 @@ $(document).on("click", ".action-button", function (e) {
                         Swal.hideLoading();
 
                         var title = "An error occurred";
-                        var message =
-                            "An error occurred. Please try again later.";
+                        var message = "An error occurred. Please try again later.";
                         Swal.fire(title, message, "error");
                     },
                 });
@@ -90,6 +89,7 @@ $(document).on("click", ".action-button", function (e) {
         }
     });
 });
+
 
 $(document).ready(function () {
 
@@ -106,19 +106,19 @@ $(document).ready(function () {
         return csrfToken;
     }
 
-
-    $('.approve-product').click(function () {
-        var csrfToken = getCSRFToken(); // Get the CSRF token
+    $("#approve-product").click(function () {
+        console.log('approve');
+        var csrfToken = getCSRFToken();
         if (!csrfToken) {
             console.error("CSRF token not found.");
             return;
         }
         var itemId = $(this).data("item-id");
-        console.log(itemId, 'id');
-    
+        console.log(itemId, "id");
+
         var confirmButtonText = "Yes";
         var confirmButtonColor = "#DD6B55";
-    
+
         Swal.fire({
             title: "Confirm Product Approve",
             text: "Are you sure you want approve?",
@@ -136,14 +136,13 @@ $(document).ready(function () {
                         csrfmiddlewaretoken: csrfToken,
                     },
                     success: function (data) {
-                        if (data.status == 'success') {
-                            const statusCompleted = document.querySelector('#status-completed');
-                            const statusPending = document.querySelector('#status-pending');
-                            if (data.status == 'completed') {
-                                statusCompleted.textContent = data.order_status
-                            }
-                            else{
-                                statusPending.textContent = data.order_status
+                        if (data.status == "success") {
+                            const statusCompleted = document.querySelector("#status-completed");
+                            const statusPending = document.querySelector("#status-pending");
+                            if (data.status == "completed") {
+                                statusCompleted.textContent = data.order_status;
+                            } else {
+                                statusPending.textContent = data.order_status;
                             }
 
                             const Toast = Swal.mixin({
@@ -161,7 +160,8 @@ $(document).ready(function () {
                                 icon: data.status,
                                 title: data.title,
                             });
-    
+
+                            window.location.reload()
                         } else {
                             console.log("else");
                         }
@@ -172,6 +172,90 @@ $(document).ready(function () {
                 });
             }
         });
-    })
+    });
 
-})
+    $(".refund-product").click(function () {
+        var csrfToken = getCSRFToken(); // Get the CSRF token
+        if (!csrfToken) {
+            console.error("CSRF token not found.");
+            return;
+        }
+        var itemId = $(this).data("item-id");
+        console.log(itemId, "id");
+
+        var confirmButtonText = "Yes";
+        var confirmButtonColor = "#DD6B55";
+
+        Swal.fire({
+            title: "Confirm Refund",
+            text: "Are you sure you want refund?",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonText: confirmButtonText,
+            confirmButtonColor: confirmButtonColor,
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: `/customadmin/order/orders-cancelled-or-returned/completed/${itemId}/`,
+                    method: "POST",
+                    dataType: "json",
+                    data: {
+                        csrfmiddlewaretoken: csrfToken,
+                    },
+                    success: function (data) {
+                        if (data.status == "success") {
+                            const statusCompleted = document.querySelector("#status-completed");
+                            const statusPending = document.querySelector("#status-pending");
+                            if (data.status == "completed") {
+                                statusCompleted.textContent = data.order_status;
+                            } else {
+                                statusPending.textContent = data.order_status;
+                            }
+
+                            const Toast = Swal.mixin({
+                                toast: true,
+                                position: "top-end",
+                                showConfirmButton: false,
+                                timer: 3000,
+                                timerProgressBar: true,
+                                didOpen: (toast) => {
+                                    toast.addEventListener("mouseenter", Swal.stopTimer);
+                                    toast.addEventListener("mouseleave", Swal.resumeTimer);
+                                },
+                            });
+                            Toast.fire({
+                                icon: data.status,
+                                title: data.title,
+                            });
+
+                            window.location.reload();
+                        } else {
+                            console.log("else");
+                        }
+                    },
+                    error: function () {
+                        console.log("error");
+                    },
+                });
+            }
+        });
+    });
+
+    $("#performanceChart").length && ((e = {
+        series: [codPercentage, walletPercentage, onlinePercentage],
+        chart: { height: 320, type: "radialBar" },
+        colors: [window.theme.primary, window.theme.success, window.theme.danger],
+        stroke: { lineCap: "round" },
+        plotOptions: {
+            radialBar: {
+                startAngle: -168,
+                endAngle: -450,
+                hollow: { size: "55%" },
+                track: { background: "transparent" },
+                dataLabels: { show: !1 },
+            },
+        },
+    }),
+    new ApexCharts(document.querySelector("#performanceChart"), e).render());   
+
+});

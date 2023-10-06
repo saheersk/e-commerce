@@ -6,11 +6,11 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.contrib.auth import update_session_auth_hash
 
-from user.models import Address 
+from user.models import Address
 from user_profile.forms import CustomUserEditForm
 from main.functions import generate_form_error
 from user_profile.forms import AddressForm, OrderManagementForm
-from shop.models import Order, Cart, OrderStatus, OrderItem, Payment
+from shop.models import Order, Cart, OrderStatus, OrderItem, Payment, WalletHistory
 
 
 @login_required(login_url='user/login/')
@@ -333,7 +333,7 @@ def profile_order_cancel(request, pk):
                 product.order_status = status
                 product.save()
             else:
-                instance.status = "requested for cancel"
+                instance.status = "cancel"
 
                 status = OrderStatus.objects.get(status="Requested For Cancelling")
                 product.order_status = status
@@ -385,7 +385,7 @@ def profile_order_return(request, pk):
 
             instance.ordered_product = product 
 
-            instance.status = "requested for return"
+            instance.status = "return"
 
             status = OrderStatus.objects.get(status="Requested For Returning")
             product.order_status = status
@@ -419,3 +419,11 @@ def profile_order_return(request, pk):
 
         return render(request, 'profile/user-order-return.html', context)
     
+
+def profile_wallet_history(request):
+    wallet_history = WalletHistory.objects.filter(wallet__user=request.user)
+    context = {
+        "title" : "Male Fashion | Wallet History",
+        "wallet_history": wallet_history
+    }
+    return render(request, 'profile/user-wallet-history.html', context)

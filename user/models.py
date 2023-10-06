@@ -115,21 +115,7 @@ class Wallet(models.Model):
         return f"Wallet of {self.user.first_name}"
     
 
-class WalletHistory(models.Model):
-    TRANSACTION_OPERATION = [
-        ('credit', 'Credit'),
-        ('debit', 'Debit'),
-    ]
-    wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE)
-    amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
-    transaction_operation = models.CharField(max_length=100, choices=TRANSACTION_OPERATION)
-    transaction_date = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return self.wallet.user.first_name
-    
-    class Meta:
-        verbose_name_plural = 'Wallet Histories'
 
 
 

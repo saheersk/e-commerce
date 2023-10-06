@@ -291,6 +291,7 @@ $(document).ready(function () {
             },
             dataType: "json",
             success: function (data) {
+               
                 const Toast = Swal.mixin({
                     toast: true,
                     position: "top-end",
@@ -307,9 +308,21 @@ $(document).ready(function () {
                     icon: data.status,
                     title: data.title,
                 });
-                if (!data.error) {
-                    var totalLiElement = document.querySelector(".checkout__total__all li:last-child");
-                    totalLiElement.innerHTML = "Discounted Total Price <span>₹" + data.total_amount + "</span>";
+                if (data.status == "success") {
+                    // var totalLiElement = document.querySelector(".checkout__total__all li:last-child");
+                    // totalLiElement.innerHTML = "Discounted Total Price <span>₹" + data.total_amount + "</span>";
+                    $('.remove-coupon').click(function() {
+                        // Get the parent li element and remove it from the DOM
+                        $(this).closest('li').remove();
+                    });
+                    const totalAmountElement = $("#total-amount");
+                    totalAmountElement.text("₹" + data.total_amount);
+
+                    const discountTotalAmountElement = $("#discount-total-amount");
+                    discountTotalAmountElement.text("₹" + data.total_amount);
+
+                    totalAmountElement.attr("data-total-amount", data.total_amount);
+                    discountTotalAmountElement.attr("data-total-amount", data.total_amount);
                     couponInput.val("");
                 }
             },
@@ -357,7 +370,7 @@ $(document).ready(function () {
                             title: data.title,
                             text: data.message,
                         }).then((result) => {
-                            window.location.href = `/user-profile/my-order/details/${orderId}/`
+                            window.location.href = `/user-profile/my-order/`
                         })
                     },
                     error: function () {
@@ -427,6 +440,7 @@ $(document).ready(function () {
     });
 
     $(document).on("submit", "form.ajax-order", function (e) {
+        console.log('order');
         var csrfToken = getCSRFToken(); // Get the CSRF token
         if (!csrfToken) {
             console.error("CSRF token not found.");
@@ -440,8 +454,14 @@ $(document).ready(function () {
         var confirmButtonText = "Yes";
         var confirmButtonColor = "#DD6B55";
 
-        var totalAmountElement = document.getElementById("total-amount");
-        var totalAmount = totalAmountElement.getAttribute("data-total-amount");
+        
+        var totalAmount = $("#total-amount").data("total-amount");
+        console.log(totalAmount, 'total');
+
+        if(totalAmount == undefined) {
+            totalAmount = $("#discount-total-amount").data("total-amount");
+            console.log(totalAmount, 'dis');
+        }
 
         console.log("Total Amount:", totalAmount);
         
@@ -951,6 +971,7 @@ $(document).ready(function () {
             console.error("CSRF token not found.");
             return;
         }
+
         var productId = $(this).data("product-id");
         var selectedSize = $('input[name="size"]:checked').val();
         var selectedQuantity = $("#quantity-" + productId).val(); 
@@ -991,6 +1012,7 @@ $(document).ready(function () {
                         icon: "success",
                         title: "Added to cart",
                     });
+                    
                 } else {
                     // Handle the case when adding to the cart is not successful
                 }

@@ -1,7 +1,6 @@
 {% load static %}
 <div class="app-menu">
     <!-- Sidebar -->
-
     <div class="navbar-vertical navbar nav-dashboard">
         <div class="h-100" data-simplebar>
             <!-- Brand logo -->
@@ -38,6 +37,11 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a class="nav-link has-arrow" href="{% url 'customadmin:admin_coupon' %}">
+                       Coupons 
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link has-arrow" href="{% url 'customadmin:admin_product'  %}">
                         Products
                     </a>
@@ -58,6 +62,11 @@
                 <li class="nav-item">
                     <a class="nav-link has-arrow" href="{% url 'customadmin:admin_order_center'  %}">
                         Order Cancelled or Returned
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link has-arrow" href="{% url 'customadmin:admin_sales_report'  %}">
+                        Sales Report
                     </a>
                 </li>
                 <li class="nav-item">
