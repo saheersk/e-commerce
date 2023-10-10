@@ -5,39 +5,42 @@ from datetime import datetime
 from django.shortcuts import render, reverse, get_object_or_404, redirect
 from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
+from django.contrib.auth import authenticate, login as auth_login, \
+      logout as auth_logout
 from django.db.models import Q, Sum, Count
 from django.forms import formset_factory
 from django.db.models.functions import TruncMonth
 from django.core.serializers.json import DjangoJSONEncoder
 
-from customadmin.forms import AdminCustomUserForm, AdminCustomUpdateUserForm, AdminCategory, AdminProduct, AdminProductImage, AdminOrderItemFrom, AdminProductVariantFrom, AdminBannerForm, AdminCouponForm
+from customadmin.forms import AdminCustomUserForm, AdminCustomUpdateUserForm, AdminCategory, AdminProduct, AdminProductImage, AdminOrderItemForm, AdminProductVariantFrom, AdminBannerForm, AdminCouponForm, AdminCategoryOfferForm, AdminProductOfferForm
 from user.models import CustomUser, Wallet, Coupon
 from web.models import Contact, Banner
 from user.functions import generate_form_error
-from shop.models import Category, Product, ProductImage, Order, ProductVariant, OrderItem, OrderManagement, OrderStatus, WalletHistory, Payment
+from shop.models import Category, Product, ProductImage, Order, ProductVariant, OrderItem, OrderManagement, OrderStatus, WalletHistory, Payment, CategoryOffer, ProductOffer
 from main.functions import paginate_instances
 from customadmin.utils import send_user_refund_mail
+
 
 class DateTimeEncoder(DjangoJSONEncoder):
     def default(self, obj):
         if isinstance(obj, datetime):
             return obj.strftime('%Y-%m-%d %H:%M:%S')
         return super().default(obj)
-    
-#Admin User
+
+
+# Admin User
 @login_required(login_url="admin-login/")
 def admin_panel(request):
     total_revenue = Order.objects.filter(order_items__order_status__status="Delivered").aggregate(
-                        total_revenue=Sum('total_price')
-                    )
+        total_revenue=Sum('total_price')
+    )
     print(total_revenue, 'none')
     monthly_revenue = Order.objects.filter(order_items__order_status__status="Delivered").annotate(
-                            month=TruncMonth('purchased_date')
-                        ).values('month').annotate(
-                            total_revenue=Sum('total_price')
-                        ).order_by('month')
-    
+        month=TruncMonth('purchased_date')
+    ).values('month').annotate(
+        total_revenue=Sum('total_price')
+    ).order_by('month')
+
     current_date = datetime.now()
     current_month = current_date.month
     current_year = current_date.year
@@ -53,77 +56,90 @@ def admin_panel(request):
     ).order_by('month')
 
     if current_month_revenue_set.exists():
-        current_month_revenue = current_month_revenue_set[0]['total_revenue']  # Use 'total_revenue' here
+        current_month_revenue = current_month_revenue_set[0]['total_revenue']
     else:
         current_month_revenue = 0
 
-    total_sales_count = Order.objects.filter(order_items__order_status__status="Delivered").count()
+    total_sales_count = Order.objects.filter(
+        order_items__order_status__status="Delivered").count()
     monthly_sales_count = (
-                            Order.objects
-                            .filter(order_items__order_status__status="Delivered")
-                            .annotate(month=TruncMonth('purchased_date'))
-                            .values('month')
-                            .annotate(sales_count=Count('id'))
-                            .order_by('month')
-                        )
-    sales_data = [{'month': item['month'], 'sales_count': item['sales_count']} for item in monthly_sales_count]
-    sales_data_json = json.dumps({'sales_data': sales_data}, cls=DateTimeEncoder)
+        Order.objects
+        .filter(order_items__order_status__status="Delivered")
+        .annotate(month=TruncMonth('purchased_date'))
+        .values('month')
+        .annotate(sales_count=Count('id'))
+        .order_by('month')
+    )
+    sales_data = [{'month': item['month'], 'sales_count': item['sales_count']}
+                  for item in monthly_sales_count]
+    sales_data_json = json.dumps(
+        {'sales_data': sales_data}, cls=DateTimeEncoder)
     monthly_sales_count_set = Order.objects.filter(
-                                order_items__order_status__status="Delivered",
-                                purchased_date__month=current_month,
-                                purchased_date__year=current_year
-                            ).annotate(
-                                month=TruncMonth('purchased_date')
-                            ).values('month').annotate(
-                                sales_count=Count('id')
-                            ).order_by('month')
-        # Get the sales_count for the current month
+        order_items__order_status__status="Delivered",
+        purchased_date__month=current_month,
+        purchased_date__year=current_year
+    ).annotate(
+        month=TruncMonth('purchased_date')
+    ).values('month').annotate(
+        sales_count=Count('id')
+    ).order_by('month')
+    # Get the sales_count for the current month
     if monthly_sales_count_set.exists():
         current_month_sales_count = monthly_sales_count_set[0]['sales_count']
     else:
         current_month_sales_count = 0
-            
-    #Transaction
-    cod_transaction_count = Payment.objects.filter(payment_method__payment_type='COD').count()
-    wallet_transaction_count = Payment.objects.filter(payment_method__payment_type='Wallet').count()
-    online_transaction_count = Payment.objects.filter(payment_method__payment_type='Online').count()
 
-    total_transaction_count = cod_transaction_count + wallet_transaction_count + online_transaction_count
+    # Transaction
+    cod_transaction_count = Payment.objects.filter(
+        payment_method__payment_type='COD').count()
+    wallet_transaction_count = Payment.objects.filter(
+        payment_method__payment_type='Wallet').count()
+    online_transaction_count = Payment.objects.filter(
+        payment_method__payment_type='Online').count()
+
+    total_transaction_count = cod_transaction_count + \
+        wallet_transaction_count + online_transaction_count
 
     # Calculate the percentages
     if total_transaction_count > 0:
-        cod_percentage = (cod_transaction_count / total_transaction_count) * 100
-        wallet_percentage = (wallet_transaction_count / total_transaction_count) * 100
-        online_percentage = (online_transaction_count / total_transaction_count) * 100
+        cod_percentage = (cod_transaction_count /
+                          total_transaction_count) * 100
+        wallet_percentage = (wallet_transaction_count /
+                             total_transaction_count) * 100
+        online_percentage = (online_transaction_count /
+                             total_transaction_count) * 100
     else:
         cod_percentage = 0
         wallet_percentage = 0
         online_percentage = 0
 
     top_selling_products = (
-                            OrderItem.objects
-                            .values('product__title', 'product__price', 'total_product_price', 'product__featured_image')  # Include product image
-                            .annotate(
-                                total_quantity_sold=Sum('quantity'),
-                                total_revenue=Sum('total_product_price')  # Use total_product_price for total revenue
-                            )
-                            .order_by('-total_quantity_sold')
-                            [:10]
-                        )
+        OrderItem.objects
+        .values('product__title', 'product__price', 'total_product_price', 'product__featured_image')
+        .annotate(
+            total_quantity_sold=Sum('quantity'),
+            total_revenue=Sum('total_product_price')
+        )
+        .order_by('-total_quantity_sold')
+        [:10]
+    )
     top_categories = (
-                        OrderItem.objects
-                        .values('product__category__name')
-                        .annotate(total_products_sold=Count('product')) 
-                        .order_by('-total_products_sold')
-                        [:10] 
-                    )
+        OrderItem.objects
+        .values('product__category__name')
+        .annotate(total_products_sold=Count('product'))
+        .order_by('-total_products_sold')
+        [:10]
+    )
     print(top_categories, 'top')
     total_users = CustomUser.objects.filter(is_superuser=False).count()
-    total_blocked_users = CustomUser.objects.filter(Q(is_superuser=False) & Q(is_blocked=True)).count()
+    total_blocked_users = CustomUser.objects.filter(
+        Q(is_superuser=False) & Q(is_blocked=True)).count()
     total_orders = Order.objects.all().count()
-    total_pending_order = Order.objects.filter(order_items__order_status__status='Pending').count()
+    total_pending_order = Order.objects.filter(
+        order_items__order_status__status='Pending').count()
 
-    orders_cancel_return = OrderManagement.objects.filter(Q(status="return") | Q(status="cancel"))
+    orders_cancel_return = OrderManagement.objects.filter(
+        Q(status="return") | Q(status="cancel"))
 
     print(monthly_sales_count, cod_percentage, 'count')
     context = {
@@ -158,29 +174,31 @@ def admin_login(request):
             if CustomUser.objects.filter(email=email).exists():
                 customer = CustomUser.objects.get(email=email)
 
-                if customer.is_blocked == False and customer.is_superuser:
-                    user = authenticate(request, email=email, password=password)
+                if not customer.is_blocked and customer.is_superuser:
+                    user = authenticate(
+                        request, email=email, password=password)
                     if user is not None:
                         auth_login(request, user)
                         return redirect("customadmin:admin_panel")
                 else:
                     context = {
-                        "title" : "Login",
-                        "error" : True,
-                        "message" : "User is not exists",
+                        "title": "Login",
+                        "error": True,
+                        "message": "User is not exists",
                     }
-                    return render(request, 'customadmin/admin-login.html', context)
-            
+                    return render(
+                        request, 'customadmin/admin-login.html', context)
+
             context = {
-                "title" : "Login",
-                "error" : True,
-                "message" : "Invalid email or password"
+                "title": "Login",
+                "error": True,
+                "message": "Invalid email or password"
             }
-            return render(request, 'customadmin/admin-login.html', context) 
+            return render(request, 'customadmin/admin-login.html', context)
     else:
         if request.user.is_superuser and request.user.is_authenticated:
             return redirect("customadmin:admin_panel")
-        
+
         context = {
             "title": "Male Fashion | Admin Login",
         }
@@ -237,14 +255,14 @@ def admin_user_add(request):
                     staff = True
 
                 CustomUser.objects.create_user(
-                        username=instance.first_name,
-                        password=instance.password,
-                        email=instance.email,
-                        first_name=instance.first_name,
-                        last_name = instance.last_name,
-                        is_staff=super_user,
-                        is_superuser=staff,
-                        is_blocked=is_blocked
+                    username=instance.first_name,
+                    password=instance.password,
+                    email=instance.email,
+                    first_name=instance.first_name,
+                    last_name=instance.last_name,
+                    is_staff=super_user,
+                    is_superuser=staff,
+                    is_blocked=is_blocked
                 )
 
                 return HttpResponseRedirect(reverse("customadmin:admin_user"))
@@ -253,11 +271,12 @@ def admin_user_add(request):
                 form = AdminCustomUserForm()
                 context = {
                     "title": "Male Fashion | Admin Add",
-                    "error" : True,
-                    "message" : message,
+                    "error": True,
+                    "message": message,
                     "form": form,
                 }
-            return render(request, 'customadmin/admin-add.html', context=context)
+            return render(request, 'customadmin/admin-add.html',
+                          context=context)
         else:
             form = AdminCustomUserForm()
             context = {
@@ -294,27 +313,27 @@ def admin_user_edit(request, pk):
                 message = generate_form_error(form)
                 context = {
                     "title": "Male Fashion | Admin Edit",
-                    "error" : True,
-                    "message" : message,
+                    "error": True,
+                    "message": message,
                     "form": form,
                     "user": user,
                 }
             return render(request, 'customadmin/admin-edit.html', context)
         else:
             form = AdminCustomUpdateUserForm(instance=user)
-            
+
             context = {
                 "title": "Male Fashion | Admin Edit",
                 "user": user,
                 "form": form,
             }
             return render(request, 'customadmin/admin-edit.html', context)
-    
+
     elif request.user.is_authenticated:
         return redirect('web:index')
     else:
         return redirect('customadmin:admin_login')
-    
+
 
 def admin_user_block(request, pk):
     if request.user.is_superuser and request.user.is_authenticated:
@@ -323,18 +342,19 @@ def admin_user_block(request, pk):
         user.is_blocked = not user.is_blocked
         user.save()
         response_data = {
-            "title" : "Successfully Changed",
-            "message" : "User Updated successfully",
-            "status" : "success",
+            "title": "Successfully Changed",
+            "message": "User Updated successfully",
+            "status": "success",
         }
 
-        return HttpResponse(json.dumps(response_data), content_type="application/json")
-    
+        return HttpResponse(json.dumps(response_data),
+                            content_type="application/json")
+
     elif request.user.is_authenticated:
         return redirect('web:index')
     else:
         return redirect('customadmin:admin_login')
-    
+
 
 # @login_required(login_url="admin-login/")
 def admin_user_delete(request, pk):
@@ -342,15 +362,16 @@ def admin_user_delete(request, pk):
     user.delete()
 
     response_data = {
-        "title" : "Successfully Changed",
-        "message" : "User Updated successfully",
-        "status" : "success",
+        "title": "Successfully Changed",
+        "message": "User Updated successfully",
+        "status": "success",
     }
 
-    return HttpResponse(json.dumps(response_data), content_type="application/json")
+    return HttpResponse(json.dumps(response_data),
+                        content_type="application/json")
 
 
-#Admin Category
+# Admin Category
 # @login_required(login_url="admin-login/")
 def admin_category(request):
     if request.user.is_superuser and request.user.is_authenticated:
@@ -367,7 +388,8 @@ def admin_category(request):
             'categories': instances,
             'heading': ['Name', "Blocked"]
         }
-        return render(request, 'customadmin/admin-table-category.html', context)
+        return render(
+            request, 'customadmin/admin-table-category.html', context)
 
     elif request.user.is_authenticated:
         return redirect('web:index')
@@ -384,18 +406,20 @@ def admin_category_add(request):
                 instance = form.save(commit=False)
                 Category.objects.create(name=instance.name)
 
-                return HttpResponseRedirect(reverse("customadmin:admin_category"))
+                return HttpResponseRedirect(
+                    reverse("customadmin:admin_category"))
             else:
                 print(form)
                 message = generate_form_error(form)
                 form = AdminCategory()
                 context = {
                     "title": "Male Fashion | Admin Category Add",
-                    "error" : True,
-                    "message" : message,
+                    "error": True,
+                    "message": message,
                     "form": form,
                 }
-                return render(request, 'customadmin/admin-add.html', context=context)
+                return render(
+                    request, 'customadmin/admin-add.html', context=context)
         else:
             form = AdminCategory()
             context = {
@@ -417,17 +441,19 @@ def admin_category_edit(request, pk):
             form = AdminCategory(request.POST, instance=category)
             if form.is_valid():
                 form.save()
-                return HttpResponseRedirect(reverse("customadmin:admin_category"))
+                return HttpResponseRedirect(
+                    reverse("customadmin:admin_category"))
             else:
                 message = generate_form_error(form)
                 form = AdminCategory()
                 context = {
                     "title": "Male Fashion | Admin Category Add",
-                    "error" : True,
-                    "message" : message,
+                    "error": True,
+                    "message": message,
                     "form": form,
                 }
-                return render(request, 'customadmin/admin-add.html', context=context)
+                return render(
+                    request, 'customadmin/admin-add.html', context=context)
         else:
             form = AdminCategory(instance=category)
             context = {
@@ -448,15 +474,18 @@ def admin_category_delete(request, pk):
     category.save()
 
     response_data = {
-            "title" : "Successfully Changed",
-            "message" : "Category Updated successfully",
-            "status" : "success",
-        }
+        "title": "Successfully Changed",
+        "message": "Category Updated successfully",
+        "status": "success",
+    }
 
-    return HttpResponse(json.dumps(response_data), content_type="application/json")
+    return HttpResponse(json.dumps(response_data),
+                        content_type="application/json")
 
-#Admin Product
+# Admin Product
 # @login_required(login_url="admin-login/")
+
+
 def admin_product(request):
     if request.user.is_superuser and request.user.is_authenticated:
         search_query = request.GET.get('search')
@@ -464,20 +493,20 @@ def admin_product(request):
         products = Product.objects.all()
 
         if search_query:
-            products = products.filter( Q(title__icontains=search_query))
+            products = products.filter(Q(title__icontains=search_query))
 
         instances = paginate_instances(request, products, per_page=8)
 
         context = {
             'products': instances,
-            'heading': ['Title', 'Category' , 'Show']
+            'heading': ['Title', 'Category', 'Show']
         }
-        return render(request, 'customadmin/admin-table-products.html', context)
+        return render(
+            request, 'customadmin/admin-table-products.html', context)
     elif request.user.is_authenticated:
         return redirect('web:index')
     else:
         return redirect('customadmin:admin_login')
-
 
 
 # @login_required(login_url="admin-login/")
@@ -500,7 +529,8 @@ def admin_product_add(request):
                         thumbnail.save()
                         image.save()
 
-                return HttpResponseRedirect(reverse("customadmin:admin_product"))
+                return HttpResponseRedirect(
+                    reverse("customadmin:admin_product"))
             else:
                 message = generate_form_error(form)
                 context = {
@@ -508,7 +538,8 @@ def admin_product_add(request):
                     'formset': formset,
                     'message': message
                 }
-                return render(request, 'customadmin/admin-product-add.html', context)
+                return render(
+                    request, 'customadmin/admin-product-add.html', context)
         else:
             form = AdminProduct()
             formset = ImageFormSet()
@@ -516,7 +547,8 @@ def admin_product_add(request):
                 'form': form,
                 'formset': formset,
             }
-            return render(request, 'customadmin/admin-product-add.html', context)
+            return render(
+                request, 'customadmin/admin-product-add.html', context)
 
     elif request.user.is_authenticated:
         return redirect('web:index')
@@ -549,8 +581,8 @@ def admin_product_edit(request, pk):
                     clear_checkbox = request.POST.get(clear_checkbox_name)
                     if clear_checkbox == 'on':
                         product_image = product_images[form_index]
-                        product_image.image = None  
-                        product_image.thumbnail = None 
+                        product_image.image = None
+                        product_image.thumbnail = None
                         product_image.save()
 
                 for i, image_form in enumerate(formset):
@@ -568,7 +600,8 @@ def admin_product_edit(request, pk):
                             product_image.thumbnail = image_data
                             product_image.save()
 
-                return HttpResponseRedirect(reverse("customadmin:admin_product"))
+                return HttpResponseRedirect(
+                    reverse("customadmin:admin_product"))
             else:
                 message = generate_form_error(form)
                 context = {
@@ -576,18 +609,21 @@ def admin_product_edit(request, pk):
                     'formset': formset,
                     'message': message
                 }
-                return render(request, 'customadmin/admin-product-add.html', context)
+                return render(
+                    request, 'customadmin/admin-product-add.html', context)
         else:
             form = AdminProduct(instance=item)
-            initial_images = [{'image': image.image} for image in product_images]
+            initial_images = [{'image': image.image}
+                              for image in product_images]
             formset = ImageFormSet(initial=initial_images)
 
             context = {
                 'form': form,
                 'formset': formset,
             }
-            return render(request, 'customadmin/admin-product-add.html', context)
-    
+            return render(
+                request, 'customadmin/admin-product-add.html', context)
+
     elif request.user.is_authenticated:
         return redirect('web:index')
     else:
@@ -598,46 +634,48 @@ def admin_product_edit(request, pk):
 def admin_product_delete(request, pk):
     product = get_object_or_404(Product, id=pk)
     product_image = ProductImage.objects.filter(product=product)
-    
-    if product.is_show == True:
+
+    if not product.is_show:
         show = False
     else:
         show = True
 
     for i in product_image:
-            i.is_show = show
-            i.save()
+        i.is_show = show
+        i.save()
     product.is_show = show
     product.save()
 
     response_data = {
-            "title" : "Successfully Changed",
-            "message" : "Product Updated successfully",
-            "status" : "success",
-        }
+        "title": "Successfully Changed",
+        "message": "Product Updated successfully",
+        "status": "success",
+    }
 
-    return HttpResponse(json.dumps(response_data), content_type="application/json")
+    return HttpResponse(json.dumps(response_data),
+                        content_type="application/json")
 
 
-#Order
+# Order
 def admin_order(request):
     if request.user.is_superuser and request.user.is_authenticated:
         search_query = request.GET.get('search')
 
         orders = Order.objects.filter(
-                ~Q(order_items__order_status__status="Requested For Cancelling") &
-                ~Q(order_items__order_status__status="Requested For Returning")
-            )
+            ~Q(order_items__order_status__status="Requested For Cancelling") &
+            ~Q(order_items__order_status__status="Requested For Returning")
+        )
 
         if search_query:
-            orders = orders.filter(Q(user__first_name__icontains=search_query) | Q(product__title__icontains=search_query) | Q(order_status__status__icontains=search_query))
-        
+            orders = orders.filter(Q(user__first_name__icontains=search_query) | Q(
+                product__title__icontains=search_query) | Q(order_status__status__icontains=search_query))
+
         instances = paginate_instances(request, orders, per_page=6)
 
         context = {
-            "title" : "Male Fashion | Admin Order",
+            "title": "Male Fashion | Admin Order",
             'heading': ['Full Name', 'Product Title', 'Price', 'Order status', ],
-            "orders" : instances
+            "orders": instances
         }
 
         return render(request, 'customadmin/admin-table-order.html', context)
@@ -646,34 +684,64 @@ def admin_order(request):
     else:
         return redirect('customadmin:admin_login')
 
+def admin_order_details(request, pk):
+    order_item = get_object_or_404(OrderItem, id=pk)
+    product_order = Order.objects.get(order_items=order_item)
+    print(order_item.product, pk,'pro')
+    if request.method == 'POST':
+        form = AdminOrderItemForm(request.POST, instance=order_item)
+        if form.is_valid():
+            form.save()
+            status =  form.cleaned_data['order_status']
+
+            order_item.order_status = status
+            order_item.save()
+
+            response_data = {
+                "title": "Changed Status",
+                "status": "success",
+            }
+            return HttpResponse(json.dumps(response_data), content_type="application/json")
+    else:
+        form = AdminOrderItemForm(instance=order_item)
+
+    context = {
+        "title": "Male Fashion | My Orders",
+        "order": order_item,
+        "form": form,
+        "product_order": product_order,
+    }
+    return render(request, 'customadmin/admin-order-page.html', context)
+
+
 
 def admin_order_edit(request, pk):
     order = get_object_or_404(OrderItem, id=pk)
     if request.method == 'POST':
-        form = AdminOrderItemFrom(request.POST, instance=order)
+        form = AdminOrderItemForm(request.POST, instance=order)
         if form.is_valid():
             form.save()
             return redirect('customadmin:admin_order')
     else:
-        form = AdminOrderItemFrom(instance=order)
+        form = AdminOrderItemForm(instance=order)
         context = {
-            'title' : "Male Fashion | Admin Order Edit",
-            "form" : form
+            'title': "Male Fashion | Admin Order Edit",
+            "form": form
         }
 
         return render(request, 'customadmin/admin-edit.html', context)
-    
 
-#Product Variant
+
+# Product Variant
 def admin_product_variant(request):
     if request.user.is_superuser and request.user.is_authenticated:
-        variants =ProductVariant.objects.all()
+        variants = ProductVariant.objects.all()
 
         instances = paginate_instances(request, variants, per_page=6)
         context = {
-            "title" : "Male Fashion | Product Variant",
-            "heading" : ['Variant Name', 'Product', 'Stock Unit', 'Size', 'Featured'],
-            "variants" : instances
+            "title": "Male Fashion | Product Variant",
+            "heading": ['Variant Name', 'Product', 'Stock Unit', 'Size', 'Featured'],
+            "variants": instances
         }
 
         return render(request, 'customadmin/admin-table-variant.html', context)
@@ -681,7 +749,7 @@ def admin_product_variant(request):
         return redirect('web:index')
     else:
         return redirect('customadmin:admin_login')
-    
+
 
 def admin_product_variant_add(request):
     if request.user.is_superuser and request.user.is_authenticated:
@@ -689,29 +757,30 @@ def admin_product_variant_add(request):
             form = AdminProductVariantFrom(request.POST)
             if form.is_valid():
                 form.save()
-                return HttpResponseRedirect(reverse("customadmin:admin_product_variant"))
+                return HttpResponseRedirect(
+                    reverse("customadmin:admin_product_variant"))
             else:
                 message = generate_form_error(form)
                 form = AdminProductVariantFrom()
                 context = {
                     "title": "Male Fashion | Admin Product Variant Add",
-                    "error" : True,
-                    "message" : message,
+                    "error": True,
+                    "message": message,
                     "form": form,
                 }
-                return render(request, 'customadmin/admin-add.html', context=context)
+                return render(
+                    request, 'customadmin/admin-add.html', context=context)
         else:
             form = AdminProductVariantFrom()
             context = {
-                "title" : "Male Fashion | Admin Product Variant Add",
-                "form" : form,
+                "title": "Male Fashion | Admin Product Variant Add",
+                "form": form,
             }
             return render(request, 'customadmin/admin-add.html', context)
     elif request.user.is_authenticated:
         return redirect('web:index')
     else:
         return redirect('customadmin:admin_login')
-
 
 
 def admin_product_variant_edit(request, pk):
@@ -721,17 +790,19 @@ def admin_product_variant_edit(request, pk):
             form = AdminProductVariantFrom(request.POST, instance=variant)
             if form.is_valid():
                 form.save()
-                return HttpResponseRedirect(reverse("customadmin:admin_product_variant"))
+                return HttpResponseRedirect(
+                    reverse("customadmin:admin_product_variant"))
             else:
                 message = generate_form_error(form)
                 form = AdminProductVariantFrom()
                 context = {
                     "title": "Male Fashion | Admin Variant Edit",
-                    "error" : True,
-                    "message" : message,
+                    "error": True,
+                    "message": message,
                     "form": form,
                 }
-                return render(request, 'customadmin/admin-add.html', context=context)
+                return render(
+                    request, 'customadmin/admin-add.html', context=context)
         else:
             form = AdminProductVariantFrom(instance=variant)
             context = {
@@ -743,7 +814,7 @@ def admin_product_variant_edit(request, pk):
         return redirect('web:index')
     else:
         return redirect('customadmin:admin_login')
-    
+
 
 def admin_product_variant_delete(request, pk):
     variant = get_object_or_404(ProductVariant, id=pk)
@@ -751,12 +822,13 @@ def admin_product_variant_delete(request, pk):
     variant.save()
 
     response_data = {
-            "title" : "Successfully Changed",
-            "message" : "Variant Updated successfully",
-            "status" : "success",
-        }
+        "title": "Successfully Changed",
+        "message": "Variant Updated successfully",
+        "status": "success",
+    }
 
-    return HttpResponse(json.dumps(response_data), content_type="application/json")
+    return HttpResponse(json.dumps(response_data),
+                        content_type="application/json")
 
 
 def admin_contact(request):
@@ -764,22 +836,22 @@ def admin_contact(request):
         contacts = Contact.objects.all()
 
         context = {
-            "title" : "Male Fashion | Contact",
-            "heading" : ["Name", "Email", "message"],
-            "contacts" : contacts
+            "title": "Male Fashion | Contact",
+            "heading": ["Name", "Email", "message"],
+            "contacts": contacts
         }
-        return render(request, 'customadmin/admin-table-contact.html',context)
+        return render(request, 'customadmin/admin-table-contact.html', context)
     elif request.user.is_authenticated:
         return redirect('web:index')
     else:
         return redirect('customadmin:admin_login')
-    
+
 
 def admin_banner(request):
     if request.user.is_superuser and request.user.is_authenticated:
         banners = Banner.objects.all()
 
-        context ={
+        context = {
             "title": "Male Fashion | Banner",
             "heading": ["Title", "Category", "Featured"],
             "banners": banners
@@ -790,7 +862,7 @@ def admin_banner(request):
         return redirect('web:index')
     else:
         return redirect('customadmin:admin_login')
-    
+
 
 def admin_banner_add(request):
     if request.user.is_superuser and request.user.is_authenticated:
@@ -798,53 +870,58 @@ def admin_banner_add(request):
             form = AdminBannerForm(request.POST)
             if form.is_valid():
                 form.save()
-                return HttpResponseRedirect(reverse("customadmin:admin_banner"))
+                return HttpResponseRedirect(
+                    reverse("customadmin:admin_banner"))
             else:
                 message = generate_form_error(form)
                 form = AdminBannerForm()
                 context = {
                     "title": "Male Fashion | Admin Banner Add",
-                    "error" : True,
-                    "message" : message,
+                    "error": True,
+                    "message": message,
                     "form": form,
                 }
-                return render(request, 'customadmin/admin-add.html', context=context)
+                return render(
+                    request, 'customadmin/admin-add.html', context=context)
         else:
             form = AdminBannerForm()
             context = {
-                "title" : "Male Fashion | Admin Banner Add",
-                "form" : form,
+                "title": "Male Fashion | Admin Banner Add",
+                "form": form,
             }
             return render(request, 'customadmin/admin-add.html', context)
     elif request.user.is_authenticated:
         return redirect('web:index')
     else:
         return redirect('customadmin:admin_login')
-    
+
 
 def admin_banner_edit(request, pk):
     if request.user.is_superuser and request.user.is_authenticated:
         banner = get_object_or_404(Banner, id=pk)
         if request.method == 'POST':
-            form = AdminBannerForm(request.POST, request.FILES ,instance=banner)
+            form = AdminBannerForm(
+                request.POST, request.FILES, instance=banner)
             if form.is_valid():
-                instance = form.save(commit=False)  
+                instance = form.save(commit=False)
                 if 'image' in request.FILES:
                     instance.image = request.FILES['image']
 
                 instance.save()
 
-                return HttpResponseRedirect(reverse("customadmin:admin_banner"))
+                return HttpResponseRedirect(
+                    reverse("customadmin:admin_banner"))
             else:
                 message = generate_form_error(form)
                 form = AdminBannerForm()
                 context = {
                     "title": "Male Fashion | Admin Variant Edit",
-                    "error" : True,
-                    "message" : message,
+                    "error": True,
+                    "message": message,
                     "form": form,
                 }
-                return render(request, 'customadmin/admin-add.html', context=context)
+                return render(
+                    request, 'customadmin/admin-add.html', context=context)
         else:
             form = AdminBannerForm(instance=banner)
             context = {
@@ -856,7 +933,7 @@ def admin_banner_edit(request, pk):
         return redirect('web:index')
     else:
         return redirect('customadmin:admin_login')
-    
+
 
 def admin_banner_delete(request, pk):
     banner = get_object_or_404(Banner, id=pk)
@@ -864,12 +941,13 @@ def admin_banner_delete(request, pk):
     banner.save()
 
     response_data = {
-            "title" : "Successfully Changed",
-            "message" : "Variant Updated successfully",
-            "status" : "success",
-        }
+        "title": "Successfully Changed",
+        "message": "Variant Updated successfully",
+        "status": "success",
+    }
 
-    return HttpResponse(json.dumps(response_data), content_type="application/json")
+    return HttpResponse(json.dumps(response_data),
+                        content_type="application/json")
 
 
 def admin_order_center(request):
@@ -901,25 +979,28 @@ def admin_order_center_approve(request, pk):
     payment = Payment.objects.get(order=purchased_order)
 
     if payment.payment_method.payment_type == "COD":
-        product_variant = ProductVariant.objects.get(product=order.ordered_product.product, size=order.ordered_product.size)
-        product_variant.stock_unit += order.ordered_product.quantity 
+        product_variant = ProductVariant.objects.get(
+            product=order.ordered_product.product,
+            size=order.ordered_product.size)
+        product_variant.stock_unit += order.ordered_product.quantity
         product_variant.save()
-        
+
         order_data = Order.objects.get(order_items=order.ordered_product)
         print(order_data, 'order')
-        wallet =  Wallet.objects.get(user=order_data.user)
+        wallet = Wallet.objects.get(user=order_data.user)
         wallet.balance += order.ordered_product.total_product_price
         wallet.save()
 
         purchased_order = Order.objects.get(order_items=order.ordered_product)
 
         WalletHistory.objects.create(
-                order=purchased_order,
-                wallet=wallet,
-                amount=order.ordered_product.total_product_price,
-                transaction_operation='credit'
-            )
-        
+            order=purchased_order,
+            description="Amount for this order Amount is Credited",
+            wallet=wallet,
+            amount=order.ordered_product.total_product_price,
+            transaction_operation='credit'
+        )
+
         order_status = OrderStatus.objects.get(status="Refunded")
         order.ordered_product.order_status = order_status
         order.ordered_product.save()
@@ -927,15 +1008,19 @@ def admin_order_center_approve(request, pk):
         order.status = "completed"
         order.save()
 
-        send_user_refund_mail(request, order.ordered_product.total_product_price, order_data.user.email)
+        send_user_refund_mail(
+            request,
+            order.ordered_product.total_product_price,
+            order_data.user.email)
 
         response_data = {
-            "title" : "Amount Refunded",
+            "title": "Amount Refunded",
             "order_status": order.status,
-            "status" : "success",
+            "status": "success",
         }
 
-        return HttpResponse(json.dumps(response_data), content_type="application/json")
+        return HttpResponse(json.dumps(response_data),
+                            content_type="application/json")
     else:
         order_status = OrderStatus.objects.get(status="Approved")
         order.ordered_product.order_status = order_status
@@ -945,37 +1030,41 @@ def admin_order_center_approve(request, pk):
         order.save()
 
         response_data = {
-            "title" : "Approved Returned",
+            "title": "Approved Returned",
             "order_status": order.status,
-            "status" : "success",
+            "status": "success",
         }
 
-    return HttpResponse(json.dumps(response_data), content_type="application/json")
+    return HttpResponse(json.dumps(response_data),
+                        content_type="application/json")
 
 
 def admin_order_center_completed(request, pk):
     order = get_object_or_404(OrderManagement, id=pk)
 
-    product_variant = ProductVariant.objects.get(product=order.ordered_product.product, size=order.ordered_product.size)
-    product_variant.stock_unit += order.ordered_product.quantity 
+    product_variant = ProductVariant.objects.get(
+        product=order.ordered_product.product,
+        size=order.ordered_product.size)
+    product_variant.stock_unit += order.ordered_product.quantity
     product_variant.save()
-        
+
     order_data = Order.objects.get(order_items=order.ordered_product)
     print(order_data, 'order')
 
-    wallet =  Wallet.objects.get(user=order_data.user)
+    wallet = Wallet.objects.get(user=order_data.user)
     wallet.balance += order.ordered_product.total_product_price
     wallet.save()
 
     purchased_order = Order.objects.get(order_items=order.ordered_product)
 
     WalletHistory.objects.create(
-            order=purchased_order,
-            wallet=wallet,
-            amount=order.ordered_product.total_product_price,
-            transaction_operation='credit'
-        )
-    
+        order=purchased_order,
+        description="Amount for this order Amount is Credited",
+        wallet=wallet,
+        amount=order.ordered_product.total_product_price,
+        transaction_operation='credit'
+    )
+
     order_status = OrderStatus.objects.get(status="Refunded")
     order.ordered_product.order_status = order_status
     order.ordered_product.save()
@@ -983,25 +1072,29 @@ def admin_order_center_completed(request, pk):
     order.status = "completed"
     order.save()
 
-    send_user_refund_mail(request, order.ordered_product.total_product_price, order_data.user.email)
+    send_user_refund_mail(
+        request,
+        order.ordered_product.total_product_price,
+        order_data.user.email)
 
     response_data = {
-            "title" : "Amount Refunded",
-            "order_status": order.status,
-            "status" : "success",
-        }
+        "title": "Amount Refunded",
+        "order_status": order.status,
+        "status": "success",
+    }
 
-    return HttpResponse(json.dumps(response_data), content_type="application/json")
+    return HttpResponse(json.dumps(response_data),
+                        content_type="application/json")
 
 
-#Coupon
+# Coupon
 def admin_coupon(request):
     coupons = Coupon.objects.all()
 
     context = {
-        "title" : "Male Fashion | Admin Coupon",
+        "title": "Male Fashion | Admin Coupon",
         "heading": ['Coupon', 'Discount Type', 'Amount or Percentage', 'Valid From', 'Valid To'],
-        "coupons" : coupons
+        "coupons": coupons
     }
 
     return render(request, 'customadmin/admin-table-coupon.html', context)
@@ -1012,7 +1105,7 @@ def admin_coupon_add(request):
         form = AdminCouponForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect("customadmin:admin_coupon") 
+            return redirect("customadmin:admin_coupon")
     else:
         form = AdminCouponForm()
         context = {
@@ -1028,7 +1121,7 @@ def admin_coupon_edit(request, pk):
         form = AdminCouponForm(request.POST, instance=coupon)
         if form.is_valid():
             form.save()
-            return redirect("customadmin:admin_coupon") 
+            return redirect("customadmin:admin_coupon")
     else:
         form = AdminCouponForm(instance=coupon)
         context = {
@@ -1036,16 +1129,17 @@ def admin_coupon_edit(request, pk):
             "form": form
         }
         return render(request, 'customadmin/admin-add.html', context)
-    
+
 
 def admin_sales_report(request):
     order_status = request.GET.get('order_status')
 
     if order_status:
-        orders = Order.objects.filter(order_items__order_status__status=order_status)
+        orders = Order.objects.filter(
+            order_items__order_status__status=order_status)
     else:
         orders = Order.objects.all()
-    
+
     if request.method == 'POST':
         from_date = request.POST['from_date']
         to_date = request.POST['to_date']
@@ -1053,7 +1147,9 @@ def admin_sales_report(request):
         request.session['from_date'] = from_date
         request.session['to_date'] = to_date
 
-        filtered_orders = orders.filter(purchased_date__range=[from_date, to_date])
+        filtered_orders = orders.filter(
+            purchased_date__range=[
+                from_date, to_date])
 
         context = {
             "title": "Male Fashion | Sales Report",
@@ -1068,7 +1164,6 @@ def admin_sales_report(request):
         }
 
         return render(request, 'customadmin/admin-sales-report.html', context)
-
 
 
 def download_sales_report_csv(request):
@@ -1088,7 +1183,8 @@ def download_sales_report_csv(request):
                 purchased_date__range=[from_date, to_date]
             )
     elif order_status:
-        orders = Order.objects.filter(order_items__order_status__status=order_status)
+        orders = Order.objects.filter(
+            order_items__order_status__status=order_status)
     else:
         orders = Order.objects.all()
 
@@ -1098,15 +1194,13 @@ def download_sales_report_csv(request):
     response['Content-Disposition'] = 'attachment; filename="sales_report.csv"'
 
     writer = csv.writer(response)
-    # Add CSV header row
-    writer.writerow(['Order ID', 'Customer Name', 'Total Price', 'Product', "Qty", 'Order Status', 'Purchase Date'])
+    writer.writerow(['Order ID', 'Customer Name', 'Total Price',
+                    'Product', 'Order Status', 'Purchase Date'])
 
-    # Add data rows
     all_status = []
     all_product = []
 
     for order in data_to_export:
-        # Initialize lists for each order
         status = []
         product = []
 
@@ -1114,7 +1208,6 @@ def download_sales_report_csv(request):
             status.append(item.order_status.status)
             product.append(f"{item.product} ({item.quantity})")
 
-        # Append the status and product lists for the current order to the overall lists
         all_status.append(status)
         all_product.append(product)
 
@@ -1122,9 +1215,97 @@ def download_sales_report_csv(request):
             order.id,
             f"{order.user.first_name} {order.user.last_name}",
             order.total_price,
-            ', '.join(product),  # Convert the product list to a comma-separated string
-            ', '.join(status),   # Convert the status list to a comma-separated string
+            ', '.join(product),
+            ', '.join(status),
             order.purchased_date
         ])
 
     return response
+
+
+#Category Offer
+def admin_category_offer(request):
+    category_offers = CategoryOffer.objects.filter(active=True)
+
+    context = {
+        "title": "Male Fashion | Admin Coupon",
+        "heading": ['Category', 'Discount Type', 'Amount or Percent', 'From Date',"Expiry Date"],
+        "category_offers": category_offers
+    }
+
+    return render(request, 'customadmin/admin-category-offer.html', context)
+
+
+def admin_category_offer_add(request):
+    if request.method == 'POST':
+        form = AdminCategoryOfferForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect("customadmin:admin_category_offer")
+    else:
+        form = AdminCategoryOfferForm()
+        context = {
+            "title": "Male Fashion | Admin Coupon Add",
+            "form": form
+        }
+        return render(request, 'customadmin/admin-add.html', context)
+
+
+def admin_category_offer_edit(request, pk):
+    category_offer = get_object_or_404(CategoryOffer, id=pk)
+    if request.method == 'POST':
+        form = AdminCategoryOfferForm(request.POST, instance=category_offer)
+        if form.is_valid():
+            form.save()
+            return redirect("customadmin:admin_category_offer")
+    else:
+        form = AdminCategoryOfferForm(instance=category_offer)
+        context = {
+            "title": "Male Fashion | Admin Coupon Add",
+            "form": form
+        }
+        return render(request, 'customadmin/admin-add.html', context)
+    
+
+#Product Offer
+def admin_product_offer(request):
+    product_offers = ProductOffer.objects.filter(active=True)
+
+    context = {
+        "title": "Male Fashion | Admin Coupon",
+        "heading": ['Product', 'Discount Type', 'Amount or Percent', "Valid From","Expiry Date"],
+        "product_offers": product_offers
+    }
+
+    return render(request, 'customadmin/admin-product-offer.html', context)
+
+
+def admin_product_offer_add(request):
+    if request.method == 'POST':
+        form = AdminProductOfferForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect("customadmin:admin_product_offer")
+    else:
+        form = AdminProductOfferForm()
+        context = {
+            "title": "Male Fashion | Admin Coupon Add",
+            "form": form
+        }
+        return render(request, 'customadmin/admin-add.html', context)
+
+
+def admin_product_offer_edit(request, pk):
+    product_offer = get_object_or_404(ProductOffer, id=pk)
+    if request.method == 'POST':
+        form = AdminProductOfferForm(request.POST, instance=product_offer)
+        if form.is_valid():
+            form.save()
+            return redirect("customadmin:admin_product_offer")
+    else:
+        form = AdminProductOfferForm(instance=product_offer)
+        context = {
+            "title": "Male Fashion | Admin Coupon Add",
+            "form": form
+        }
+        return render(request, 'customadmin/admin-add.html', context)

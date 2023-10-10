@@ -8,8 +8,8 @@ from decimal import Decimal
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
-from django.db.models import Sum, Q
-from django.db.models import Sum, F, ExpressionWrapper, DecimalField
+from django.db.models import ExpressionWrapper, F, DecimalField, Sum, Case, When, Value, Q
+from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.conf import settings
 from django.template.loader import get_template
@@ -145,17 +145,26 @@ def product_cart(request):
 
     request.session['cart_count'] = Cart.objects.filter(user=request.user, is_deleted=False).count() if request.user.is_authenticated else 0
 
-    total_amount = products.aggregate(
-        total_amount=Sum(
-            ExpressionWrapper(
-                F('product__price') * F('qty'),
-                output_field=DecimalField()
+    total_amount = Cart.objects.filter(user=request.user, is_deleted=False).aggregate(
+    total_amount=Coalesce(
+                Sum(
+                    Case(
+                        When(product__discount_amount__gt=0.00, then=ExpressionWrapper(F('product__discount_amount'), output_field=DecimalField())),
+                        default=ExpressionWrapper(F('product__price'), output_field=DecimalField()),
+                    ) * F('qty'),
+                    output_field=DecimalField(),
+                ),
+                Value(0.00),
+                output_field=DecimalField(),
             )
-        )
-    )['total_amount'] or 0
+        )['total_amount']
 
     for item in products:
-        item.total_price_of_product = item.product.price * item.qty
+        if item.product.discount_amount > 0.00:
+            item.total_price_of_product = item.product.discount_amount * item.qty
+        else:
+            item.total_price_of_product = item.product.price * item.qty
+
         item.save()
    
     context = {
@@ -173,20 +182,33 @@ def product_cart_add(request, pk):
     size = request.POST.get('size')
     qty = request.POST.get('quantity')
     print(size, qty, 'qty')
-    if Cart.objects.filter(product=product).exists():
-        instance = Cart.objects.get(product=product)
+    if Cart.objects.filter(user=request.user, product=product).exists():
+        instance = Cart.objects.get(user=request.user, product=product)
         instance.is_deleted = False
         instance.qty = int(qty)
         instance.size = size
-        instance.total_price_of_product =  instance.product.price * instance.qty
+        print(product.discount_amount,'amount')
+        if product.discount_amount > 0.00:
+            print('hello')
+            instance.total_price_of_product = product.discount_amount * int(qty)
+            print(instance.total_price_of_product, 'total')
+        else:
+            print('else')
+            instance.total_price_of_product = product.price * int(qty)
+
         instance.save()
     else:
+        if product.discount_amount > 0.00:
+            price = product.discount_amount
+        else:
+            price = product.price
+
         Cart.objects.create(
             product=product,
             user=request.user,
             qty=qty,
             size=size,
-            total_price_of_product=product.price
+            total_price_of_product=price
         )
     
     cart_count = request.session.get('cart_count', 0)
@@ -237,27 +259,36 @@ def update_product_quantity(request, pk):
     elif action == 'decrement':
         if product.qty > 1:
             product.qty -= 1
-    
-    product.total_price_of_product = product.product.price * product.qty
+
+    amount = 0
+    if product.product.discount_amount > 0.00:
+        amount = product.total_price_of_product = product.product.discount_amount * product.qty
+    else:
+        amount = product.total_price_of_product = product.product.price * product.qty
 
     product.save()
 
     products = Cart.objects.filter(user=request.user, is_deleted=False)
 
     total_amount = products.aggregate(
-        total_amount=Sum(
-            ExpressionWrapper(
-                F('product__price') * F('qty'),
-                output_field=DecimalField()
+    total_amount=Coalesce(
+                Sum(
+                    Case(
+                        When(product__discount_amount__gt=0.00, then=ExpressionWrapper(F('product__discount_amount'), output_field=DecimalField())),
+                        default=ExpressionWrapper(F('product__price'), output_field=DecimalField()),
+                    ) * F('qty'),
+                    output_field=DecimalField(),
+                ),
+                Value(0.00),
+                output_field=DecimalField(),
             )
-        )
-    )['total_amount'] or 0
+        )['total_amount']
     
     data = {
         'exceeded': False,
         'message' : "success",
         'qty' : product.qty,
-        'amount': product.product.price * product.qty,
+        'amount': amount,
         'total_amount' : total_amount
     }
 
@@ -292,54 +323,63 @@ def product_cart_remove(request, pk):
 #checkout
 @login_required(login_url="user/login/")
 def product_checkout(request):
-    user_addresses = Address.objects.filter(user=request.user, is_default=False)
-    user_default_address = Address.objects.get(user=request.user, is_default=True)
+    if not Address.objects.filter(user=request.user, is_default=True).exists():
+        return redirect("user_profile:profile_address_add")
+    else:
+        user_addresses = Address.objects.filter(user=request.user, is_default=False)
+        user_default_address = Address.objects.get(user=request.user, is_default=True)
 
-    current_datetime = timezone.now()
+        current_datetime = timezone.now()
 
-    used_coupon_codes = CouponUsage.objects.filter(user=request.user).values_list('coupon__code', flat=True)
-    valid_coupons = Coupon.objects.filter(
-        active=True,
-        valid_to__gte=current_datetime,
-    ).exclude(code__in=used_coupon_codes)
+        used_coupon_codes = CouponUsage.objects.filter(user=request.user).values_list('coupon__code', flat=True)
+        valid_coupons = Coupon.objects.filter(
+            active=True,
+            valid_to__gte=current_datetime,
+        ).exclude(code__in=used_coupon_codes)
 
-    products = Cart.objects.filter(user=request.user, is_deleted=False)
+        products = Cart.objects.filter(user=request.user, is_deleted=False)
 
-    total_amount = products.aggregate(
-        total_amount=Sum(
-            ExpressionWrapper(
-                F('product__price') * F('qty'),
-                output_field=DecimalField()
-            )
-        )
-    )['total_amount'] or 0
+        total_amount = products.aggregate(
+                total_amount=Coalesce(
+                            Sum(
+                                Case(
+                                    When(product__discount_amount__gt=0.00, then=ExpressionWrapper(F('product__discount_amount'), output_field=DecimalField())),
+                                    default=ExpressionWrapper(F('product__price'), output_field=DecimalField()),
+                                ) * F('qty'),
+                                output_field=DecimalField(),
+                            ),
+                            Value(0.00),
+                            output_field=DecimalField(),
+                        )
+                    )['total_amount']
+    
 
-    print(total_amount, 'amount')
-    wallet = request.session.get('wallet')
+        print(total_amount, 'amount')
+        wallet = request.session.get('wallet')
 
-    discount_amount = 0
-    for item in products:
-        print(item.total_price_of_product)
-        discount_amount += item.total_price_of_product
+        discount_amount = 0
+        for item in products:
+            print(item.total_price_of_product)
+            discount_amount += item.total_price_of_product
 
-    discount = False
-    if discount_amount != total_amount:
-        discount = True
+        discount = False
+        if discount_amount != total_amount:
+            discount = True
 
-    print(discount, discount_amount, total_amount, 'amount')
+        print(discount, discount_amount, total_amount, 'amount')
 
-    context = {
-        "wallet" : wallet,
-        "title" : "Male Fashion | Product Checkout",
-        "user_addresses": user_addresses,
-        "user_default_address": user_default_address,
-        "products": products,
-        "coupons": valid_coupons,
-        "total_amount": total_amount,
-        "discount_amount": discount_amount,
-        "discount" : discount
-    }
-    return render(request, 'product/checkout.html', context)
+        context = {
+            "wallet" : wallet,
+            "title" : "Male Fashion | Product Checkout",
+            "user_addresses": user_addresses,
+            "user_default_address": user_default_address,
+            "products": products,
+            "coupons": valid_coupons,
+            "total_amount": total_amount,
+            "discount_amount": discount_amount,
+            "discount" : discount
+        }
+        return render(request, 'product/checkout.html', context)
 
 
 #Discount
@@ -352,7 +392,20 @@ def product_discount(request):
         user = request.user
         products = Cart.objects.filter(user=user, is_deleted=False)
 
-        total_amount = sum(item.product.price * item.qty for item in products)
+        # total_amount = sum(item.product.price * item.qty for item in products)
+        total_amount = products.aggregate(
+                total_amount=Coalesce(
+                            Sum(
+                                Case(
+                                    When(product__discount_amount__gt=0.00, then=ExpressionWrapper(F('product__discount_amount'), output_field=DecimalField())),
+                                    default=ExpressionWrapper(F('product__price'), output_field=DecimalField()),
+                                ) * F('qty'),
+                                output_field=DecimalField(),
+                            ),
+                            Value(0.00),
+                            output_field=DecimalField(),
+                        )
+                    )['total_amount']
 
         if CouponUsage.objects.filter(Q(user=user) & Q(coupon=coupon)).exists():
             response_data = {
@@ -363,8 +416,8 @@ def product_discount(request):
 
 
         # if request.session.get('coupon'):
-        #     # coupon_code = request.session.get('coupon')
-        #     # if coupon_code == coupon.code:
+        #     coupon_code = request.session.get('coupon')
+        #     if coupon_code == coupon.code:
         #         response_data = {
         #             "title": "Already used one coupon",
         #             "status": "warning",
@@ -387,31 +440,38 @@ def product_discount(request):
             }
             return HttpResponse(json.dumps(response_data), content_type="application/json")
 
-        discount_amount = 0
+        total_discount_amount = 0.00
         if coupon.discount_type == 'amount':
             discount = coupon.amount_or_percent / 2
+
             for item in products:
                 item.total_price_of_product -= discount
-                discount_amount += item.total_price_of_product 
                 item.save()
+                total_discount_amount += float(item.total_price_of_product)
         else:
+            total_discount_percentage = coupon.amount_or_percent / 2
+            print(total_discount_percentage, 'per')
             for item in products:
-                item.total_price_of_product = item.total_price_of_product - (item.total_price_of_product * (coupon.amount_or_percent / 200))
-                discount_amount += item.total_price_of_product 
+                discount = item.total_price_of_product * (total_discount_percentage / 100)
+                print(discount, 'dis')
+                item.total_price_of_product -= discount
                 item.save()
+                total_discount_amount += float(item.total_price_of_product)
 
-        CouponUsage.objects.create(
-                user=request.user,
-                coupon=coupon,
-            )
+        # CouponUsage.objects.create(
+        #         user=request.user,
+        #         coupon=coupon,
+        #     )
 
         # CouponUsage.objects.create(user=user, coupon=coupon)
-        request.session['coupon'] = coupon.code
+        # request.session['coupon'] = coupon.code
+
+        total_discount_amount = round(total_discount_amount, 2)
 
         response_data = {
             "title": "Discount applied",
             "status": "success",
-            "total_amount": float(discount_amount),
+            "total_amount": total_discount_amount,
         }
 
         return HttpResponse(json.dumps(response_data), content_type="application/json")
@@ -580,6 +640,7 @@ def product_order_wallet(request):
             WalletHistory.objects.create(
                 wallet=wallet,
                 order=order,
+                description="Amount for this order is debited.",
                 amount=total_amount,
                 transaction_operation='debit'
             )
@@ -641,6 +702,7 @@ def product_order_wallet(request):
                 wallet=wallet,
                 order=order,
                 amount=total_amount,
+                description="Amount for this order is debited.",
                 transaction_operation='debit'
             )
 
@@ -710,8 +772,6 @@ def generate_invoice_pdf(request, pk):
         total_amount += item.quantity * item.product.price
          
     context = {'order': order, 'invoice_id': invoice_id, 'total_amount': total_amount}
-
-    # return render(request, 'product/invoice-template.html', context)
 
     template_path = 'product/invoice-template.html' 
     template = get_template(template_path)

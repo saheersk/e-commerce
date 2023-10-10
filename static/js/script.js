@@ -198,7 +198,73 @@ $(document).on("click", ".action-button", function (e) {
     });
 });
 
+$(document).on('submit', '.ajax-review', function(e){
+    e.preventDefault();
+    console.log('submit sus');
+
+        let formData = $(this).serialize();
+        console.log(formData, 'form');
+        var ratingValue = parseInt($('#stars li.selected').last().data('value'), 10);
+        const orderId = $(this).find('button').data('order-id');
+
+        formData += `&rating=${ratingValue}`;
+        console.log(formData, orderId, ratingValue,'form');
+        $.ajax({
+        url: `/user-profile/my-order/review/${orderId}/`, // Replace with the actual URL of your view
+        method: "POST",
+        dataType: "json",
+        data: formData,
+        success: function(data) {
+            // updateSelectOptions(data);
+            console.log(data, 'sus');
+            const Toast = Swal.mixin({
+                toast: true,
+                position: "top-end",
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener("mouseenter", Swal.stopTimer);
+                    toast.addEventListener("mouseleave", Swal.resumeTimer);
+                },
+            });
+            Toast.fire({
+                icon: data.status,
+                title: data.title,
+            });
+            window.location.reload();
+        },
+        error: function(xhr, status, error) {
+            console.error("Error fetching options:", error);
+        }
+        });
+})
+
 $(document).ready(function () {
+
+    $('.star').on('click', function() {
+        const starValue = $(this).data('value');
+        $('#star-rating').val(starValue);
+
+        // Highlight the selected stars
+        $(this).prevAll('.star').addClass('selected');
+        $(this).addClass('selected');
+        $(this).nextAll('.star').removeClass('selected');
+    });
+    //CSRF Token
+    function getCSRFToken() {
+        var csrfToken = null;
+        var cookies = document.cookie.split(";");
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i].trim();
+            if (cookie.startsWith("csrftoken=")) {
+                csrfToken = cookie.substring("csrftoken=".length, cookie.length);
+                break;
+            }
+        }
+        return csrfToken;
+    }
+
     //Address path
     $("#new-address").click(function () {
         window.location.href = "/user-profile/address/add/?next=" + window.location.pathname;
@@ -256,18 +322,6 @@ $(document).ready(function () {
     });
 
     // Function to get the CSRF token from the page's cookies
-    function getCSRFToken() {
-        var csrfToken = null;
-        var cookies = document.cookie.split(";");
-        for (var i = 0; i < cookies.length; i++) {
-            var cookie = cookies[i].trim();
-            if (cookie.startsWith("csrftoken=")) {
-                csrfToken = cookie.substring("csrftoken=".length, cookie.length);
-                break;
-            }
-        }
-        return csrfToken;
-    }
 
     $(document).on("submit", "form.ajax-discount", function (e) {
         console.log("discount");
@@ -1022,5 +1076,50 @@ $(document).ready(function () {
             },
         });
     });
+
+    $('#stars li').on('mouseover', function(){
+        var onStar = parseInt($(this).data('value'), 10); // The star currently mouse on
+       
+        // Now highlight all the stars that's not after the current hovered star
+        $(this).parent().children('li.star').each(function(e){
+          if (e < onStar) {
+            $(this).addClass('hover');
+          }
+          else {
+            $(this).removeClass('hover');
+          }
+        });
+        
+      }).on('mouseout', function(){
+        $(this).parent().children('li.star').each(function(e){
+          $(this).removeClass('hover');
+        });
+      });
+      
+      
+      /* 2. Action to perform on click */
+      $('#stars li').on('click', function(){
+        var onStar = parseInt($(this).data('value'), 10); // The star currently selected
+        var stars = $(this).parent().children('li.star');
+        
+        for (i = 0; i < stars.length; i++) {
+          $(stars[i]).removeClass('selected');
+        }
+        
+        for (i = 0; i < onStar; i++) {
+          $(stars[i]).addClass('selected');
+        }
+        
+        // JUST RESPONSE (Not needed)
+        var ratingValue = parseInt($('#stars li.selected').last().data('value'), 10);
+        var msg = "";
+        if (ratingValue > 1) {
+            msg = "Thanks! You rated this " + ratingValue + " stars.";
+            // console.log(ratingValue, 'val');
+        }
+        else {
+            msg = "We will improve ourselves. You rated this " + ratingValue + " stars.";
+        }        
+      });
 
 });

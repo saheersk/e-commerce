@@ -1,4 +1,5 @@
 import random
+import uuid
 
 from django.utils import timezone
 from django.db import models
@@ -58,6 +59,8 @@ class CustomUser(AbstractUser, PermissionsMixin):
     profile_picture = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
     phone_number = PhoneNumberField(unique=True)
     email = models.EmailField(unique=True)
+    referral_code = models.CharField(max_length=20, null=True, blank=True, unique=True)
+    used_code = models.CharField(max_length=20, null=True, blank=True)
     is_blocked = models.BooleanField(default=False)
 
     objects = CustomUserManager()
@@ -69,6 +72,8 @@ class CustomUser(AbstractUser, PermissionsMixin):
         return self.email
     
     def save(self, *args, **kwargs):
+        unique_id = str(uuid.uuid4().hex[:6]) 
+        self.referral_code = "FASHION" + unique_id
         if self.profile_picture and hasattr(self.profile_picture, 'path'):
             try:
                 with default_storage.open(self.profile_picture.path, 'rb') as img_file:
@@ -115,7 +120,10 @@ class Wallet(models.Model):
         return f"Wallet of {self.user.first_name}"
     
 
+class ReferralAmount(models.Model):
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    description = models.TextField()
+    created_date = models.DateTimeField(auto_now_add=True)
 
-
-
-
+    def __str__(self):
+       return str(self.amount)

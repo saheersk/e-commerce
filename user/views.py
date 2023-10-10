@@ -20,7 +20,8 @@ from django.conf import settings
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
-from user.models import CustomUser, Wallet
+from shop.models import WalletHistory
+from user.models import CustomUser, Wallet, ReferralAmount
 from user.forms import CustomUserForm
 from main.functions import generate_form_error
 from user.utils import send_otp
@@ -74,19 +75,38 @@ def signup(request):
         form = CustomUserForm(request.POST)
         if form.is_valid():
             instance = form.save(commit=False)
-
+            # form.cleaned_data
+            used_code =  form.cleaned_data['used_code']
             password = make_password(instance.password)
+
             user = CustomUser.objects.create_user(
                 username=instance.first_name + instance.last_name,
                 password=password,
                 email=instance.email,
                 first_name=instance.first_name,
                 last_name = instance.last_name,
+                used_code = used_code if used_code else '',
                 phone_number=instance.phone_number,
             )
-            
-            Wallet.objects.create(user=user, balance=1000)
-            
+            user_wallet = Wallet.objects.create(user=user)
+
+            if CustomUser.objects.filter(referral_code=used_code).exists():
+                referred_user = CustomUser.objects.get(referral_code=used_code)
+                referred_user.amount += 500
+                referred_user.save()
+
+                if used_code:
+                    referred_amount = ReferralAmount.objects.first()
+                    user_wallet.balance += referred_amount.amount
+                    user_wallet.save()
+
+                    WalletHistory.objects.create(
+                            wallet=user_wallet,
+                            description= f"Referral Amount Credited From user {instance.first_name}",
+                            amount=referred_amount.amount,
+                            transaction_operation='credit'
+                        )
+
             request.session['email'] = instance.email
             send_otp(request, instance.email)
 
@@ -167,7 +187,7 @@ def otp_verify(request, *args, **kwargs):
             valid_unit = datetime.fromisoformat(otp_valid_date)
 
             if valid_unit > datetime.now():
-                totp = pyotp.TOTP(otp_secret_key, interval=60)
+                totp = pyotp.TOTP(otp_secret_key, interval=180)
                 print(totp.verify(otp))
                 if totp.verify(otp):
                     user = get_object_or_404(CustomUser, email=email)

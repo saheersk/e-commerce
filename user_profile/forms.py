@@ -1,7 +1,7 @@
 from django import forms
 
 from user.models import CustomUser, Address
-from shop.models import OrderManagement
+from shop.models import OrderManagement, UserReview
 
 
 class CustomUserEditForm(forms.ModelForm):
@@ -37,3 +37,10 @@ class OrderManagementForm(forms.ModelForm):
     class Meta:
         model = OrderManagement
         fields = ['reason', 'message']
+
+
+class UserReviewForm(forms.ModelForm):
+    
+    class Meta:
+        model = UserReview
+        fields = ['comment', 'rating']

@@ -1,0 +1,90 @@
+{% extends "customadmin/admin-base.html" %} {% block content %} {% load static %}
+{% load paginator_tags %}
+<!-- Wrapper -->
+<main id="main-wrapper" class="main-wrapper">
+    {% include 'customadmin/includes/admin-header.html' %} {% include 'customadmin/includes/sidebar.html' %}
+    <div id="app-content">
+        <!-- Container fluid -->
+        <div class="app-content-area">
+            <div class="container-fluid">
+                <div class="row">
+                    <div class="col-lg-12 col-md-12 col-12">
+                        <!-- Page header -->
+                        <div class="mb-5">
+                            <h3 class="mb-0">Category Management</h3>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <!-- row -->
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header d-md-flex border-bottom-0">
+                                    <div class="flex-grow-1">
+                                        <a href="{% url 'customadmin:admin_category_offer_add' %}" class="btn btn-primary"
+                                            >+ Add</a
+                                        >
+                                    </div>
+                                    <div class="search-bar">
+                                        <form>
+                                            <input
+                                                type="text"
+                                                name="search"
+                                                class="form-control"
+                                                placeholder="Search..."
+                                            />
+                                        </form>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive table-card">
+                                        <table
+                                            id="example"
+                                            class="table text-nowrap table-centered mt-0"
+                                            style="width: 100%"
+                                        >
+                                            <thead class="table-light">
+                                                <tr>
+                                                    {% for name in heading %}
+                                                    <th>{{name}}</th>
+                                                    {% endfor %}
+                                                    <th>Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for offer in category_offers %}
+                                                <tr>
+                                                    <td>{{offer.category}}</td>
+                                                    <td>{{offer.discount_type}}</td>
+                                                    <td class="text-capitalize">{{offer.amount_or_percent}}</td>
+                                                    <td>{{ offer.valid_from|date:"Y-m-d" }}</td>
+                                                    <td>{{ offer.valid_to|date:"Y-m-d" }}</td>
+                                                    <td>
+                                                        <a
+                                                            href="{% url 'customadmin:admin_category_offer_edit' offer.id %}"
+                                                            class="btn btn-ghost btn-icon btn-sm rounded-circle texttooltip"
+                                                            data-template="editOne"
+                                                        >
+                                                            <i data-feather="edit" class="icon-xs"></i>
+                                                            <div id="editOne" class="d-none">
+                                                                <span>Edit</span>
+                                                            </div>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% load_pagination products %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}

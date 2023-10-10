@@ -4,6 +4,7 @@ import uuid
 from django.db import models
 from django.utils.text import slugify
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.utils import timezone
 
 from PIL import Image
 from io import BytesIO
@@ -29,6 +30,7 @@ class Product(models.Model):
     featured_image = models.ImageField(upload_to='Product/featured-images')
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
+    discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     short_description = models.CharField(max_length=200)
     is_show = models.BooleanField(default=True)
@@ -180,7 +182,6 @@ class Payment(models.Model):
     purchased_price =models.DecimalField(max_digits=10, decimal_places=2)
     payment_date = models.DateTimeField(auto_now_add=True)
 
-
     def __str__(self):
         return self.user.first_name
     
@@ -204,14 +205,16 @@ class OrderManagement(models.Model):
     def __str__(self):
         return self.reason
 
+
 class WalletHistory(models.Model):
     TRANSACTION_OPERATION = [
         ('credit', 'Credit'),
         ('debit', 'Debit'),
     ]
     wallet = models.ForeignKey(Wallet, on_delete=models.CASCADE)
-    order = models.ForeignKey(Order, on_delete=models.CASCADE)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, null=True, blank=True)
     amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    description = models.CharField(max_length=150)
     transaction_operation = models.CharField(max_length=100, choices=TRANSACTION_OPERATION)
     transaction_date = models.DateTimeField(auto_now_add=True)
 
@@ -220,3 +223,54 @@ class WalletHistory(models.Model):
     
     class Meta:
         verbose_name_plural = 'Wallet Histories'
+
+
+
+class UserReview(models.Model):
+    product = models.ForeignKey(OrderItem, on_delete=models.CASCADE)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    comment = models.TextField()
+    rating = models.PositiveIntegerField()
+    reply = models.CharField(max_length=200, null=True, blank=True)
+
+    def __str__(self):
+        return self.user.first_name
+
+
+class CategoryOffer(models.Model):
+    DISCOUNT_TYPE_CHOICES = [
+        ('amount', 'Amount'),
+        ('percent', 'Percent'),
+    ]
+
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    discount_type = models.CharField(max_length=100, choices=DISCOUNT_TYPE_CHOICES)
+    amount_or_percent = models.DecimalField(max_digits=5, decimal_places=2)
+    description = models.CharField(max_length=50)
+    valid_from = models.DateTimeField()
+    valid_to = models.DateTimeField()
+    active = models.BooleanField(default=True)
+    applied = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.discount_type
+    
+
+class ProductOffer(models.Model):
+    DISCOUNT_TYPE_CHOICES = [
+        ('amount', 'Amount'),
+        ('percent', 'Percent'),
+    ]
+
+    products = models.ManyToManyField(Product)
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+    discount_type = models.CharField(max_length=100, choices=DISCOUNT_TYPE_CHOICES)
+    amount_or_percent = models.DecimalField(max_digits=5, decimal_places=2)
+    valid_from = models.DateTimeField()
+    valid_to = models.DateTimeField()
+    active = models.BooleanField(default=True)
+    applied = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.title

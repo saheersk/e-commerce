@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from shop.models import Category, ProductImage, Product, Cart, Order, OrderStatus, Payment, PaymentMethod, ProductVariant, OrderItem, OrderManagement, WalletHistory
+from shop.models import Category, ProductImage, Product, Cart, Order, OrderStatus, Payment, PaymentMethod, ProductVariant, OrderItem, OrderManagement, WalletHistory, UserReview, CategoryOffer, ProductOffer
 
 
 class ProductImageAdmin(admin.TabularInline):
@@ -73,3 +73,13 @@ class WalletHistoryAdmin(admin.ModelAdmin):
     list_display = ['wallet', 'amount', 'transaction_operation']
 
 admin.site.register(WalletHistory, WalletHistoryAdmin)
+
+
+
+admin.site.register(UserReview)
+
+
+admin.site.register(CategoryOffer)
+
+
+admin.site.register(ProductOffer)

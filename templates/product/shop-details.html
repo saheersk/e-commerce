@@ -55,7 +55,12 @@
                             <i class="fa fa-star-o"></i>
                             <span> - 5 Reviews</span>
                         </div>
-                        <h3>₹{{product.price}}</h3>
+                        {% if product.discount_amount != 0.00 %}
+                            <h3>₹{{ product.discount_amount }}</h3>
+                            <del>₹{{product.price}}</del>
+                        {% else %}
+                            <h3>₹{{product.price}}</h3>
+                        {% endif %}
                         <p>
                             {{product.short_description}}
                         </p>
@@ -226,7 +231,12 @@
                             <i class="fa fa-star-o"></i>
                             <i class="fa fa-star-o"></i>
                         </div>
-                        <h5>{{re_product.price}}</h5>
+                        {% if product.discount_amount != 0.00 %}
+                                    <h5>₹{{ product.discount_amount }}</h5>
+                                    <del>₹{{product.price}}</del>
+                                {% else %}
+                                    <h5>₹{{product.price}}</h5>
+                                {% endif %}
                         <div class="product__color__select">
                             <label for="pc-1">
                                 <input type="radio" id="pc-1" />

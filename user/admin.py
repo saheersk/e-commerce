@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from user.models import CustomUser, Address, Coupon, CouponUsage, Wallet
+from user.models import CustomUser, Address, Coupon, CouponUsage, Wallet, ReferralAmount
 
 class CustomUserAdmin(UserAdmin):
     list_display = ('id', 'first_name', 'last_name', 'email', 'phone_number')
@@ -14,6 +14,8 @@ class CustomUserAdmin(UserAdmin):
                 'fields': (
                     'phone_number',
                     'profile_picture', 
+                    'referral_code',
+                    'used_code',
                     'is_blocked'
                 ),
             }
@@ -52,3 +54,6 @@ class WalletAdmin(admin.ModelAdmin):
     list_display = ['user', 'balance']
 
 admin.site.register(Wallet, WalletAdmin)
+
+
+admin.site.register(ReferralAmount)

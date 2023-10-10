@@ -4,7 +4,7 @@ from django import forms
 
 from user.models import CustomUser, Coupon
 from web.models import Banner
-from shop.models import Category, Product, ProductImage, OrderItem, ProductVariant
+from shop.models import Category, Product, ProductImage, OrderItem, ProductVariant, CategoryOffer, ProductOffer
 
 from phonenumber_field.formfields import PhoneNumberField
 from phonenumber_field.phonenumber import to_python
@@ -16,7 +16,15 @@ class AdminCustomUserForm(forms.ModelForm):
 
     class Meta:
         model = CustomUser
-        fields = ["first_name", "last_name", "email" , "phone_number", "password", "confirm_password", "is_superuser", "is_blocked"]
+        fields = [
+            "first_name",
+            "last_name",
+            "email",
+            "phone_number",
+            "password",
+            "confirm_password",
+            "is_superuser",
+            "is_blocked"]
 
     def clean(self):
         cleaned_data = super().clean()
@@ -28,7 +36,7 @@ class AdminCustomUserForm(forms.ModelForm):
 
         if not first_name:
             self.add_error("first_name", "First name is required")
-        
+
         if not last_name:
             self.add_error("last_name", "Last name is required")
 
@@ -41,15 +49,21 @@ class AdminCustomUserForm(forms.ModelForm):
         if CustomUser.objects.filter(email=email).exists():
             self.add_error("email", "Email is already taken.")
 
-        if not re.match(r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$', email):
+        if not re.match(
+                r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$', email):
             self.add_error("email", "Invalid email format.")
-
 
 
 class AdminCustomUpdateUserForm(forms.ModelForm):
     class Meta:
         model = CustomUser
-        fields = ["first_name", "last_name", "email", "phone_number","is_superuser", "is_blocked"]
+        fields = [
+            "first_name",
+            "last_name",
+            "email",
+            "phone_number",
+            "is_superuser",
+            "is_blocked"]
 
     def clean(self):
         cleaned_data = super().clean()
@@ -59,7 +73,7 @@ class AdminCustomUpdateUserForm(forms.ModelForm):
 
         if not first_name:
             self.add_error("first_name", "First name is required")
-        
+
         if not last_name:
             self.add_error("last_name", "Last name is required")
 
@@ -70,7 +84,8 @@ class AdminCustomUpdateUserForm(forms.ModelForm):
             self.add_error("email", "Email is required.")
             return
 
-        if not re.match(r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$', email):
+        if not re.match(
+                r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$', email):
             self.add_error("email", "Invalid email format.")
 
 
@@ -90,31 +105,39 @@ class AdminCategory(forms.ModelForm):
         instance = self.instance
 
         if Category.objects.filter(name=name).exclude(pk=instance.pk).exists():
-            if Category.objects.filter(name=name).exclude(pk=instance.pk).exists() and Category.objects.filter(name=name, is_deleted = True):
+            if Category.objects.filter(name=name).exclude(pk=instance.pk).exists(
+            ) and Category.objects.filter(name=name, is_deleted=True):
                 cat = Category.objects.get(name=name)
                 cat.is_deleted = False
                 cat.save()
             else:
-                self.add_error('name', "A category with this name already exists.")
+                self.add_error(
+                    'name', "A category with this name already exists.")
 
         return name
-
 
 
 class AdminProduct(forms.ModelForm):
     class Meta:
         model = Product
-        fields = ['title', 'featured_image', 'description', 'short_description', 'category', 'price']
+        fields = [
+            'title',
+            'featured_image',
+            'description',
+            'short_description',
+            'category',
+            'price']
 
 
 class AdminProductImage(forms.ModelForm):
     image = forms.ImageField(required=False)
+
     class Meta:
         model = ProductImage
         fields = ['image']
 
 
-class AdminOrderItemFrom(forms.ModelForm):
+class AdminOrderItemForm(forms.ModelForm):
     class Meta:
         model = OrderItem
         fields = ['order_status']
@@ -127,7 +150,6 @@ class AdminProductVariantFrom(forms.ModelForm):
         exclude = ['variant_name']
 
 
-
 class AdminBannerForm(forms.ModelForm):
 
     class Meta:
@@ -138,7 +160,31 @@ class AdminBannerForm(forms.ModelForm):
 class AdminCouponForm(forms.ModelForm):
 
     class Meta:
-        model = Coupon 
+        model = Coupon
+        fields = '__all__'
+
+        widgets = {
+            'valid_from': forms.DateInput(attrs={'type': 'date'}),
+            'valid_to': forms.DateInput(attrs={'type': 'date'}),
+        }
+
+
+class AdminCategoryOfferForm(forms.ModelForm):
+
+    class Meta:
+        model = CategoryOffer
+        fields = '__all__'
+
+        input_formats = ['%Y-%m-%dT%H:%M:%S'] 
+        widgets = {
+            'valid_from': forms.DateInput(attrs={'type': 'date'}),
+            'valid_to': forms.DateInput(attrs={'type': 'date'}),
+        }
+
+class AdminProductOfferForm(forms.ModelForm):
+
+    class Meta:
+        model = ProductOffer
         fields = '__all__'
 
         widgets = {

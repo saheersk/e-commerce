@@ -49,7 +49,12 @@
                                         </div>
                                         <div class="product__cart__item__text">
                                             <h6>{{ product.product.title }}</h6>
-                                            <h5>₹{{ product.product.price }}</h5>
+                                            {% if product.product.discount_amount != 0.00 %}
+                                                <h5>₹{{ product.product.discount_amount }}</h5>
+                                                <del>₹{{product.product.price}}</del>
+                                            {% else %}
+                                                <h5>₹{{product.roduct.price}}</h5>
+                                            {% endif %}
                                         </div>
                                     </td>
                                     <td class="quantity__item">

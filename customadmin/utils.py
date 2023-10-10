@@ -7,6 +7,7 @@ import ssl
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
+
 def send_user_refund_mail(request, amount, email):
 
     subject = 'Male Fashion Amount Refunded'

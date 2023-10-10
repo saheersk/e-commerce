@@ -1,0 +1,53 @@
+# Virtual environment
+venv/
+env/
+
+# Compiled Python files
+*.pyc
+__pycache__/
+
+# # Editor and IDE files
+# .vscode/
+# .idea/
+# .*.swp
+
+# # Dependency management files
+# node_modules/
+# npm-debug.log
+# yarn-error.log
+
+# # Log and temporary files
+# *.log
+# *.tmp
+# *.bak
+
+# # Database files
+# db.sqlite3
+# *.db
+
+# # Environment configuration
+# .env
+# .env.*
+
+# # Media and static files (if not using a CDN)
+# media/
+# static/
+
+# # Compiled JavaScript and CSS files
+# *.js
+# *.css
+
+# # Configuration files
+# *.conf
+
+# # macOS specific files
+# .DS_Store
+
+# # Editor configuration files
+# .editorconfig
+# .eslintrc
+# .prettierrc
+
+# # Ignore local .gitignore files
+# .gitignore
+

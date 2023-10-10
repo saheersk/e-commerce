@@ -1,12 +1,15 @@
-import os
+# import os
 
 from pathlib import Path
+from datetime import timedelta
 
+from celery.schedules import crontab
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-SECRET_KEY = 'django-insecure-%vy8$8d6$jah0=bk63#fvyr#@)did)1m*ilrwv+6sj-hr=k@kf'
+SECRET_KEY = 'django-insecure-%vy8$8d6$jah0=bk63#fvyr#@)did)1'
+# m*ilrwv+6sj-hr=k@kf'
 
 DEBUG = True
 
@@ -23,7 +26,7 @@ INSTALLED_APPS = [
 
     'imagekit',
     'sendgrid',
-    
+
     'web',
     'user',
     'shop',
@@ -122,12 +125,20 @@ RAZORPAY_KEY_SECRET = 'f4SuCsKkP5FXRQHw4Mx7GiQQ'
 EMAIL_BACKEND = 'sendgrid_backend.SendgridBackend'
 SENDGRID_API_KEY = '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'
 
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.sendgrid.net'  # SendGrid SMTP server
-# EMAIL_PORT = 587  # SendGrid SMTP port
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = 'saheerabcd3@gmail.com'
-# EMAIL_HOST_PASSWORD = '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'
 
+CELERY_BROKER_URL = 'sqla+sqlite:///celery.sqlite3'
+CELERY_RESULT_BACKEND = 'db+sqlite:///celery_results.sqlite3'
 
+CELERY_BEAT_SCHEDULE = {
+    'apply_category_offers': {
+        'task': 'customadmin.tasks.apply_category_offers',
+        'schedule': timedelta(seconds=5),
+        # 'schedule': crontab(minute=0, hour=0),
+    },
+    'apply_product_offers': {
+        'task': 'customadmin.tasks.apply_product_offers',
+        'schedule': timedelta(seconds=5),
+        # 'schedule': crontab(minute=0, hour=0),
+    },
+}
 

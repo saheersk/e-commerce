@@ -20,30 +20,35 @@
             <div class="row">
                         <div class="col-12">
                             <div class="card">
-                                <div class="search-bar w-25 mt-2 mb-2 ml-2">
-                                    <form>
-                                        <input
-                                            type="text"
-                                            name="search"
-                                            class="form-control"
-                                            placeholder="Search..."
-                                        />
-                                    </form>
-                                </div>
-                                {% comment %} <div class="dropdown-filters">
-                                    <select class="form-select" id="userFilter">
-                                        <option value="">All Users</option>
-                                        <!-- Add options for users here -->
-                                    </select>
-                                
-                                    <select class="form-select" id="statusFilter">
-                                        <option value="">All Statuses</option>
-                                        <option value="Delivered">Delivered</option>
-                                        <option value="Returned">Returned</option>
-                                        <option value="Cancelled">Cancelled</option>
-                                        <!-- Add more status options here -->
-                                    </select>
-                                </div> {% endcomment %}
+                                <div class='d-flex w-100'>
+                                    <div class="search-bar w-25 mt-2 mb-2 ml-2">
+                                        <form>
+                                            <input
+                                                type="text"
+                                                name="search"
+                                                class="form-control"
+                                                placeholder="Search..."
+                                            />
+                                        </form>
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center dropdown-filters">
+                                        <select class="form-select" id="userFilter" style="height:40px">
+                                            <option value="">All Users</option>
+                                        </select>
+                                        <select class="form-select" id="statusFilter" style="height:40px">
+                                            <option value="">All Statuses</option>
+                                            <option value="Delivered">Delivered</option>
+                                            <option value="Returned">Returned</option>
+                                            <option value="Cancelled">Cancelled</option>
+                                        </select>
+                                        <select class="form-select" id="statusFilter" style="height:40px">
+                                            <option value="">All Category</option>
+                                            <option value="Delivered">Delivered</option>
+                                            <option value="Returned">Returned</option>
+                                            <option value="Cancelled">Cancelled</option>
+                                        </select>
+                                    </div>
+                                 </div>
                                 <div class="card-body">
                                     <div class="table-responsive table-card">
                                         <table
@@ -56,7 +61,6 @@
                                                     {% for name in heading %}
                                                     <th>{{name}}</th>
                                                     {% endfor %}
-                                                    <th>Action</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -66,14 +70,15 @@
 
                                                     <td>
                                                         {% for item in order.order_items.all %}
-                                                        {{item.product.title}}
-                                                        <br>
+                                                        <a href="{% url 'customadmin:admin_order_details' item.id %}">
+                                                            {{item.product.title}}<br>
+                                                        </a>
                                                         {% endfor %}
                                                     </td>
 
                                                     <td>₹{{order.total_price}}</td>
                                                         <td>
-                                                        {% for item in order.order_items.all %}
+                                                            {% for item in order.order_items.all %}
                                                                 {% if item.order_status.status == 'Delivered' %}
                                                                     <span class="text-success">{{ item.order_status }}</span>
                                                                 {% elif item.order_status.status == 'Returned' or item.order_status.status == 'Cancelled'  %}
@@ -88,18 +93,6 @@
                                                         </br>
                                                             {% endfor %}
                                                         </td>
-                                                    <td>
-                                                        <a
-                                                            href="{% url 'customadmin:admin_order_edit' order.id %}"
-                                                            class="btn btn-ghost btn-icon btn-sm rounded-circle texttooltip"
-                                                            data-template="editOne"
-                                                        >
-                                                            <i data-feather="edit" class="icon-xs"></i>
-                                                            <div id="editOne" class="d-none">
-                                                                <span>Edit</span>
-                                                            </div>
-                                                        </a>
-                                                    </td>
                                                 </tr>
                                                 {% endfor %}
                                             </tbody>

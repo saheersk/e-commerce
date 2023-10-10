@@ -90,21 +90,96 @@ $(document).on("click", ".action-button", function (e) {
     });
 });
 
+function getCSRFToken() {
+    var csrfToken = null;
+    var cookies = document.cookie.split(";");
+    for (var i = 0; i < cookies.length; i++) {
+        var cookie = cookies[i].trim();
+        if (cookie.startsWith("csrftoken=")) {
+            csrfToken = cookie.substring("csrftoken=".length, cookie.length);
+            break;
+        }
+    }
+    return csrfToken;
+}
+
+  $(document).on('submit', '.ajax-status', function(e){
+    e.preventDefault();
+    console.log('submit sus');
+        var csrfToken = getCSRFToken();
+        if (!csrfToken) {
+            console.error("CSRF token not found.");
+            return;
+        }
+        console.log('select');
+        var form = $(this);
+        var formData = form.serialize();
+        console.log(formData, 'form');
+
+        const orderId = $(this).find('button').data('order-id');
+
+        $.ajax({
+        url: `/customadmin/order/orders/${orderId}/`, // Replace with the actual URL of your view
+        method: "POST",
+        dataType: "json",
+        data: formData,
+        success: function(data) {
+            // updateSelectOptions(data);
+            console.log(data, 'sus');
+            const Toast = Swal.mixin({
+                toast: true,
+                position: "top-end",
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                didOpen: (toast) => {
+                    toast.addEventListener("mouseenter", Swal.stopTimer);
+                    toast.addEventListener("mouseleave", Swal.resumeTimer);
+                },
+            });
+            Toast.fire({
+                icon: data.status,
+                title: data.title,
+            });
+        },
+        error: function(xhr, status, error) {
+            console.error("Error fetching options:", error);
+        }
+        });
+  })
 
 $(document).ready(function () {
+    console.log('hlo');
+    // function updateSelectOptions(options) {
+    //     const select = $("#status-select");
+    //     select.empty();
+    //     options.forEach(function(option) {
+    //       select.append(`<option date-order-id="${option.order_id}" value="${option.status}">${option.status}</option>`);
+    //     });
+    //   }
+    
+      
 
-    function getCSRFToken() {
-        var csrfToken = null;
-        var cookies = document.cookie.split(";");
-        for (var i = 0; i < cookies.length; i++) {
-            var cookie = cookies[i].trim();
-            if (cookie.startsWith("csrftoken=")) {
-                csrfToken = cookie.substring("csrftoken=".length, cookie.length);
-                break;
-            }
-        }
-        return csrfToken;
-    }
+    // $('#orderStatus').on('change', function() {
+    //     const selectedValue = $(this).val();
+        
+    //     const baseUrl = window.location.origin; // Get the base URL without query parameters
+        
+    //     const url = `${baseUrl}?order_status=${selectedValue}`;
+    
+    //     $.ajax({
+    //         url: url,
+    //         method: 'GET',
+    //         dataType: 'json',
+    //         success: function(data) {
+    //             console.log(data);
+    //             //$('#filteredTable').html(data);
+    //         },
+    //         error: function(error) {
+    //             console.error('Error:', error);
+    //         }
+    //     });
+    // });
 
     $("#approve-product").click(function () {
         console.log('approve');

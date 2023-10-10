@@ -57,7 +57,7 @@
                                     <td>{{order.id}}</td>
                                     <td>
                                         {% for item in order.order_items.all %}
-                                            {{item.product.title}} - {{item.quantity}}
+                                            {{item.product.title}} - {{item.quantity}}</br>
                                         {% endfor %}
                                     </td>
                                     <td>{{ order.purchased_date|date:"j M Y" }}</td>
@@ -74,23 +74,5 @@
             </div>
         </div>
     </div>
-
-    <script>
-        document.getElementById('orderStatus').addEventListener('change', function() {
-            // Get the selected value
-            const selectedValue = this.value;
-        
-            // Get the current base URL (excluding the query string)
-            const baseUrl = window.location.href.split('?')[0];
-        
-            // Construct the URL with the selected value as a query parameter
-            const url = `${baseUrl}?order_status=${selectedValue}`;
-        
-            window.location.href = url;
-            console.log('Selected Value:', selectedValue);
-            console.log('URL:', url);
-        });
-    </script>
-
  {% endblock %}
 

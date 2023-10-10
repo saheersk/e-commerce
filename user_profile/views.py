@@ -7,10 +7,10 @@ from django.http import HttpResponse
 from django.contrib.auth import update_session_auth_hash
 
 from user.models import Address
-from user_profile.forms import CustomUserEditForm
+from user_profile.forms import CustomUserEditForm, UserReviewForm
 from main.functions import generate_form_error
 from user_profile.forms import AddressForm, OrderManagementForm
-from shop.models import Order, Cart, OrderStatus, OrderItem, Payment, WalletHistory
+from shop.models import Order, Cart, OrderStatus, OrderItem, Payment, WalletHistory, UserReview
 
 
 @login_required(login_url='user/login/')
@@ -158,10 +158,13 @@ def profile_address_add(request):
             print(instance, 'instance')
 
             default = request.POST.get('is_default')
-            if default == 'on':
-                address = Address.objects.get(user=request.user, is_default=True)
-                address.is_default = False
-                address.save()
+            if Address.objects.filter(user=request.user).exists():
+                if default == 'on':
+                    address = Address.objects.get(user=request.user, is_default=True)
+                    address.is_default = False
+                    address.save()
+                    instance.is_default = True
+            else:
                 instance.is_default = True
 
             instance.user = request.user
@@ -305,9 +308,11 @@ def profile_order(request):
 @login_required(login_url='user/login/')
 def profile_order_details(request, pk):
     orders = Order.objects.filter(user=request.user, id=pk)
+    reviews = UserReview.objects.filter(user=request.user)
     context = {
         "title" : "Male Fashion | My Orders",
-        "orders" : orders
+        "orders" : orders,
+        "reviews" : reviews,
     }
     return render(request, 'profile/user-order-details.html', context)
 
@@ -368,8 +373,6 @@ def profile_order_cancel(request, pk):
         return render(request, 'profile/user-order-cancel.html', context)
 
 
-
-
 @login_required(login_url='user/login/')
 def profile_order_return(request, pk):
     product = get_object_or_404(OrderItem, id=pk)
@@ -427,3 +430,31 @@ def profile_wallet_history(request):
         "wallet_history": wallet_history
     }
     return render(request, 'profile/user-wallet-history.html', context)
+
+
+def profile_order_review(request, pk):
+    order = get_object_or_404(OrderItem, id=pk)
+    form  = UserReviewForm(request.POST)
+
+    if form.is_valid():
+        instance = form.save(commit=False)
+
+        instance.user = request.user
+        instance.product = order
+
+        instance.save()
+
+        response_data = {
+                "status" : "success",
+                "title" : "Thank you for your Feedback",
+                }
+        return HttpResponse(json.dumps(response_data), content_type="application/json")
+    else:
+        error_message = generate_form_error(form)
+        print(error_message, 'error')
+        response_data = {
+                "status" : "error",
+                "title" : "Address Field Error.",
+                "message" : str(error_message),
+            }
+        return HttpResponse(json.dumps(response_data), content_type="application/json")

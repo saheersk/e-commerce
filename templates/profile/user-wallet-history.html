@@ -18,7 +18,7 @@
                                             {% for item in wallet.order.order_items.all %}
                                                 <span><small>Product Name: {{item.product.title}} - {{item.quantity}}</small><br></span>
                                             {% endfor %}
-                                            <span>Refund amount is credit to your wallet <br></span>
+                                            <span>{{wallet.description}}<br></span>
                                             <span><small>On {{ wallet.transaction_date|date:"j F Y g:i A" }}</small></span>
                                         </div>
                                         <div class="col-md-4 d-flex flex-column align-items-end justify-content-end">

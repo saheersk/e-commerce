@@ -12,7 +12,7 @@ import ssl
 ssl._create_default_https_context = ssl._create_unverified_context
 
 def send_otp(request, email):
-    totp = pyotp.TOTP(pyotp.random_base32(), interval=60)
+    totp = pyotp.TOTP(pyotp.random_base32(), interval=180)
     otp = totp.now()
 
     request.session['otp_secret_key'] = totp.secret

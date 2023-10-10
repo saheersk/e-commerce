@@ -107,7 +107,12 @@
                                     <i class="fa fa-star-o"></i>
                                     <i class="fa fa-star-o"></i>
                                 </div>
-                                <h5>₹{{product.price}}</h5>
+                                {% if product.discount_amount != 0.00 %}
+                                    <h5>₹{{ product.discount_amount }}</h5>
+                                    <del>₹{{product.price}}</del>
+                                {% else %}
+                                    <h5>₹{{product.price}}</h5>
+                                {% endif %}
                             </div>
                         </div>
                     </a>
