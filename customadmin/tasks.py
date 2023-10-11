@@ -18,7 +18,9 @@ def calculate_discount_price(product, offer):
 @shared_task
 def apply_category_offers():
     today = timezone.localdate()
-
+    i =0
+    i+=1
+    print(i, 'iii')
     CategoryOffer = apps.get_model('shop', 'CategoryOffer') 
     valid_offers = CategoryOffer.objects.filter(valid_from__lte=today, active=True)
 
@@ -90,3 +92,8 @@ def apply_product_offers():
 
         offer.applied = True
         offer.save()
+
+    apply_category_offers()
+
+
+    

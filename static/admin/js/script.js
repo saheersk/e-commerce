@@ -317,7 +317,7 @@ $(document).ready(function () {
     });
 
     $("#performanceChart").length && ((e = {
-        series: [codPercentage, walletPercentage, onlinePercentage],
+        series: [codPercentage , walletPercentage, onlinePercentage],
         chart: { height: 320, type: "radialBar" },
         colors: [window.theme.primary, window.theme.success, window.theme.danger],
         stroke: { lineCap: "round" },

@@ -26,6 +26,7 @@ INSTALLED_APPS = [
 
     'imagekit',
     'sendgrid',
+    'django_celery_beat',
 
     'web',
     'user',
@@ -126,19 +127,49 @@ EMAIL_BACKEND = 'sendgrid_backend.SendgridBackend'
 SENDGRID_API_KEY = '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'
 
 
-CELERY_BROKER_URL = 'sqla+sqlite:///celery.sqlite3'
-CELERY_RESULT_BACKEND = 'db+sqlite:///celery_results.sqlite3'
+# CELERY_BROKER_URL = 'sqla+sqlite:///celery.sqlite3'
+# CELERY_RESULT_BACKEND = 'db+sqlite:///celery_results.sqlite3'
+
+#CELERY
+CELERY_BROKER_URL = 'redis://localhost:6379'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+
+#CELERY BEAT
+# CELERY_BEAT_SCHEDULE = 'django-celery-beat.schedulers:DatabaseScheduler'
+# CELERY_BEAT_SCHEDULE = {
+#     'apply_category_offers': {
+#         'task': 'customadmin.tasks.apply_category_offers',
+#         'schedule': timedelta(seconds=5),
+#         # 'schedule': crontab(minute=0, hour=0),
+#     },
+#     'apply_product_offers': {
+#         'task': 'customadmin.tasks.apply_product_offers',
+#         'schedule': timedelta(seconds=5),
+#         # 'schedule': crontab(minute=0, hour=0),
+#     },
+# }
+
+category_task = 'customadmin.tasks.apply_category_offers'
+product_task = 'customadmin.tasks.apply_product_offers'
 
 CELERY_BEAT_SCHEDULE = {
-    'apply_category_offers': {
-        'task': 'customadmin.tasks.apply_category_offers',
-        'schedule': timedelta(seconds=5),
-        # 'schedule': crontab(minute=0, hour=0),
+    'apply_category_offers_first_run': {
+        'task': category_task,
+        # 'schedule': timedelta(seconds=7),  # Schedule it as needed
+        'schedule': crontab(minute=0, hour=0),
     },
     'apply_product_offers': {
-        'task': 'customadmin.tasks.apply_product_offers',
-        'schedule': timedelta(seconds=5),
-        # 'schedule': crontab(minute=0, hour=0),
+        'task': product_task,
+        # 'schedule': timedelta(seconds=5),
+    },
+    'apply_category_offers_second_run': {
+        'task': category_task,
+        # 'schedule': timedelta(seconds=9),  # Schedule it as needed
+        'schedule': crontab(minute=0, hour=0),
     },
 }
 

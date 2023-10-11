@@ -166,6 +166,14 @@ def product_cart(request):
             item.total_price_of_product = item.product.price * item.qty
 
         item.save()
+
+    if 'coupon' in request.session:
+        del request.session['coupon']
+    
+    if 'total_discount_amount' in request.session:
+        del request.session['total_discount_amount']
+
+    request.session['wallet'] = False
    
     context = {
         "title": "Male Fashion | Cart",
@@ -357,14 +365,16 @@ def product_checkout(request):
         print(total_amount, 'amount')
         wallet = request.session.get('wallet')
 
-        discount_amount = 0
+        total_discount_amount = 0.00
         for item in products:
-            print(item.total_price_of_product)
-            discount_amount += item.total_price_of_product
+            total_discount_amount += float(item.total_price_of_product)
+
+        discount_amount = request.session.get('total_discount_amount')
 
         discount = False
-        if discount_amount != total_amount:
-            discount = True
+        if discount_amount is not None:
+            if float(discount_amount) < total_amount and float(discount_amount) > 0.00:
+                discount = True
 
         print(discount, discount_amount, total_amount, 'amount')
 
@@ -392,7 +402,6 @@ def product_discount(request):
         user = request.user
         products = Cart.objects.filter(user=user, is_deleted=False)
 
-        # total_amount = sum(item.product.price * item.qty for item in products)
         total_amount = products.aggregate(
                 total_amount=Coalesce(
                             Sum(
@@ -415,14 +424,14 @@ def product_discount(request):
             return HttpResponse(json.dumps(response_data), content_type="application/json")
 
 
-        # if request.session.get('coupon'):
-        #     coupon_code = request.session.get('coupon')
-        #     if coupon_code == coupon.code:
-        #         response_data = {
-        #             "title": "Already used one coupon",
-        #             "status": "warning",
-        #         }
-        #         return HttpResponse(json.dumps(response_data), content_type="application/json")
+        if request.session.get('coupon'):
+            coupon_code = request.session.get('coupon')
+            if coupon_code == coupon.code:
+                response_data = {
+                    "title": "Already used one coupon",
+                    "status": "warning",
+                }
+                return HttpResponse(json.dumps(response_data), content_type="application/json")
 
         current_datetime = timezone.now()
 
@@ -441,37 +450,28 @@ def product_discount(request):
             return HttpResponse(json.dumps(response_data), content_type="application/json")
 
         total_discount_amount = 0.00
+        for item in products:
+            total_discount_amount += float(item.total_price_of_product)
+
+        if 'total_discount_amount' in request.session:
+            total_discount_amount = request.session.get('total_discount_amount')
+
+        discount = coupon.amount_or_percent
+
         if coupon.discount_type == 'amount':
-            discount = coupon.amount_or_percent / 2
-
-            for item in products:
-                item.total_price_of_product -= discount
-                item.save()
-                total_discount_amount += float(item.total_price_of_product)
+            total_discount_amount -= float(discount)
+            request.session['total_discount_amount'] = total_discount_amount
         else:
-            total_discount_percentage = coupon.amount_or_percent / 2
-            print(total_discount_percentage, 'per')
-            for item in products:
-                discount = item.total_price_of_product * (total_discount_percentage / 100)
-                print(discount, 'dis')
-                item.total_price_of_product -= discount
-                item.save()
-                total_discount_amount += float(item.total_price_of_product)
+            total_discount_amount = float(total_discount_amount) - (float(total_discount_amount) * float(discount/100))
+            request.session['total_discount_amount'] = total_discount_amount
 
-        # CouponUsage.objects.create(
-        #         user=request.user,
-        #         coupon=coupon,
-        #     )
-
-        # CouponUsage.objects.create(user=user, coupon=coupon)
-        # request.session['coupon'] = coupon.code
-
-        total_discount_amount = round(total_discount_amount, 2)
+        request.session['coupon'] = coupon.code
+        total_amount = request.session.get('total_discount_amount')
 
         response_data = {
             "title": "Discount applied",
             "status": "success",
-            "total_amount": total_discount_amount,
+            "total_amount": float(total_amount),
         }
 
         return HttpResponse(json.dumps(response_data), content_type="application/json")
@@ -491,25 +491,39 @@ def product_order_cod(request):
         order_status = OrderStatus.objects.get(status="Pending")
         payment_type = PaymentMethod.objects.get(payment_type="COD")
 
+        coupon=None
+        if 'coupon' in request.session:
+            coupon = Coupon.objects.get(code=request.session.get('coupon'))
+            CouponUsage.objects.create(user=request.user, coupon=coupon)
+
+            
         total_amount = 0
         order = Order.objects.create(
                         user=user,
                         shipping_address=shipping_address,
+                        coupon=coupon
                     )
-        
+
         request.session['wallet'] = False
 
         for item in products:
+                if item.product.discount_amount > 0.00:
+                    price = item.product.discount_amount
+                else:
+                    price = item.product.price
+
                 order_item = OrderItem.objects.create(
                         product=item.product,
                         quantity=item.qty,
                         order_status=order_status,
                         size=item.size,
-                        total_product_price=item.product.price * item.qty
+                        total_product_price=price * item.qty
                     )
                 order.order_items.add(order_item)
                 total_amount += item.total_price_of_product
-
+        
+        if 'total_discount_amount' in request.session:
+            total_amount = request.session.get('total_discount_amount')
 
         order.total_price = total_amount
 
@@ -524,16 +538,24 @@ def product_order_cod(request):
             )
                 
         for item in products:
+                if item.product.discount_amount > 0.00:
+                    price = item.product.discount_amount
+                else:
+                    price = item.product.price
+
                 product = ProductVariant.objects.get(product=item.product, size=item.size)
                 product.stock_unit -= item.qty
                 product.save()
                 item.is_deleted = True
                 item.qty = 1
-                item.total_price_of_product = item.product.price * item.qty
+                item.total_price_of_product = price * item.qty
                 item.save()
             
         if 'coupon' in request.session:
                 del request.session['coupon']
+
+        if 'total_discount_amount' in request.session: 
+                del request.session['total_discount_amount']
             
         generate_invoice_to_send_email(request, order.id)
 
@@ -559,23 +581,36 @@ def product_order_digital(request):
         order_status = OrderStatus.objects.get(status="Pending")
         payment_type = PaymentMethod.objects.get(payment_type="Online")
 
+        coupon=None
+        if 'coupon' in request.session:
+            coupon = Coupon.objects.get(code=request.session.get('coupon'))
+            CouponUsage.objects.create(user=request.user, coupon=coupon)
+
         total_amount = 0.00
         order = Order.objects.create(
                         user=user,
                         shipping_address=shipping_address,
+                        coupon=coupon
                     )
             
         for item in products:
+                if item.product.discount_amount > 0.00:
+                    price = item.product.discount_amount
+                else:
+                    price = item.product.price
+
                 order_item = OrderItem.objects.create(
                         product=item.product,
                         quantity=item.qty,
                         order_status=order_status,
                         size=item.size,
-                        total_product_price=item.product.price * item.qty
+                        total_product_price=price * item.qty
                     )
                 order.order_items.add(order_item)
                 total_amount += float(item.total_price_of_product)
 
+        if 'total_discount_amount' in request.session:
+            total_amount = request.session.get('total_discount_amount')
 
         order.total_price = total_amount
 
@@ -590,16 +625,24 @@ def product_order_digital(request):
             )
                 
         for item in products:
+                if item.product.discount_amount > 0.00:
+                    price = item.product.discount_amount
+                else:
+                    price = item.product.price
+
                 product = ProductVariant.objects.get(product=item.product, size=item.size)
                 product.stock_unit -= item.qty
                 product.save()
                 item.is_deleted = True
                 item.qty = 1
-                item.total_price_of_product = item.product.price * item.qty
+                item.total_price_of_product = price * item.qty
                 item.save()
             
         if 'coupon' in request.session:
                 del request.session['coupon']
+
+        if 'total_discount_amount' in request.session:
+                del request.session['total_discount_amount']
 
         generate_invoice_to_send_email(request, order.id)
         response_data = {
@@ -627,10 +670,16 @@ def product_order_wallet(request):
         for item in products:
              total_amount += item.total_price_of_product
 
+        coupon=None
+        if 'coupon' in request.session:
+            coupon = Coupon.objects.get(code=request.session.get('coupon'))
+            total_amount = request.session.get('total_discount_amount')
+            CouponUsage.objects.create(user=request.user, coupon=coupon)
 
         order = Order.objects.create(
                         user=user,
                         shipping_address=shipping_address,
+                        coupon=coupon
                     )
             
         if wallet.balance > total_amount:
@@ -648,15 +697,23 @@ def product_order_wallet(request):
             request.session['wallet'] = False
 
             for item in products:
+                if item.product.discount_amount > 0.00:
+                    price = item.product.discount_amount
+                else:
+                    price = item.product.price
+
                 order_item = OrderItem.objects.create(
                             product=item.product,
                             quantity=item.qty,
                             order_status=order_status,
                             size=item.size,
-                            total_product_price=item.product.price * item.qty
+                            total_product_price= price * item.qty
                         )
                 order.order_items.add(order_item)
                 total_amount += item.total_price_of_product
+
+            if 'coupon' in request.session:
+                total_amount = request.session.get('total_discount_amount')
 
             order.total_price = total_amount
 
@@ -671,16 +728,23 @@ def product_order_wallet(request):
                 )
                     
             for item in products:
+                    if item.product.discount_amount > 0.00:
+                        price = item.product.discount_amount
+                    else:
+                        price = item.product.price
                     product = ProductVariant.objects.get(product=item.product, size=item.size)
                     product.stock_unit -= item.qty
                     product.save()
                     item.is_deleted = True
                     item.qty = 1
-                    item.total_price_of_product = item.product.price * item.qty
+                    item.total_price_of_product = price * item.qty
                     item.save()
                 
             if 'coupon' in request.session:
                     del request.session['coupon']
+                    
+            if 'total_discount_amount' in request.session:
+                    del request.session['total_discount_amount']
             
             generate_invoice_to_send_email(request, order.id)
             response_data = {
@@ -694,9 +758,13 @@ def product_order_wallet(request):
         else:
             total_amount = Decimal(0.00)
             for item in products:
-                item.total_price_of_product -= wallet.balance // 2
-                item.save()
                 total_amount += item.total_price_of_product
+
+            if 'total_discount_amount' in request.session:
+                total_amount = request.session.get('total_discount_amount')
+            
+            total_amount = float(total_amount) - float(wallet.balance)
+            request.session['total_discount_amount'] = total_amount
 
             WalletHistory.objects.create(
                 wallet=wallet,

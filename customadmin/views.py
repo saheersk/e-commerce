@@ -151,9 +151,9 @@ def admin_panel(request):
         "current_month_sales_count": current_month_sales_count,
         "total_sales_count": total_sales_count,
         "monthly_sales_count": sales_data_json,
-        "cod_percentage": cod_percentage,
-        "wallet_percentage": wallet_percentage,
-        "online_percentage": online_percentage,
+        'cod_percentage': round(cod_percentage, 1),
+        'wallet_percentage': round(wallet_percentage, 1),
+        'online_percentage': round(online_percentage, 1),
         "top_selling_products": top_selling_products,
         "top_categories": top_categories,
         "total_users": total_users,
@@ -664,7 +664,7 @@ def admin_order(request):
         orders = Order.objects.filter(
             ~Q(order_items__order_status__status="Requested For Cancelling") &
             ~Q(order_items__order_status__status="Requested For Returning")
-        )
+        ).order_by('-id')
 
         if search_query:
             orders = orders.filter(Q(user__first_name__icontains=search_query) | Q(
@@ -683,6 +683,7 @@ def admin_order(request):
         return redirect('web:index')
     else:
         return redirect('customadmin:admin_login')
+
 
 def admin_order_details(request, pk):
     order_item = get_object_or_404(OrderItem, id=pk)

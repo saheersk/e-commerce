@@ -513,7 +513,7 @@ $(document).ready(function () {
         console.log(totalAmount, 'total');
 
         if(totalAmount == undefined) {
-            totalAmount = $("#discount-total-amount").data("total-amount");
+            totalAmount = $("#discount-total-amount").data("discounted-total-amount");
             console.log(totalAmount, 'dis');
         }
 

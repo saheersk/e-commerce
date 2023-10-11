@@ -109,7 +109,7 @@
                         <ul class="checkout__total__all">
                             <li>Subtotal <span>₹{{total_amount}}</span></li>
                             {% if discount %}
-                                <li>Discounted Price <span id="discount-total-amount" data-total-amount="{{ discount_amount }}">₹{{ discount_amount }}</span></li>
+                                <li>Discounted Price <span id="discount-total-amount" data-discounted-total-amount="{{ discount_amount }}">₹{{ discount_amount }}</span></li>
                             {% else %}
                                 <li>Total <span id="total-amount" data-total-amount="{{ total_amount }}" >₹{{ total_amount }}</span></li>
                             {% endif %}
