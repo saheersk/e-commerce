@@ -24,14 +24,17 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'channels',
     'imagekit',
     'sendgrid',
     'django_celery_beat',
+    'django_celery_results',
 
     'web',
     'user',
     'shop',
-    'customadmin'
+    'customadmin',
+    'fashion_asgi',
 ]
 
 MIDDLEWARE = [
@@ -42,6 +45,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'fashion.urls'
@@ -59,6 +63,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
                 'fashion.context_processors.username',
                 'shop.context_processors.cart_count',
+                'fashion_asgi.context_processors.notification',
                 'user_profile.context_processors.wallet',
             ],
         },
@@ -66,6 +71,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'fashion.wsgi.application'
+ASGI_APPLICATION = 'fashion.asgi.application'
 
 
 DATABASES = {
@@ -100,6 +106,7 @@ USE_I18N = True
 
 USE_TZ = True
 
+handler404 = 'web.views.custom_404_view'
 
 STATIC_URL = 'static/'
 
@@ -118,6 +125,15 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'user.CustomUser'
 
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
+}
+
 # client.set_app_details({"title" : "<YOUR_APP_TITLE>", "version" : "<YOUR_APP_VERSION>"})
 
 RAZORPAY_KEY_ID = 'rzp_test_7Pm5s9hhe2TILm'
@@ -132,44 +148,33 @@ SENDGRID_API_KEY = 'SG.7Rn_SLACRKqUuyGznx3kBQ.GUkKAWYZ8iY8z-0KH6QpDq6pbwQAbXgySl
 
 #CELERY
 CELERY_BROKER_URL = 'redis://localhost:6379'
-CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+# # CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+CELERY_RESULT_BACKEND = 'django-db'
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Asia/Kolkata'
 
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 #CELERY BEAT
-# CELERY_BEAT_SCHEDULE = 'django-celery-beat.schedulers:DatabaseScheduler'
-# CELERY_BEAT_SCHEDULE = {
-#     'apply_category_offers': {
-#         'task': 'customadmin.tasks.apply_category_offers',
-#         'schedule': timedelta(seconds=5),
-#         # 'schedule': crontab(minute=0, hour=0),
-#     },
-#     'apply_product_offers': {
-#         'task': 'customadmin.tasks.apply_product_offers',
-#         'schedule': timedelta(seconds=5),
-#         # 'schedule': crontab(minute=0, hour=0),
-#     },
-# }
-
 category_task = 'customadmin.tasks.apply_category_offers'
 product_task = 'customadmin.tasks.apply_product_offers'
 
 CELERY_BEAT_SCHEDULE = {
     'apply_category_offers_first_run': {
         'task': category_task,
-        # 'schedule': timedelta(seconds=7),  # Schedule it as needed
+        # 'schedule': timedelta(seconds=7),
         'schedule': crontab(minute=0, hour=0),
     },
     'apply_product_offers': {
         'task': product_task,
         # 'schedule': timedelta(seconds=5),
+        'schedule': crontab(minute=1, hour=0),
     },
     'apply_category_offers_second_run': {
         'task': category_task,
-        # 'schedule': timedelta(seconds=9),  # Schedule it as needed
-        'schedule': crontab(minute=0, hour=0),
+        # 'schedule': timedelta(seconds=9),
+        'schedule': crontab(minute=2, hour=0),
     },
 }
 

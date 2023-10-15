@@ -57,11 +57,22 @@
             <!--Navbar nav -->
             <ul class="navbar-nav navbar-right-wrap ms-lg-auto d-flex nav-top-wrap align-items-center ms-4 ms-lg-0">
                 {% if request.user.is_authenticated and request.user.is_superuser %}
-                <li style="margin-right: 5px;" >{{username}}</li>
+                <a href="#" class="notification-icon" data-toggle="collapse" data-target="#notification-panel">
+                    <i class="far fa-bell bell-icon-black"></i>
+                    <span class="badge badge-danger text-white" id="notification-badge" style="left: 10px; top: -6px;">0</span>
+                </a>
+                <li style="margin-right: 5px; margin-left: 15px" >{{username}}</li>
                 <li ><a class="ml-2" href="{% url 'customadmin:admin_logout' %}"> Logout </a></li>
                 {% else %}
                 <li>Login</li>
                 {% endif %}
+            </ul>
+        </div>
+        <div id="notification-panel" class="notification-panel">
+            <ul class="list-group" id="notification-dropdown" style="width: 400px; height: 500px; overflow-y: auto;">
+                {% for item in notification %}
+                    <li class='list-group-item'>{{ item.message }}</li>
+                {% endfor %}
             </ul>
         </div>
     </div>

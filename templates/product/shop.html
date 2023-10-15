@@ -26,14 +26,14 @@
                                                 <ul class="nice-scroll">
                                                     <li>
                                                         <label>
-                                                            <input type="checkbox" name="category" value="All" id="allCategories" {% if 'All' in request.GET.getlist.category %}checked{% endif %}>
+                                                            <input type="checkbox" name="category" value="All" id="allCategories" />
                                                             All
                                                         </label>
                                                     </li>
                                                     {% for category in categories %}
                                                     <li>
                                                         <label>
-                                                            <input type="checkbox" name="category" value="{{ category }}" class="category-checkbox" {% if category in category_params %}checked{% endif %}>
+                                                            <input type="checkbox" name="category" value="{{ category }}" class="category-checkbox" id="category-{{ category }}" />
                                                             {{ category }}
                                                         </label>
                                                     </li>
@@ -125,6 +125,42 @@
     </div>
 </section>
 <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        // Parse the URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // Check checkboxes based on the 'category' URL parameters
+        urlParams.getAll("category").forEach(function (category) {
+            const checkbox = document.getElementById("category-" + category);
+            if (checkbox) {
+                checkbox.checked = true;
+            }
+        });
+    
+        // Handle form submission
+        const form = document.getElementById("category-filter-form");
+        form.addEventListener("submit", function (event) {
+            event.preventDefault();
+            // Retrieve the selected categories
+            const selectedCategories = [];
+            document.querySelectorAll(".category-checkbox:checked").forEach(function (checkbox) {
+                selectedCategories.push(checkbox.value);
+            });
+    
+            // Construct the URL with selected categories
+            const baseUrl = "/shop/all/";
+            const params = new URLSearchParams();
+            selectedCategories.forEach(function (category) {
+                params.append("category", category);
+            });
+            const url = baseUrl + "?" + params.toString();
+            
+            // Redirect to the filtered URL
+            window.location.href = url;
+        });
+    });
+
+    
     const allCategories = document.getElementById('allCategories');
     const categoryCheckboxes = document.querySelectorAll('.category-checkbox');
 

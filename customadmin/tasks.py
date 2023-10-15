@@ -20,7 +20,7 @@ def apply_category_offers():
     today = timezone.localdate()
     i =0
     i+=1
-    print(i, 'iii')
+
     CategoryOffer = apps.get_model('shop', 'CategoryOffer') 
     valid_offers = CategoryOffer.objects.filter(valid_from__lte=today, active=True)
 
@@ -62,11 +62,9 @@ def apply_product_offers():
 
     ProductOffer = apps.get_model('shop', 'ProductOffer') 
     valid_offers = ProductOffer.objects.filter(valid_from__lte=today, active=True)
-    print(valid_offers, 'valid')
 
     for offer in valid_offers:
         for product in offer.products.all():
-            print(product.price, 'product')
             if offer.applied:
                 if offer.valid_to.date() < today:
                     product.discount_amount = 0.00
@@ -76,7 +74,6 @@ def apply_product_offers():
                     offer.save()
                 else:
                     price = calculate_discount_price(product, offer)
-                    print(price, 'price')
                     if price < product.discount_amount or product.discount_amount == 0:
                         product.discount_amount = price
                     product.save()

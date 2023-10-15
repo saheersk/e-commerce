@@ -69,7 +69,7 @@
             </div>
             <div class="col-lg-6 col-md-6">
                 <nav class="header__menu mobile-menu">
-                    <ul>
+                    <ul >
                         <li {% if active_menu_item == 'home' %}class="active"{% endif %}>
                             <a href="{% url 'web:index' %}">Home</a>
                         </li>
@@ -93,14 +93,22 @@
                 </nav>
             </div>
             <div class="col-lg-3 col-md-3">
+                <!-- Notification icon and box -->
                 <div class="header__nav__option">
-                    {% comment %} <a href="#" class="search-switch"><img src="{% static 'img/icon/search.png' %}" alt="" /></a> {% endcomment %}
+                    <a href="#" class="notification-icon" data-toggle="collapse" data-target="#notification-panel">
+                        <i class="far fa-bell bell-icon-black"></i>
+                        <span class="badge badge-danger text-white" id="notification-badge" style="left: 10px; top: -6px;">0</span>
+                    </a>
                     <a href="{% url 'shop:product_wishlist' %}"><img src="{% static 'img/icon/heart.png' %}" alt="" /></a>
-                    <a href="{% url 'shop:product_cart' %}"><img src="{% static 'img/icon/cart.png' %}" alt="" /> <span class="cart-count">{{cart_count}}</span></a>
-                    {% comment %}
-                    <div class="price">$0.00</div>
-                    {% endcomment %}
-                    <span>₹{{wallet_amount}}</span>
+                    <a href="{% url 'shop:product_cart' %}"><img src="{% static 'img/icon/cart.png' %}" alt="" /><span class="cart-count">{{cart_count}}</span></a>
+                    <span>Wallet: ₹{{wallet_amount}}</span>
+                </div>
+                <div id="notification-panel" class="notification-panel">
+                    <ul class="list-group" id="notification-dropdown" style="width: 400px; height: 500px; overflow-y: auto;">
+                        {% for item in notification %}
+                            <li class='list-group-item'>{{ item.message }}</li>
+                        {% endfor %}
+                    </ul>
                 </div>
             </div>
         </div>
@@ -108,3 +116,5 @@
     </div>
 </header>
 <!-- Header Section End -->
+
+
