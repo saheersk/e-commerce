@@ -12,11 +12,11 @@ from django.forms import formset_factory
 from django.db.models.functions import TruncMonth
 from django.core.serializers.json import DjangoJSONEncoder
 
-from customadmin.forms import AdminCustomUserForm, AdminCustomUpdateUserForm, AdminCategory, AdminProduct, AdminProductImage, AdminOrderItemForm, AdminProductVariantFrom, AdminBannerForm, AdminCouponForm, AdminCategoryOfferForm, AdminProductOfferForm
-from user.models import CustomUser, Wallet, Coupon
+from customadmin.forms import AdminCustomUserForm, AdminCustomUpdateUserForm, AdminCategory, AdminProduct, AdminProductImage, AdminOrderItemForm, AdminProductVariantFrom, AdminBannerForm, AdminCouponForm, AdminCategoryOfferForm, AdminProductOfferForm, AdminReviewForm, AdminReferralAmountForm
+from user.models import CustomUser, Wallet, Coupon, ReferralAmount
 from web.models import Contact, Banner
 from user.functions import generate_form_error
-from shop.models import Category, Product, ProductImage, Order, ProductVariant, OrderItem, OrderManagement, OrderStatus, WalletHistory, Payment, CategoryOffer, ProductOffer
+from shop.models import Category, Product, ProductImage, Order, ProductVariant, OrderItem, OrderManagement, OrderStatus, WalletHistory, Payment, CategoryOffer, ProductOffer, UserReview
 from main.functions import paginate_instances
 from customadmin.utils import send_user_refund_mail
 
@@ -660,22 +660,43 @@ def admin_product_delete(request, pk):
 def admin_order(request):
     if request.user.is_superuser and request.user.is_authenticated:
         search_query = request.GET.get('search')
+        user_filter = request.GET.get('userFilter')
+        status_filter = request.GET.get('statusFilter')
+        category_filter = request.GET.get('categoryFilter')
 
         orders = Order.objects.filter(
             ~Q(order_items__order_status__status="Requested For Cancelling") &
             ~Q(order_items__order_status__status="Requested For Returning")
-        ).order_by('-id')
+        )
 
         if search_query:
             orders = orders.filter(Q(user__first_name__icontains=search_query) | Q(
                 product__title__icontains=search_query) | Q(order_status__status__icontains=search_query))
 
-        instances = paginate_instances(request, orders, per_page=6)
+        if user_filter:
+            orders = orders.filter(user__first_name=user_filter.split(' ')[0], user__last_name=user_filter.split(' ')[1])
+
+        if status_filter:
+            orders = orders.filter(order_items__order_status__status=status_filter)
+
+        if category_filter:
+            orders = orders.filter(product__category__name=category_filter)
+
+        orders = orders.order_by('-id')
+
+        instances = paginate_instances(request, orders, per_page=8)
+
+        users = CustomUser.objects.all()
+        statuses = OrderStatus.objects.all()
+        categories = Category.objects.all()
 
         context = {
             "title": "Male Fashion | Admin Order",
             'heading': ['Full Name', 'Product Title', 'Price', 'Order status', ],
-            "orders": instances
+            "orders": instances,
+            "users": users,
+            "statuses": statuses,
+            "categories": categories
         }
 
         return render(request, 'customadmin/admin-table-order.html', context)
@@ -1307,6 +1328,87 @@ def admin_product_offer_edit(request, pk):
         form = AdminProductOfferForm(instance=product_offer)
         context = {
             "title": "Male Fashion | Admin Coupon Add",
+            "form": form
+        }
+        return render(request, 'customadmin/admin-add.html', context)
+    
+
+#Review
+def admin_reviews(request):
+    reviews = UserReview.objects.all()
+
+    context = {
+        "title": "Male Fashion | Admin Reviews",
+        "heading": ['Product', 'Username', 'Message', 'Reply'],
+        "reviews": reviews,
+    }
+    return render(request, 'customadmin/admin-table-reviews.html', context)
+    
+
+def admin_review_reply(request, pk):
+    review = UserReview.objects.get(id=pk)
+
+    if request.method == 'POST':
+        form = AdminReviewForm(request.POST)
+        if form.is_valid():
+            form.save()
+
+            response_data = {
+                "title": "Reply Added",
+                "status": "success"
+            }
+        else:
+            response_data = {
+                "title": "Error",
+                "status": "error"
+            }
+        return HttpResponse(json.dumps(response_data),content_type="application/json")
+    
+    else:
+        form = AdminReviewForm(instance=review)
+        context = {
+            "title": "Male Fashion | Admin Reply Add",
+            "form": form
+        }
+        return render(request, 'customadmin/admin-add.html', context)
+
+
+#Referral Offer
+def admin_referral_offer(request):
+    referral = ReferralAmount.objects.first()
+
+    context = {
+        "title": "Male Fashion | Admin Referral",
+        "heading": ["Referral Amount", "Gain Amount" ],
+        "referral": referral,
+    }
+
+    return render(request, 'customadmin/admin-table-referral.html', context)
+
+
+def admin_referral_offer_edit(request):
+    referral = ReferralAmount.objects.first()
+
+    if request.method == 'POST':
+        form = AdminReferralAmountForm(request.POST, instance=referral)
+        if form.is_valid():
+            form.save()
+
+            response_data = {
+                "title": "Reply Added",
+                "status": "success"
+            }
+        else:
+            response_data = {
+                "title": "Error",
+                "status": "error"
+            }
+        return redirect("customadmin:admin_referral_offer")
+    
+    else:
+        form = AdminReferralAmountForm(instance=referral)
+        context = {
+            "title": "Male Fashion | Admin Reply Add",
             "form": form
         }
         return render(request, 'customadmin/admin-add.html', context)

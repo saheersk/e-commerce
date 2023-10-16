@@ -307,11 +307,15 @@ def profile_order(request):
 
 @login_required(login_url='user/login/')
 def profile_order_details(request, pk):
-    orders = Order.objects.filter(user=request.user, id=pk)
-    reviews = UserReview.objects.filter(user=request.user)
+    # orders = Order.objects.filter(user=request.user, id=pk)
+    order_item = get_object_or_404(OrderItem, id=pk)
+    reviews = UserReview.objects.filter(user=request.user, product=order_item)
+    product_order = Order.objects.get(order_items=order_item)
+    print(order_item, 'item')
     context = {
         "title" : "Male Fashion | My Orders",
-        "orders" : orders,
+        "order": order_item,
+        "product_order": product_order,
         "reviews" : reviews,
     }
     return render(request, 'profile/user-order-details.html', context)

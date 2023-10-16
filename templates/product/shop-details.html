@@ -1,6 +1,59 @@
 {% extends "base.html" %} {% block content %} {% load static %} {% include 'web/includes/header.html' %}
+{% load range_rating %}
+{% load paginator_tags %}
+<style>
+    <!-- Custom CSS for the star rating -->
+    .rating {
+        display: inline-block;
+        margin: 0;
+    }
 
-<!-- Shop Details Section Begin -->
+    .rating label {
+        font-size: 10px;
+        cursor: pointer;
+        color: #ccc; /* Default star color */
+    }
+
+    .rating label:before {
+        content: '\2605'; /* Unicode character for an empty star */
+    }
+
+    .rating input[type="radio"] {
+        display: none;
+    }
+
+    .rating input[type="radio"]:checked ~ label:before {
+        content: '\2605'; /* Unicode character for a filled star when selected */ /* Filled star color when selected */
+    }
+
+    /* Rating Star Widgets Style */
+    .rating-stars ul {
+        list-style-type: none;
+        padding: 0;
+
+        -moz-user-select: none;
+        -webkit-user-select: none;
+    }
+    .rating-stars ul > li.star {
+        display: inline-block;
+    }
+
+    /* Idle State of the stars */
+    .rating-stars ul > li.star > i.fa {
+        font-size: 1.5em; /* Change the size of the stars */
+        color: #ccc; /* Color on idle state */
+    }
+
+    /* Hover state of the stars */
+    .rating-stars ul > li.star.hover > i.fa {
+        color: #FFCC36;
+    }
+
+    /* Selected state of the stars */
+    .rating-stars ul > li.star.selected > i.fa {
+        color: #FF912C;
+    }
+</style>
 <section class="shop-details">
     <div class="product__details__pic">
         <div class="container">
@@ -48,12 +101,16 @@
                     <div class="product__details__text">
                         <h4>{{product.title}}</h4>
                         <div class="rating">
-                            <i class="fa fa-star"></i>
-                            <i class="fa fa-star"></i>
-                            <i class="fa fa-star"></i>
-                            <i class="fa fa-star"></i>
-                            <i class="fa fa-star-o"></i>
-                            <span> - 5 Reviews</span>
+                            <div class="rating-stars">
+                                <ul class="stars">
+                                    {% for i in 5|create_range %}
+                                        <li class="star ">
+                                            <i class="fa fa-star fa-fw {% if i < average_rating %}text-warning{% endif %}"></i>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            <span> - {{review_count}} Reviews</span>
                         </div>
                         {% if product.discount_amount != 0.00 %}
                             <h3>₹{{ product.discount_amount }}</h3>
@@ -119,74 +176,27 @@
                                     <p class="note">
                                         {{product.description}}
                                     </p>
-                                    {% comment %} <div class="product__details__tab__content__item">
-                                        <h5>Products Infomation</h5>
-                                        <p>
-                                            A Pocket PC is a handheld computer, which features many of the same
-                                            capabilities as a modern PC. These handy little devices allow individuals to
-                                            retrieve and store e-mail messages, create a contact file, coordinate
-                                            appointments, surf the internet, exchange text messages and more. Every
-                                            product that is labeled as a Pocket PC must be accompanied with specific
-                                            software to operate the unit and must feature a touchscreen and touchpad.
-                                        </p>
-                                        <p>
-                                            As is the case with any new technology product, the cost of a Pocket PC was
-                                            substantial during it’s early release. For approximately $700.00, consumers
-                                            could purchase one of top-of-the-line Pocket PCs in 2003. These days,
-                                            customers are finding that prices have become much more reasonable now that
-                                            the newness is wearing off. For approximately $350.00, a new Pocket PC can
-                                            now be purchased.
-                                        </p>
-                                    </div>
-                                    <div class="product__details__tab__content__item">
-                                        <h5>Material used</h5>
-                                        <p>
-                                            Polyester is deemed lower quality due to its none natural quality’s. Made
-                                            from synthetic materials, not natural like wool. Polyester suits become
-                                            creased easily and are known for not being breathable. Polyester suits tend
-                                            to have a shine to them compared to wool and cotton suits, this can make the
-                                            suit look cheap. The texture of velvet is luxurious and breathable. Velvet
-                                            is a great choice for dinner party jacket and can be worn all year round.
-                                        </p>
-                                    </div> {% endcomment %}
                                 </div>
                             </div>
                             <div class="tab-pane" id="tabs-7" role="tabpanel">
                                 <div class="product__details__tab__content">
-                                    <p class="note">
-                                        Nam tempus turpis at metus scelerisque placerat nulla deumantos solicitud felis.
-                                        Pellentesque diam dolor, elementum etos lobortis des mollis ut risus. Sedcus
-                                        faucibus an sullamcorper mattis drostique des commodo pharetras loremos.
-                                    </p>
-                                    <div class="product__details__tab__content__item">
-                                        <h5>Products Infomation</h5>
-                                        <p>
-                                            A Pocket PC is a handheld computer, which features many of the same
-                                            capabilities as a modern PC. These handy little devices allow individuals to
-                                            retrieve and store e-mail messages, create a contact file, coordinate
-                                            appointments, surf the internet, exchange text messages and more. Every
-                                            product that is labeled as a Pocket PC must be accompanied with specific
-                                            software to operate the unit and must feature a touchscreen and touchpad.
-                                        </p>
-                                        <p>
-                                            As is the case with any new technology product, the cost of a Pocket PC was
-                                            substantial during it’s early release. For approximately $700.00, consumers
-                                            could purchase one of top-of-the-line Pocket PCs in 2003. These days,
-                                            customers are finding that prices have become much more reasonable now that
-                                            the newness is wearing off. For approximately $350.00, a new Pocket PC can
-                                            now be purchased.
-                                        </p>
-                                    </div>
-                                    <div class="product__details__tab__content__item">
-                                        <h5>Material used</h5>
-                                        <p>
-                                            Polyester is deemed lower quality due to its none natural quality’s. Made
-                                            from synthetic materials, not natural like wool. Polyester suits become
-                                            creased easily and are known for not being breathable. Polyester suits tend
-                                            to have a shine to them compared to wool and cotton suits, this can make the
-                                            suit look cheap. The texture of velvet is luxurious and breathable. Velvet
-                                            is a great choice for dinner party jacket and can be worn all year round.
-                                        </p>
+                                    <div class="card-body">
+                                        {% for review in reviews %}
+                                        <div class="mb-3">
+                                            <p>Comment: {{ review.comment }}</p>
+                                            <div class="rating-stars">
+                                                <ul class="stars">
+                                                    {% for i in 5|create_range %}
+                                                        <li class="star ">
+                                                            <i class="fa fa-star fa-fw {% if i < review.rating %}text-warning{% endif %}"></i>
+                                                        </li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <hr/>
+                                        {% endfor %}
+                                    {% load_pagination reviews %}
                                     </div>
                                 </div>
                             </div>
@@ -223,31 +233,12 @@
                     </div>
                     <div class="product__item__text">
                         <h6>{{re_product.title}}</h6>
-                        <a href="{% url 'shop:product_cart_add' product.id %}" class="add-cart">+ Add To Cart</a>
-                        <div class="rating">
-                            <i class="fa fa-star-o"></i>
-                            <i class="fa fa-star-o"></i>
-                            <i class="fa fa-star-o"></i>
-                            <i class="fa fa-star-o"></i>
-                            <i class="fa fa-star-o"></i>
-                        </div>
                         {% if product.discount_amount != 0.00 %}
                                     <h5>₹{{ product.discount_amount }}</h5>
                                     <del>₹{{product.price}}</del>
                                 {% else %}
                                     <h5>₹{{product.price}}</h5>
                                 {% endif %}
-                        <div class="product__color__select">
-                            <label for="pc-1">
-                                <input type="radio" id="pc-1" />
-                            </label>
-                            <label class="active black" for="pc-2">
-                                <input type="radio" id="pc-2" />
-                            </label>
-                            <label class="grey" for="pc-3">
-                                <input type="radio" id="pc-3" />
-                            </label>
-                        </div>
                     </div>
                 </div>
             </div>

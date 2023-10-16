@@ -74,6 +74,13 @@ urlpatterns = [
         'product/offer/edit/<int:pk>/',
         views.admin_product_offer_edit,
         name='admin_product_offer_edit'),
+    #Referral
+    path('user/referral/offer/', views.admin_referral_offer, name='admin_referral_offer'),
+    path(
+        'user/referral/offer/edit/',
+        views.admin_referral_offer_edit,
+        name='admin_referral_offer_edit'),
+
 
     # Admin Product
     path('product/products/', views.admin_product, name='admin_product'),
@@ -134,6 +141,9 @@ urlpatterns = [
         'order/orders/sales-report/download_csv/',
         views.download_sales_report_csv,
         name='download_sales_report_csv'),
+    #Reviews
+    path('order/reviews/', views.admin_reviews, name='admin_reviews'),
+    path('order/reviews/reply/<int:pk>/', views.admin_review_reply, name='admin_review_reply'),
 
     # Contact
     path('contact/details/', views.admin_contact, name='admin_contact'),

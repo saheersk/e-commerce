@@ -90,14 +90,15 @@ def signup(request):
             )
             user_wallet = Wallet.objects.create(user=user)
 
+            referred_amount = ReferralAmount.objects.first()
+
             if CustomUser.objects.filter(referral_code=used_code).exists():
                 referred_user = CustomUser.objects.get(referral_code=used_code)
-                referred_user.amount += 500
+                referred_user.amount += referred_amount.referred_user_amount
                 referred_user.save()
 
                 if used_code:
-                    referred_amount = ReferralAmount.objects.first()
-                    user_wallet.balance += referred_amount.amount
+                    user_wallet.balance += referred_amount.new_user_amount
                     user_wallet.save()
 
                     WalletHistory.objects.create(

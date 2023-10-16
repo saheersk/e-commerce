@@ -2,9 +2,9 @@ import re
 
 from django import forms
 
-from user.models import CustomUser, Coupon
+from user.models import CustomUser, Coupon, ReferralAmount
 from web.models import Banner
-from shop.models import Category, Product, ProductImage, OrderItem, ProductVariant, CategoryOffer, ProductOffer
+from shop.models import Category, Product, ProductImage, OrderItem, ProductVariant, CategoryOffer, ProductOffer, UserReview
 
 from phonenumber_field.formfields import PhoneNumberField
 from phonenumber_field.phonenumber import to_python
@@ -191,3 +191,14 @@ class AdminProductOfferForm(forms.ModelForm):
             'valid_from': forms.DateInput(attrs={'type': 'date'}),
             'valid_to': forms.DateInput(attrs={'type': 'date'}),
         }
+
+class AdminReviewForm(forms.ModelForm):
+    class Meta:
+        model = UserReview
+        fields = ['reply']
+
+
+class AdminReferralAmountForm(forms.ModelForm):
+    class Meta:
+        model = ReferralAmount
+        fields = ['new_user_amount', 'referred_user_amount']

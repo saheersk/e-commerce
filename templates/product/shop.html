@@ -99,14 +99,7 @@
                             </div>
                             <div class="product__item__text">
                                 <h6>{{product.title}}</h6>
-                                <a href="#" class="add-to-cart add-cart" data-product-id="{{ product.id }}">+ Add To Cart</a>
-                                <div class="rating">
-                                    <i class="fa fa-star-o"></i>
-                                    <i class="fa fa-star-o"></i>
-                                    <i class="fa fa-star-o"></i>
-                                    <i class="fa fa-star-o"></i>
-                                    <i class="fa fa-star-o"></i>
-                                </div>
+                                <a href="#" class="">{{product.title}}</a>
                                 {% if product.discount_amount != 0.00 %}
                                     <h5>₹{{ product.discount_amount }}</h5>
                                     <del>₹{{product.price}}</del>

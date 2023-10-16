@@ -32,20 +32,23 @@
                                         </form>
                                     </div>
                                     <div class="d-flex justify-content-between align-items-center dropdown-filters">
-                                        <select class="form-select" id="userFilter" style="height:40px">
+                                        <select class="form-select ml-2 mr-2" id="userFilter" style="height:40px">
                                             <option value="">All Users</option>
+                                            {% for user in users %}
+                                                <option value="{{user.first_name}} {{user.last_name}}">{{user.first_name}} {{user.last_name}}</option>
+                                            {% endfor %}
                                         </select>
-                                        <select class="form-select" id="statusFilter" style="height:40px">
-                                            <option value="">All Statuses</option>
-                                            <option value="Delivered">Delivered</option>
-                                            <option value="Returned">Returned</option>
-                                            <option value="Cancelled">Cancelled</option>
+                                        <select class="form-select mr-2" id="statusFilter" style="height:40px">
+                                            <option value="">All Status</option>
+                                            {% for status in statuses %}
+                                                <option value="{{status.status}}">{{status.status}}</option>
+                                            {% endfor %}
                                         </select>
-                                        <select class="form-select" id="statusFilter" style="height:40px">
+                                        <select class="form-select" id="categoryFilter" style="height:40px">
                                             <option value="">All Category</option>
-                                            <option value="Delivered">Delivered</option>
-                                            <option value="Returned">Returned</option>
-                                            <option value="Cancelled">Cancelled</option>
+                                            {% for category in categories %}
+                                            <option value="{{category.name}}">{{category.name}}</option>
+                                            {% endfor %}
                                         </select>
                                     </div>
                                  </div>
@@ -108,5 +111,36 @@
         </div>
     </div>
 </main>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    $(document).ready(function () {
+        // When any of the select elements changes
+        $('#userFilter, #statusFilter, #categoryFilter').change(function () {
+            // Get selected filter values
+            var userFilter = $('#userFilter').val();
+            var statusFilter = $('#statusFilter').val();
+            var categoryFilter = $('#categoryFilter').val();
+
+            // Build the new URL
+            var newUrl = "{% url 'customadmin:admin_order' %}?";
+
+            if (userFilter) {
+                newUrl += "&userFilter=" + userFilter;
+            }
+
+            if (statusFilter) {
+                newUrl += "&statusFilter=" + statusFilter;
+            }
+
+            if (categoryFilter) {
+                newUrl += "&categoryFilter=" + categoryFilter;
+            }
+
+            // Redirect to the new URL
+            window.location.href = newUrl;
+        });
+    });
+</script>
+
 
 {% endblock %}

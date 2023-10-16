@@ -56,4 +56,7 @@ class WalletAdmin(admin.ModelAdmin):
 admin.site.register(Wallet, WalletAdmin)
 
 
-admin.site.register(ReferralAmount)
+class ReferredAmountAdmin(admin.ModelAdmin):
+    list_display = ['new_user_amount', 'referred_user_amount']
+
+admin.site.register(ReferralAmount, ReferredAmountAdmin)

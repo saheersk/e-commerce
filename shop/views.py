@@ -8,7 +8,7 @@ from decimal import Decimal
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
-from django.db.models import ExpressionWrapper, F, DecimalField, Sum, Case, When, Value, Q
+from django.db.models import ExpressionWrapper, F, DecimalField, Sum, Case, When, Value, Q, Avg
 from django.db.models.functions import Coalesce
 from django.utils import timezone
 from django.conf import settings
@@ -17,7 +17,7 @@ from django.template.loader import get_template
 import razorpay
 from xhtml2pdf import pisa
 
-from shop.models import Product, ProductImage, Category, Wishlist, Cart, OrderStatus, Order, Payment, PaymentMethod, ProductVariant, OrderItem, WalletHistory
+from shop.models import Product, ProductImage, Category, Wishlist, Cart, OrderStatus, Order, Payment, PaymentMethod, ProductVariant, OrderItem, WalletHistory, UserReview
 from user.models import Address, Coupon, CustomUser, CouponUsage, Wallet
 from main.functions import paginate_instances
 from shop.utils import generate_invoice_to_send_email
@@ -66,14 +66,20 @@ def product_details(request, slug):
     related_products = Product.objects.filter(category=product.category).exclude(pk=product.pk)[:4]
 
     variants = ProductVariant.objects.filter(product=product)
-
+    reviews = UserReview.objects.filter(product__product=product)
+    review_count = reviews.count()
+    average_rating = UserReview.objects.filter(product__product=product).aggregate(Avg('rating'))['rating__avg']
+    instances = paginate_instances(request, reviews, per_page=4)
 
     context = {
         'title': f'Male Fashion | {product.title}',
         'product': product,
         'product_images': product_images,
         'variants': variants,
-        'related_products': related_products
+        'related_products': related_products,
+        'reviews': instances,
+        'average_rating':int(average_rating),
+        'review_count': review_count
     }
     return render(request, 'product/shop-details.html', context)
 

@@ -150,37 +150,6 @@ function getCSRFToken() {
 
 $(document).ready(function () {
     console.log('hlo');
-    // function updateSelectOptions(options) {
-    //     const select = $("#status-select");
-    //     select.empty();
-    //     options.forEach(function(option) {
-    //       select.append(`<option date-order-id="${option.order_id}" value="${option.status}">${option.status}</option>`);
-    //     });
-    //   }
-    
-      
-
-    // $('#orderStatus').on('change', function() {
-    //     const selectedValue = $(this).val();
-        
-    //     const baseUrl = window.location.origin; // Get the base URL without query parameters
-        
-    //     const url = `${baseUrl}?order_status=${selectedValue}`;
-    
-    //     $.ajax({
-    //         url: url,
-    //         method: 'GET',
-    //         dataType: 'json',
-    //         success: function(data) {
-    //             console.log(data);
-    //             //$('#filteredTable').html(data);
-    //         },
-    //         error: function(error) {
-    //             console.error('Error:', error);
-    //         }
-    //     });
-    // });
-
     $("#approve-product").click(function () {
         console.log('approve');
         var csrfToken = getCSRFToken();
@@ -248,6 +217,48 @@ $(document).ready(function () {
             }
         });
     });
+
+    $("#product-review").click(function () {
+        var csrfToken = getCSRFToken();
+        if (!csrfToken) {
+            console.error("CSRF token not found.");
+            return;
+        }
+        $.ajax({
+                    url: `/customadmin/order/review/`,
+                    method: "POST",
+                    dataType: "json",
+                    data: {
+                        csrfmiddlewaretoken: csrfToken,
+                    },
+                    success: function (data) {
+                        if (data.status == "success") {
+                            const Toast = Swal.mixin({
+                                toast: true,
+                                position: "top-end",
+                                showConfirmButton: false,
+                                timer: 3000,
+                                timerProgressBar: true,
+                                didOpen: (toast) => {
+                                    toast.addEventListener("mouseenter", Swal.stopTimer);
+                                    toast.addEventListener("mouseleave", Swal.resumeTimer);
+                                },
+                            });
+                            Toast.fire({
+                                icon: data.status,
+                                title: data.title,
+                            });
+
+                        } else {
+                            console.log("else");
+                        }
+                    },
+                    error: function () {
+                        console.log("error");
+                    },
+        });
+    })
+
 
     $(".refund-product").click(function () {
         var csrfToken = getCSRFToken(); // Get the CSRF token

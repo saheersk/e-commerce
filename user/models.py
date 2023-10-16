@@ -121,9 +121,10 @@ class Wallet(models.Model):
     
 
 class ReferralAmount(models.Model):
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    new_user_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    referred_user_amount = models.DecimalField(max_digits=10, decimal_places=2)
     description = models.TextField()
     created_date = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-       return str(self.amount)
+       return str(self.new_user_amount)
