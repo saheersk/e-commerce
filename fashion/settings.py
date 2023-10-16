@@ -163,18 +163,18 @@ product_task = 'customadmin.tasks.apply_product_offers'
 CELERY_BEAT_SCHEDULE = {
     'apply_category_offers_first_run': {
         'task': category_task,
-        # 'schedule': timedelta(seconds=7),
-        'schedule': crontab(minute=0, hour=0),
+        'schedule': timedelta(seconds=3),
+        # 'schedule': crontab(minute=0, hour=0),
     },
     'apply_product_offers': {
         'task': product_task,
-        # 'schedule': timedelta(seconds=5),
-        'schedule': crontab(minute=1, hour=0),
+        'schedule': timedelta(seconds=5),
+        # 'schedule': crontab(minute=1, hour=0),
     },
     'apply_category_offers_second_run': {
         'task': category_task,
-        # 'schedule': timedelta(seconds=9),
-        'schedule': crontab(minute=2, hour=0),
+        'schedule': timedelta(seconds=9),
+        # 'schedule': crontab(minute=2, hour=0),
     },
 }
 

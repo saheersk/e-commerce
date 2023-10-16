@@ -17,11 +17,14 @@ from shop.models import Order, Cart, OrderStatus, OrderItem, Payment, WalletHist
 def profile_details(request):
     if request.user.is_authenticated:
         user = request.user
-        default_address = Address.objects.get(user=user, is_default=True)
+        try:
+            default_address = Address.objects.get(user=user, is_default=True)
+        except Address.DoesNotExist:
+            default_address = None
     context = {
         "title": "Male Fashion | Profile Detail",
         "user": user,
-        "default_address" : default_address
+        "default_address" : default_address if default_address else None,
     }
 
     return render(request, 'profile/user-profile.html', context)

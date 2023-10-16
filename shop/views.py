@@ -53,7 +53,7 @@ def product_all(request):
         'products': instances,
         'categories': categories,
         'active_menu_item': "shop",
-        'category_params': category_params
+        'category_params': category_params,
     }
     
     return render(request, 'product/shop.html', context)
@@ -78,7 +78,7 @@ def product_details(request, slug):
         'variants': variants,
         'related_products': related_products,
         'reviews': instances,
-        'average_rating':int(average_rating),
+        'average_rating':int(average_rating) if average_rating else 0,
         'review_count': review_count
     }
     return render(request, 'product/shop-details.html', context)

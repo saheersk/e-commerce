@@ -12,13 +12,14 @@ from django.forms import formset_factory
 from django.db.models.functions import TruncMonth
 from django.core.serializers.json import DjangoJSONEncoder
 
-from customadmin.forms import AdminCustomUserForm, AdminCustomUpdateUserForm, AdminCategory, AdminProduct, AdminProductImage, AdminOrderItemForm, AdminProductVariantFrom, AdminBannerForm, AdminCouponForm, AdminCategoryOfferForm, AdminProductOfferForm, AdminReviewForm, AdminReferralAmountForm
+from customadmin.forms import AdminCustomUserForm, AdminCustomUpdateUserForm, AdminCategory, AdminProduct, AdminProductImage, AdminOrderItemForm, AdminProductVariantFrom, AdminBannerForm, AdminCouponForm, AdminCategoryOfferForm, AdminProductOfferForm, AdminReviewForm, AdminReferralAmountForm, AdminBroadcastNotificationForm
 from user.models import CustomUser, Wallet, Coupon, ReferralAmount
 from web.models import Contact, Banner
 from user.functions import generate_form_error
 from shop.models import Category, Product, ProductImage, Order, ProductVariant, OrderItem, OrderManagement, OrderStatus, WalletHistory, Payment, CategoryOffer, ProductOffer, UserReview
 from main.functions import paginate_instances
 from customadmin.utils import send_user_refund_mail
+from fashion_asgi.models import BroadcastNotification
 
 
 class DateTimeEncoder(DjangoJSONEncoder):
@@ -31,138 +32,144 @@ class DateTimeEncoder(DjangoJSONEncoder):
 # Admin User
 @login_required(login_url="admin-login/")
 def admin_panel(request):
-    total_revenue = Order.objects.filter(order_items__order_status__status="Delivered").aggregate(
-        total_revenue=Sum('total_price')
-    )
-    print(total_revenue, 'none')
-    monthly_revenue = Order.objects.filter(order_items__order_status__status="Delivered").annotate(
-        month=TruncMonth('purchased_date')
-    ).values('month').annotate(
-        total_revenue=Sum('total_price')
-    ).order_by('month')
-
-    current_date = datetime.now()
-    current_month = current_date.month
-    current_year = current_date.year
-
-    current_month_revenue_set = Order.objects.filter(
-        order_items__order_status__status="Delivered",
-        purchased_date__month=current_month,
-        purchased_date__year=current_year
-    ).annotate(
-        month=TruncMonth('purchased_date')
-    ).values('month').annotate(
-        total_revenue=Sum('total_price')
-    ).order_by('month')
-
-    if current_month_revenue_set.exists():
-        current_month_revenue = current_month_revenue_set[0]['total_revenue']
-    else:
-        current_month_revenue = 0
-
-    total_sales_count = Order.objects.filter(
-        order_items__order_status__status="Delivered").count()
-    monthly_sales_count = (
-        Order.objects
-        .filter(order_items__order_status__status="Delivered")
-        .annotate(month=TruncMonth('purchased_date'))
-        .values('month')
-        .annotate(sales_count=Count('id'))
-        .order_by('month')
-    )
-    sales_data = [{'month': item['month'], 'sales_count': item['sales_count']}
-                  for item in monthly_sales_count]
-    sales_data_json = json.dumps(
-        {'sales_data': sales_data}, cls=DateTimeEncoder)
-    monthly_sales_count_set = Order.objects.filter(
-        order_items__order_status__status="Delivered",
-        purchased_date__month=current_month,
-        purchased_date__year=current_year
-    ).annotate(
-        month=TruncMonth('purchased_date')
-    ).values('month').annotate(
-        sales_count=Count('id')
-    ).order_by('month')
-    # Get the sales_count for the current month
-    if monthly_sales_count_set.exists():
-        current_month_sales_count = monthly_sales_count_set[0]['sales_count']
-    else:
-        current_month_sales_count = 0
-
-    # Transaction
-    cod_transaction_count = Payment.objects.filter(
-        payment_method__payment_type='COD').count()
-    wallet_transaction_count = Payment.objects.filter(
-        payment_method__payment_type='Wallet').count()
-    online_transaction_count = Payment.objects.filter(
-        payment_method__payment_type='Online').count()
-
-    total_transaction_count = cod_transaction_count + \
-        wallet_transaction_count + online_transaction_count
-
-    # Calculate the percentages
-    if total_transaction_count > 0:
-        cod_percentage = (cod_transaction_count /
-                          total_transaction_count) * 100
-        wallet_percentage = (wallet_transaction_count /
-                             total_transaction_count) * 100
-        online_percentage = (online_transaction_count /
-                             total_transaction_count) * 100
-    else:
-        cod_percentage = 0
-        wallet_percentage = 0
-        online_percentage = 0
-
-    top_selling_products = (
-        OrderItem.objects
-        .values('product__title', 'product__price', 'total_product_price', 'product__featured_image')
-        .annotate(
-            total_quantity_sold=Sum('quantity'),
-            total_revenue=Sum('total_product_price')
+    if request.user.is_superuser and request.user.is_authenticated:
+        total_revenue = Order.objects.filter(order_items__order_status__status="Delivered").aggregate(
+            total_revenue=Sum('total_price')
         )
-        .order_by('-total_quantity_sold')
-        [:10]
-    )
-    top_categories = (
-        OrderItem.objects
-        .values('product__category__name')
-        .annotate(total_products_sold=Count('product'))
-        .order_by('-total_products_sold')
-        [:10]
-    )
-    print(top_categories, 'top')
-    total_users = CustomUser.objects.filter(is_superuser=False).count()
-    total_blocked_users = CustomUser.objects.filter(
-        Q(is_superuser=False) & Q(is_blocked=True)).count()
-    total_orders = Order.objects.all().count()
-    total_pending_order = Order.objects.filter(
-        order_items__order_status__status='Pending').count()
+        print(total_revenue, 'none')
+        monthly_revenue = Order.objects.filter(order_items__order_status__status="Delivered").annotate(
+            month=TruncMonth('purchased_date')
+        ).values('month').annotate(
+            total_revenue=Sum('total_price')
+        ).order_by('month')
 
-    orders_cancel_return = OrderManagement.objects.filter(
-        Q(status="return") | Q(status="cancel"))
+        current_date = datetime.now()
+        current_month = current_date.month
+        current_year = current_date.year
 
-    print(monthly_sales_count, cod_percentage, 'count')
-    context = {
-        "title": "Male Fashion | Admin Panel",
-        "username": request.user.username if request.user.is_authenticated else None,
-        "total_revenue": total_revenue,
-        "monthly_revenue": monthly_revenue,
-        "current_month_revenue": current_month_revenue,
-        "current_month_sales_count": current_month_sales_count,
-        "total_sales_count": total_sales_count,
-        "monthly_sales_count": sales_data_json,
-        'cod_percentage': round(cod_percentage, 1),
-        'wallet_percentage': round(wallet_percentage, 1),
-        'online_percentage': round(online_percentage, 1),
-        "top_selling_products": top_selling_products,
-        "top_categories": top_categories,
-        "total_users": total_users,
-        "total_blocked_users": total_blocked_users,
-        "total_orders": total_orders,
-        "total_pending_order": total_pending_order,
-        "orders_cancel_return": orders_cancel_return,
-    }
-    return render(request, 'customadmin/admin-panel.html', context)
+        current_month_revenue_set = Order.objects.filter(
+            order_items__order_status__status="Delivered",
+            purchased_date__month=current_month,
+            purchased_date__year=current_year
+        ).annotate(
+            month=TruncMonth('purchased_date')
+        ).values('month').annotate(
+            total_revenue=Sum('total_price')
+        ).order_by('month')
+
+        if current_month_revenue_set.exists():
+            current_month_revenue = current_month_revenue_set[0]['total_revenue']
+        else:
+            current_month_revenue = 0
+
+        total_sales_count = Order.objects.filter(
+            order_items__order_status__status="Delivered").count()
+        monthly_sales_count = (
+            Order.objects
+            .filter(order_items__order_status__status="Delivered")
+            .annotate(month=TruncMonth('purchased_date'))
+            .values('month')
+            .annotate(sales_count=Count('id'))
+            .order_by('month')
+        )
+        sales_data = [{'month': item['month'], 'sales_count': item['sales_count']}
+                    for item in monthly_sales_count]
+        sales_data_json = json.dumps(
+            {'sales_data': sales_data}, cls=DateTimeEncoder)
+        monthly_sales_count_set = Order.objects.filter(
+            order_items__order_status__status="Delivered",
+            purchased_date__month=current_month,
+            purchased_date__year=current_year
+        ).annotate(
+            month=TruncMonth('purchased_date')
+        ).values('month').annotate(
+            sales_count=Count('id')
+        ).order_by('month')
+        # Get the sales_count for the current month
+        if monthly_sales_count_set.exists():
+            current_month_sales_count = monthly_sales_count_set[0]['sales_count']
+        else:
+            current_month_sales_count = 0
+
+        # Transaction
+        cod_transaction_count = Payment.objects.filter(
+            payment_method__payment_type='COD').count()
+        wallet_transaction_count = Payment.objects.filter(
+            payment_method__payment_type='Wallet').count()
+        online_transaction_count = Payment.objects.filter(
+            payment_method__payment_type='Online').count()
+
+        total_transaction_count = cod_transaction_count + \
+            wallet_transaction_count + online_transaction_count
+
+        # Calculate the percentages
+        if total_transaction_count > 0:
+            cod_percentage = (cod_transaction_count /
+                            total_transaction_count) * 100
+            wallet_percentage = (wallet_transaction_count /
+                                total_transaction_count) * 100
+            online_percentage = (online_transaction_count /
+                                total_transaction_count) * 100
+        else:
+            cod_percentage = 0
+            wallet_percentage = 0
+            online_percentage = 0
+
+        top_selling_products = (
+            OrderItem.objects
+            .values('product__title', 'product__price', 'total_product_price', 'product__featured_image')
+            .annotate(
+                total_quantity_sold=Sum('quantity'),
+                total_revenue=Sum('total_product_price')
+            )
+            .order_by('-total_quantity_sold')
+            [:10]
+        )
+        top_categories = (
+            OrderItem.objects
+            .values('product__category__name')
+            .annotate(total_products_sold=Count('product'))
+            .order_by('-total_products_sold')
+            [:10]
+        )
+        print(top_categories, 'top')
+        total_users = CustomUser.objects.filter(is_superuser=False).count()
+        total_blocked_users = CustomUser.objects.filter(
+            Q(is_superuser=False) & Q(is_blocked=True)).count()
+        total_orders = Order.objects.all().count()
+        total_pending_order = Order.objects.filter(
+            order_items__order_status__status='Pending').count()
+
+        orders_cancel_return = OrderManagement.objects.filter(
+            Q(status="return") | Q(status="cancel"))
+
+        print(monthly_sales_count, cod_percentage, 'count')
+        context = {
+            "title": "Male Fashion | Admin Panel",
+            "username": request.user.username if request.user.is_authenticated else None,
+            "total_revenue": total_revenue,
+            "monthly_revenue": monthly_revenue,
+            "current_month_revenue": current_month_revenue,
+            "current_month_sales_count": current_month_sales_count,
+            "total_sales_count": total_sales_count,
+            "monthly_sales_count": sales_data_json,
+            'cod_percentage': round(cod_percentage, 1),
+            'wallet_percentage': round(wallet_percentage, 1),
+            'online_percentage': round(online_percentage, 1),
+            "top_selling_products": top_selling_products,
+            "top_categories": top_categories,
+            "total_users": total_users,
+            "total_blocked_users": total_blocked_users,
+            "total_orders": total_orders,
+            "total_pending_order": total_pending_order,
+            "orders_cancel_return": orders_cancel_return,
+        }
+        return render(request, 'customadmin/admin-panel.html', context)
+    elif request.user.is_authenticated:
+        return redirect('web:index')
+    else:
+        print('hi')
+        return redirect('customadmin:admin_login')
 
 
 def admin_login(request):
@@ -1409,6 +1416,71 @@ def admin_referral_offer_edit(request):
         form = AdminReferralAmountForm(instance=referral)
         context = {
             "title": "Male Fashion | Admin Reply Add",
+            "form": form
+        }
+        return render(request, 'customadmin/admin-add.html', context)
+    
+
+#Notification
+def admin_notification(request):
+    notifications = BroadcastNotification.objects.all()
+
+    context = {
+        "title": "Male Fashion | Admin Notification",
+        "heading": ["Message", "Broadcast On", "Sended"],
+        "notifications": notifications,
+    }
+
+    return render(request, 'customadmin/admin-table-notification.html', context)
+
+def admin_notification_add(request):
+    if request.method == 'POST':
+        form = AdminBroadcastNotificationForm(request.POST)
+        if form.is_valid():
+            form.save()
+
+            response_data = {
+                "title": "Reply Added",
+                "status": "success"
+            }
+        else:
+            response_data = {
+                "title": "Error",
+                "status": "error"
+            }
+        return redirect("customadmin:admin_notification")
+    
+    else:
+        form = AdminBroadcastNotificationForm()
+        context = {
+            "title": "Male Fashion | Admin Notification",
+            "form": form
+        }
+        return render(request, 'customadmin/admin-add.html', context)
+
+
+def admin_notification_edit(request, pk):
+    notification = BroadcastNotification.objects.get(id=pk)
+    if request.method == 'POST':
+        form = AdminBroadcastNotificationForm(request.POST, instance=notification)
+        if form.is_valid():
+            form.save()
+
+            response_data = {
+                "title": "Reply Added",
+                "status": "success"
+            }
+        else:
+            response_data = {
+                "title": "Error",
+                "status": "error"
+            }
+        return redirect("customadmin:admin_notification")
+    
+    else:
+        form = AdminBroadcastNotificationForm(instance=notification)
+        context = {
+            "title": "Male Fashion | Admin Notification",
             "form": form
         }
         return render(request, 'customadmin/admin-add.html', context)

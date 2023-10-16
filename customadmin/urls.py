@@ -163,4 +163,17 @@ urlpatterns = [
         views.admin_banner_delete,
         name='admin_banner_delete'),
 
+    #Notification
+    path(
+        'notification/broadcast/',
+        views.admin_notification,
+        name='admin_notification'),
+    path(
+        'notification/broadcast/add/',
+        views.admin_notification_add,
+        name='admin_notification_add'),
+    path(
+        'notification/broadcast/edit/<int:pk>/',
+        views.admin_notification_edit,
+        name='admin_notification_edit'),
 ]

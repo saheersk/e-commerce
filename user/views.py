@@ -78,17 +78,20 @@ def signup(request):
             # form.cleaned_data
             used_code =  form.cleaned_data['used_code']
             password = make_password(instance.password)
-
-            user = CustomUser.objects.create_user(
-                username=instance.first_name + instance.last_name,
-                password=password,
-                email=instance.email,
-                first_name=instance.first_name,
-                last_name = instance.last_name,
-                used_code = used_code if used_code else '',
-                phone_number=instance.phone_number,
-            )
-            user_wallet = Wallet.objects.create(user=user)
+            
+            instance.password = password
+            # instance.username
+            instance.save()
+            # user = CustomUser.objects.create_user(
+            #     username=instance.first_name + instance.last_name,
+            #     password=password,
+            #     email=instance.email,
+            #     first_name=instance.first_name,
+            #     last_name = instance.last_name,
+            #     used_code = used_code if used_code else '',
+            #     phone_number=instance.phone_number,
+            # )
+            user_wallet = Wallet.objects.create(user=instance)
 
             referred_amount = ReferralAmount.objects.first()
 

@@ -5,6 +5,7 @@ from django import forms
 from user.models import CustomUser, Coupon, ReferralAmount
 from web.models import Banner
 from shop.models import Category, Product, ProductImage, OrderItem, ProductVariant, CategoryOffer, ProductOffer, UserReview
+from fashion_asgi.models import BroadcastNotification
 
 from phonenumber_field.formfields import PhoneNumberField
 from phonenumber_field.phonenumber import to_python
@@ -202,3 +203,14 @@ class AdminReferralAmountForm(forms.ModelForm):
     class Meta:
         model = ReferralAmount
         fields = ['new_user_amount', 'referred_user_amount']
+
+
+class AdminBroadcastNotificationForm(forms.ModelForm):
+
+    class Meta:
+        model = BroadcastNotification
+        fields = ['message', 'broadcast_on']
+
+        widgets = {
+            'broadcast_on': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+        }

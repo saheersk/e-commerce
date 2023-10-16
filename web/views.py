@@ -8,7 +8,6 @@ from web.forms import ContactForm
 from shop.models import Product, Cart
 from user.functions import generate_form_error
 
-# from channels.layer import get_channel_layer
 from channels.layers import get_channel_layer
 
 
@@ -17,8 +16,11 @@ def index(request):
     showcase = Showcase.objects.filter(is_featured=True)[:3]
     trends = FashionTrends.objects.filter(is_featured=True)[:3]
     products = Product.objects.all()[:8]
-
-    request.session['cart_count'] = Cart.objects.filter(user=request.user, is_deleted=False).count() if request.user.is_authenticated else 0
+    
+    if request.user.is_authenticated:
+        request.session['cart_count'] = Cart.objects.filter(user=request.user, is_deleted=False).count()
+    else:
+        request.session['cart_count'] = 0
 
     context = {
         "title": "Male Fashion | Home",
