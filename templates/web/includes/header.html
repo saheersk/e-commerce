@@ -101,7 +101,7 @@
                     </a>
                     <a href="{% url 'shop:product_wishlist' %}"><img src="{% static 'img/icon/heart.png' %}" alt="" /></a>
                     <a href="{% url 'shop:product_cart' %}"><img src="{% static 'img/icon/cart.png' %}" alt="" /><span class="cart-count">{{cart_count}}</span></a>
-                    <span>Wallet: ₹{{wallet_amount}}</span>
+                    <span>₹{{wallet_amount}}</span>
                 </div>
                 <div id="notification-panel" class="notification-panel">
                     <ul class="list-group" id="notification-dropdown" style="width: 400px; height: 500px; overflow-y: auto;">

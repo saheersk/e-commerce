@@ -67,7 +67,7 @@
                                                                 <span>Edit</span>
                                                             </div>
                                                         </a>
-                                                        <a
+                                                        {% comment %} <a
                                                             href="{% url 'customadmin:admin_notification_add' %}"
                                                             class=" btn btn-ghost btn-icon btn-sm rounded-circle texttooltip danger action-button reload"
                                                             data-text="Are you sure want to remove this category. You can't undo this action."
@@ -78,7 +78,7 @@
                                                             <div id="trashOne" class="d-none">
                                                                 <span>Delete</span>
                                                             </div>
-                                                        </a>
+                                                        </a> {% endcomment %}
                                                     </td>
                                                 </tr>
                                                 {% endfor %}

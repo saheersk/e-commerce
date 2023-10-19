@@ -81,9 +81,9 @@
                                         <p><b>Status: </b>{{order.order_status.status}}</p>
                                         <h4 class="mt-2 mb-3">₹{{order.total_product_price}}</h4>
                                         {% if order.order_status.status == "Delivered" %}
-                                        <a type="button" href="{% url 'user_profile:profile_order_cancel' order.id %}" class="btn btn-primary" >Return</a>
+                                        <a type="button" href="{% url 'user_profile:profile_order_return' order.id %}" class="btn btn-primary" >Return</a>
                                         {% else %}
-                                        <a type="button" href="{% url 'user_profile:profile_order_return' order.id %}" class="btn btn-danger" >Cancel</a>
+                                        <a type="button" href="{% url 'user_profile:profile_order_cancel' order.id %}" class="btn btn-danger" >Cancel</a>
                                         {% endif %}
                                     </div>
                                 </div>
