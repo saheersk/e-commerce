@@ -1,0 +1,61 @@
+version: "3.8"
+services:
+  #Redis
+  redis:
+    image: redis:latest 
+    container_name: redis_container
+    ports:
+      - "6379:6379" 
+
+  #Postgres Database
+  postgres_db:
+    image: postgres:13
+    platform: linux/arm64
+    container_name: postgres_container
+    environment:
+      POSTGRES_DB: 'fashion_db'
+      POSTGRES_USER: 'fashion_user'
+      POSTGRES_PASSWORD: 'fashion_user123'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  #Django Appication
+  app:
+    build: .
+    volumes:
+      - .:/fashion
+    ports:
+      - 8000:8000
+    image: app:fashion
+    container_name: fashion_container
+    command: gunicorn -k uvicorn.workers.UvicornWorker fashion.asgi:application -b 0.0.0.0:8000
+    depends_on:
+      - postgres_db
+
+  # Celery Beat
+  celery-beat:
+    build: .
+    volumes:
+      - .:/fashion
+    command: celery -A fashion beat --loglevel=info
+    container_name: celery-beat
+    depends_on:
+      - postgres_db
+      - redis
+      - app
+  
+  #Celery
+  celery:
+    restart: always
+    build: .
+    volumes:
+      - .:/fashion
+    command: celery -A fashion worker --loglevel=info
+    container_name: celery
+    depends_on:
+      - postgres_db 
+      - redis
+      - app
+  
+volumes:
+  postgres_data:

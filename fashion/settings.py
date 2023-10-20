@@ -1,7 +1,4 @@
-# import os
-
 from pathlib import Path
-from datetime import timedelta
 
 from celery.schedules import crontab
 
@@ -74,10 +71,21 @@ WSGI_APPLICATION = 'fashion.wsgi.application'
 ASGI_APPLICATION = 'fashion.asgi.application'
 
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'fashion_db',
+        'USER': 'fashion_user',
+        'PASSWORD': 'fashion_user123',
+        'HOST': 'postgres_db',  
+        'PORT': '5432',
     }
 }
 
@@ -129,12 +137,11 @@ CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            "hosts": [('127.0.0.1', 6379)],
+            "hosts": [('redis', 6379)],
         },
     },
 }
 
-# client.set_app_details({"title" : "<YOUR_APP_TITLE>", "version" : "<YOUR_APP_VERSION>"})
 
 RAZORPAY_KEY_ID = 'rzp_test_7Pm5s9hhe2TILm'
 RAZORPAY_KEY_SECRET = 'f4SuCsKkP5FXRQHw4Mx7GiQQ'
@@ -143,38 +150,33 @@ EMAIL_BACKEND = 'sendgrid_backend.SendgridBackend'
 SENDGRID_API_KEY = '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'
 
 
-# CELERY_BROKER_URL = 'sqla+sqlite:///celery.sqlite3'
-# CELERY_RESULT_BACKEND = 'db+sqlite:///celery_results.sqlite3'
-
 #CELERY
-CELERY_BROKER_URL = 'redis://localhost:6379'
-# # CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+CELERY_BROKER_URL = 'redis://redis:6379'
+CELERY_RESULT_BACKEND = 'redis://redis:6379'
 CELERY_RESULT_BACKEND = 'django-db'
 CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'Asia/Kolkata'
 
-CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 #CELERY BEAT
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+
 category_task = 'customadmin.tasks.apply_category_offers'
 product_task = 'customadmin.tasks.apply_product_offers'
 
 CELERY_BEAT_SCHEDULE = {
     'apply_category_offers_first_run': {
         'task': category_task,
-        'schedule': timedelta(seconds=3),
-        # 'schedule': crontab(minute=0, hour=0),
+        'schedule': crontab(minute=0, hour=0),
     },
     'apply_product_offers': {
         'task': product_task,
-        'schedule': timedelta(seconds=5),
-        # 'schedule': crontab(minute=1, hour=0),
+        'schedule': crontab(minute=1, hour=0),
     },
     'apply_category_offers_second_run': {
         'task': category_task,
-        'schedule': timedelta(seconds=9),
-        # 'schedule': crontab(minute=2, hour=0),
+        'schedule': crontab(minute=2, hour=0),
     },
 }
 
