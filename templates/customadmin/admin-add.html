@@ -18,7 +18,7 @@
                     <!-- row -->
                     <div class="row">
                         <div class="input-container col-lg-12 col-12">
-                            <form class="input-form d-block dropzone border-dashed rounded-2" action="" method="post">
+                            <form class="input-form d-block dropzone border-dashed rounded-2" action="" method="post" enctype="multipart/form-data">
                                 {% csrf_token %}
                                 {{form.as_p}}
                                 <button type="submit" class="btn btn-primary">submit</button>

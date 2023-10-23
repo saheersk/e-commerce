@@ -27,7 +27,7 @@
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"/>
         <!-- Libs CSS -->
         <link href="{% static 'admin/libs/bootstrap-icons/font/bootstrap-icons.css' %}" rel="stylesheet" />
-        <link href="{% static 'admin/libs/%40mdi/font/css/materialdesignicons.min.css' %}" rel="stylesheet" />
+        {% comment %} <link href="{% static 'admin/libs/%40mdi/font/css/materialdesignicons.min.css' %}" rel="stylesheet" /> {% endcomment %}
         <link href="{% static 'admin/libs/simplebar/dist/simplebar.min.css' %}" rel="stylesheet" />
 
         <!-- Theme CSS -->
@@ -92,7 +92,7 @@
 
         <!-- quill js -->
         <script src="{% static 'admin/libs/quill/dist/quill.min.js' %}"></script>
-        <script src="{% static 'admin/libs/%40yaireo/tagify/dist/tagify.min.js' %}"></script>
+        {% comment %} <script src="{% static 'admin/libs/%40yaireo/tagify/dist/tagify.min.js' %}"></script> {% endcomment %}
 
         <!-- Libs JS -->
         <script src="{% static 'admin/libs/jquery/dist/jquery.min.js' %}"></script>
@@ -105,17 +105,17 @@
         <script src="{% static 'admin/libs/apexcharts/dist/apexcharts.min.js' %}"></script>
         <script src="{% static 'admin/js/vendors/chart.js' %}"></script>
         <!-- popper js -->
-        <script src="{% static 'admin/libs/%40popperjs/core/dist/umd/popper.min.js' %}"></script>
+        {% comment %} <script src="{% static 'admin/libs/%40popperjs/core/dist/umd/popper.min.js' %}"></script> {% endcomment %}
         <!-- tippy js -->
-        <script src="{% static 'admin/libs/tippy.js' %}/dist/tippy-bundle.umd.min.js' %}"></script>
-        <script src="{% static 'admin/js/vendors/tooltip.js' %}"></script>
+        {% comment %} <script src="{% static 'admin/libs/tippy.js' %}"></script> {% endcomment %}
+        {% comment %} <script src="{% static 'admin/js/vendors/tooltip.js' %}"></script> {% endcomment %}
    
    
         <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
         {% comment %} <script src="{% static 'admin/libs/datatables/media/js/jquery.dataTables.min.js' %}"></script> {% endcomment %}
-        <script src="{% static 'admin/libs/datatables.net-bs5/js/dataTables.bootstrap5.min.js' %}"></script>
-        <script src="{% static 'admin/libs/datatables.net-responsive/js/dataTables.responsive.min.js' %}"></script>
-        <script src="{% static 'admin/js/vendors/datatable.js' %}"></script>
+        {% comment %} <script src="{% static 'admin/libs/datatables.net-bs5/js/dataTables.bootstrap5.min.js' %}"></script> {% endcomment %}
+        {% comment %} <script src="{% static 'admin/libs/datatables.net-responsive/js/dataTables.responsive.min.js' %}"></script>
+        <script src="{% static 'admin/js/vendors/datatable.js' %}"></script> {% endcomment %}
         <script src="{% static 'admin/js/script.js' %}"></script>
     </body>
 </html>

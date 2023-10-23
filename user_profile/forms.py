@@ -10,7 +10,10 @@ class CustomUserEditForm(forms.ModelForm):
         model = CustomUser
         fields = ['profile_picture', 'first_name', 'last_name', 'email', 'phone_number']
 
+    def clean(self):
+        pass
 
+    
 class AddressForm(forms.ModelForm):
 
     class Meta:

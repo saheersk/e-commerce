@@ -20,7 +20,6 @@ click-repl==0.3.0
 cron-descriptor==1.4.0
 cryptography==41.0.4
 cssselect2==0.7.0
-decouple==0.0.7
 Django==4.0.4
 django-appconf==1.0.5
 django-celery-beat==2.5.0
@@ -48,7 +47,7 @@ phonenumbers==8.13.20
 pilkit==2.0
 Pillow==9.1.1
 prompt-toolkit==3.0.39
-psycopg2-binary==2.9.3
+psycopg2-binary==2.9.1
 pycodestyle==2.11.0
 pycparser==2.21
 pyflakes==3.1.0
@@ -61,7 +60,7 @@ pypng==0.20220715.0
 python-bidi==0.4.2
 python-crontab==3.0.0
 python-dateutil==2.8.2
-python-decouple==3.6
+python-decouple==3.8
 python-dotenv==1.0.0
 python-http-client==3.3.7
 python-resize-image==1.1.20

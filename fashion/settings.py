@@ -1,16 +1,19 @@
+import os
+
 from pathlib import Path
 
 from celery.schedules import crontab
+from decouple import config
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-SECRET_KEY = 'django-insecure-%vy8$8d6$jah0=bk63#fvyr#@)did)1'
-# m*ilrwv+6sj-hr=k@kf'
+SECRET_KEY = config('DJANGO_SECRET_KEY')
 
-DEBUG = True
+DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = config('DJANGO_ALLOWED_HOSTS', default='', cast=lambda v: [s.strip() for s in v.split(',')])
 
 
 INSTALLED_APPS = [
@@ -78,17 +81,27 @@ ASGI_APPLICATION = 'fashion.asgi.application'
 #     }
 # }
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'fashion_db',
+#         'USER': 'fashion_user',
+#         'PASSWORD': 'fashion_user123',
+#         'HOST': 'postgres_db',  
+#         'PORT': '5432',
+#     }
+# }
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'fashion_db',
-        'USER': 'fashion_user',
-        'PASSWORD': 'fashion_user123',
-        'HOST': 'postgres_db',  
-        'PORT': '5432',
+        'NAME': config('DATABASE_NAME', default=''),
+        'USER': config('DATABASE_USERNAME', default=''),
+        'PASSWORD': config('DATABASE_PASSWORD', default=''),
+        'HOST': config('DATABASE_HOST', default=''),
+        'PORT': config('DATABASE_PORT', default=''),
     }
 }
-
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -143,11 +156,11 @@ CHANNEL_LAYERS = {
 }
 
 
-RAZORPAY_KEY_ID = 'rzp_test_7Pm5s9hhe2TILm'
-RAZORPAY_KEY_SECRET = 'f4SuCsKkP5FXRQHw4Mx7GiQQ'
+RAZORPAY_KEY_ID = config('RAZORPAY_KEY_ID', default='')
+RAZORPAY_KEY_SECRET = config('RAZORPAY_KEY_SECRET', default='')
 
 EMAIL_BACKEND = 'sendgrid_backend.SendgridBackend'
-SENDGRID_API_KEY = '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'
+SENDGRID_API_KEY = config('SENDGRID_API_KEY', default='')
 
 
 #CELERY

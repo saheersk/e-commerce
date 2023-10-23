@@ -149,7 +149,6 @@ function getCSRFToken() {
   })
 
 $(document).ready(function () {
-    console.log('hlo');
     $("#approve-product").click(function () {
         console.log('approve');
         var csrfToken = getCSRFToken();

@@ -896,11 +896,10 @@ def admin_banner(request):
 def admin_banner_add(request):
     if request.user.is_superuser and request.user.is_authenticated:
         if request.method == 'POST':
-            form = AdminBannerForm(request.POST)
+            form = AdminBannerForm(request.POST, request.FILES)
             if form.is_valid():
                 form.save()
-                return HttpResponseRedirect(
-                    reverse("customadmin:admin_banner"))
+                return HttpResponseRedirect(reverse("customadmin:admin_banner"))
             else:
                 message = generate_form_error(form)
                 form = AdminBannerForm()
