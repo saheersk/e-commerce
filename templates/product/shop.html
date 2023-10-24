@@ -129,28 +129,7 @@
                 checkbox.checked = true;
             }
         });
-    
-        // Handle form submission
-        const form = document.getElementById("category-filter-form");
-        form.addEventListener("submit", function (event) {
-            event.preventDefault();
-            // Retrieve the selected categories
-            const selectedCategories = [];
-            document.querySelectorAll(".category-checkbox:checked").forEach(function (checkbox) {
-                selectedCategories.push(checkbox.value);
-            });
-    
-            // Construct the URL with selected categories
-            const baseUrl = "/shop/all/";
-            const params = new URLSearchParams();
-            selectedCategories.forEach(function (category) {
-                params.append("category", category);
-            });
-            const url = baseUrl + "?" + params.toString();
-            
-            // Redirect to the filtered URL
-            window.location.href = url;
-        });
+        
     });
 
     

@@ -64,7 +64,9 @@ TEMPLATES = [
                 'fashion.context_processors.username',
                 'shop.context_processors.cart_count',
                 'fashion_asgi.context_processors.notification',
+                'fashion_asgi.context_processors.order_notification',
                 'user_profile.context_processors.wallet',
+                'web.context_processors.broadcast',
             ],
         },
     },
@@ -73,24 +75,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'fashion.wsgi.application'
 ASGI_APPLICATION = 'fashion.asgi.application'
 
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'fashion_db',
-#         'USER': 'fashion_user',
-#         'PASSWORD': 'fashion_user123',
-#         'HOST': 'postgres_db',  
-#         'PORT': '5432',
-#     }
-# }
 
 DATABASES = {
     'default': {
@@ -130,15 +114,10 @@ USE_TZ = True
 handler404 = 'web.views.custom_404_view'
 
 STATIC_URL = 'static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
-# STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-
-STATICFILES_DIRS = [
-    BASE_DIR / "static",
-]
-
-MEDIA_ROOT = BASE_DIR / "media"
 MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

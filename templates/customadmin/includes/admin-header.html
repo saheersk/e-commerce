@@ -35,11 +35,29 @@
             </ul>
         </div>
         <div id="notification-panel" class="notification-panel">
-            <ul class="list-group" id="notification-dropdown" style="width: 400px; height: 500px; overflow-y: auto;">
-                {% for item in notification %}
-                    <li class='list-group-item'>{{ item.message }}</li>
+            <ul class="list-group" id="notification-dropdown" style="max-width: 400px; height: 500px; overflow-y: auto;">
+                {% for item in order_notification %}
+                <li class="list-group-item">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <span class="fw-bold mr-2">Username: {{item.full_name}}</span>
+                        </div>
+                        <div>
+                            <small class="text-muted">Total Amount: {{item.total_amount}}</small>
+                        </div>
+                    </div>
+                    <ul class="list-unstyled">
+                        {% for order in item.order.order_items.all %}
+                        <li>
+                            <a href="{% url 'customadmin:admin_order_details' order.id %}">
+                                <i class="fas fa-arrow-right me-2 text-primary"></i>{{order.product.title}}
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </li>
                 {% endfor %}
             </ul>
-        </div>
+        </div>        
     </div>
 </div>

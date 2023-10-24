@@ -119,7 +119,6 @@ def profile_edit(request):
             user = form.save(commit=False)  
             if 'profile_picture' in request.FILES:
                 user.profile_picture = request.FILES['profile_picture']
-                print(user.profile_picture, 'pic')
 
             user.save()
 
@@ -157,8 +156,6 @@ def profile_address_add(request):
         form = AddressForm(request.POST)
         if form.is_valid():
             instance = form.save(commit=False)
-
-            print(instance, 'instance')
 
             default = request.POST.get('is_default')
             if Address.objects.filter(user=request.user).exists():
@@ -310,11 +307,10 @@ def profile_order(request):
 
 @login_required(login_url='user/login/')
 def profile_order_details(request, pk):
-    # orders = Order.objects.filter(user=request.user, id=pk)
     order_item = get_object_or_404(OrderItem, id=pk)
     reviews = UserReview.objects.filter(user=request.user, product=order_item)
     product_order = Order.objects.get(order_items=order_item)
-    print(order_item, 'item')
+
     context = {
         "title" : "Male Fashion | My Orders",
         "order": order_item,
@@ -362,7 +358,6 @@ def profile_order_cancel(request, pk):
             return HttpResponse(json.dumps(response_data), content_type="application/json")
         else:
             error_message = generate_form_error(form)
-            print(error_message, 'error')
             response_data = {
                 "status" : "error",
                 "title" : "Address Field Error.",
@@ -412,7 +407,6 @@ def profile_order_return(request, pk):
             return HttpResponse(json.dumps(response_data), content_type="application/json")
         else:
             error_message = generate_form_error(form)
-            print(error_message, 'error')
             response_data = {
                 "status" : "error",
                 "title" : "Address Field Error.",
@@ -431,7 +425,7 @@ def profile_order_return(request, pk):
     
 
 def profile_wallet_history(request):
-    wallet_history = WalletHistory.objects.filter(wallet__user=request.user)
+    wallet_history = WalletHistory.objects.filter(wallet__user=request.user).order_by('-id')
     context = {
         "title" : "Male Fashion | Wallet History",
         "wallet_history": wallet_history
@@ -458,7 +452,6 @@ def profile_order_review(request, pk):
         return HttpResponse(json.dumps(response_data), content_type="application/json")
     else:
         error_message = generate_form_error(form)
-        print(error_message, 'error')
         response_data = {
                 "status" : "error",
                 "title" : "Address Field Error.",

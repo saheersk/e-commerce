@@ -8,9 +8,7 @@
     <style>
         /* Invoice styling */
         body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
+            font-family: 'DejaVu Sans', sans-serif;
         }
         .invoice {
             width: 80%;
@@ -106,10 +104,10 @@
             </tbody>
         </table>
         <div class="invoice-total">
-            <strong>Total Amount: ₹{{total_amount}}</strong>
+            <strong>Total Amount: &#8377;{{total_amount}}</strong>
         </div>
         <div class="invoice-total">
-            <strong>Discount Total Amount: ₹{{order.total_price}}</strong>
+            <strong>Discount Total Amount: &#8377;{{order.total_price}}</strong>
         </div>
     </div>
 </body>

@@ -8,8 +8,6 @@ from web.forms import ContactForm
 from shop.models import Product, Cart
 from user.functions import generate_form_error
 
-from channels.layers import get_channel_layer
-
 
 def index(request):
     banner = Banner.objects.filter(is_featured=True)
@@ -30,22 +28,9 @@ def index(request):
         "trends": trends,
         "products": products, 
         'active_menu_item': "home",
-        "room_name": "broadcast",
     }
     return render(request, 'web/index.html', context)
 
-from asgiref.sync import async_to_sync
-
-def test(request):
-    channel_layer = get_channel_layer()
-    async_to_sync(channel_layer.group_send)(
-        "notification_broadcast",
-        {
-            'type': 'send_notification',
-            'message': "Notification"
-        }
-    )
-    return HttpResponse("Done")
 
 def about(request):
     context = {

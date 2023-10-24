@@ -51,3 +51,5 @@ __pycache__/
 # # Ignore local .gitignore files
 # .gitignore
 
+media/
+migrations/*.pyc

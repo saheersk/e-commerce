@@ -21,6 +21,7 @@ from shop.models import Product, ProductImage, Category, Wishlist, Cart, OrderSt
 from user.models import Address, Coupon, CustomUser, CouponUsage, Wallet
 from main.functions import paginate_instances
 from shop.utils import generate_invoice_to_send_email
+from fashion_asgi.models import OrderNotification
 
 
 def product_all(request):
@@ -29,10 +30,6 @@ def product_all(request):
     q = request.GET.get('q')
 
     products = Product.objects.filter(is_show=True, category__is_blocked=False, is_deleted=False)
-
-    print(request.GET.getlist('category')  , 'cat')
-    if 'shirt' in category_params:
-        print('yes')
 
     if category_params and 'All' not in category_params:
         products = products.filter(category__name__in=category_params)
@@ -333,12 +330,18 @@ def product_cart_remove(request, pk):
 
     return HttpResponse(json.dumps(response_data), content_type="application/json")
 
-
+from urllib.parse import urlencode
 #checkout
 @login_required(login_url="user/login/")
 def product_checkout(request):
     if not Address.objects.filter(user=request.user, is_default=True).exists():
-        return redirect("user_profile:profile_address_add")
+
+        current_path = request.path
+        query_parameters = {'location': current_path}
+        query_string = urlencode(query_parameters)
+        url = f"/user-profile/address/add/?next={current_path}"
+
+        return redirect(url)
     else:
         user_addresses = Address.objects.filter(user=request.user, is_default=False)
         user_default_address = Address.objects.get(user=request.user, is_default=True)
@@ -367,8 +370,6 @@ def product_checkout(request):
                         )
                     )['total_amount']
     
-
-        print(total_amount, 'amount')
         wallet = request.session.get('wallet')
 
         total_discount_amount = 0.00
@@ -381,8 +382,6 @@ def product_checkout(request):
         if discount_amount is not None:
             if float(discount_amount) < total_amount and float(discount_amount) > 0.00:
                 discount = True
-
-        print(discount, discount_amount, total_amount, 'amount')
 
         context = {
             "wallet" : wallet,
@@ -557,11 +556,17 @@ def product_order_cod(request):
                 item.total_price_of_product = price * item.qty
                 item.save()
             
+        OrderNotification.objects.create(
+            full_name=user.first_name+ ' '+user.last_name,
+            total_amount=str(total_amount),
+            order=order
+        )
         if 'coupon' in request.session:
                 del request.session['coupon']
 
         if 'total_discount_amount' in request.session: 
                 del request.session['total_discount_amount']
+        
             
         generate_invoice_to_send_email(request, order.id)
 
@@ -643,7 +648,13 @@ def product_order_digital(request):
                 item.qty = 1
                 item.total_price_of_product = price * item.qty
                 item.save()
-            
+        
+        OrderNotification.objects.create(
+            full_name=user.first_name+ ' '+user.last_name,
+            total_amount=str(total_amount),
+            order=order
+        )
+
         if 'coupon' in request.session:
                 del request.session['coupon']
 
@@ -745,7 +756,13 @@ def product_order_wallet(request):
                     item.qty = 1
                     item.total_price_of_product = price * item.qty
                     item.save()
-                
+
+            OrderNotification.objects.create(
+                full_name=user.first_name+ ' '+user.last_name,
+                total_amount=str(total_amount),
+                order=order
+            )
+
             if 'coupon' in request.session:
                     del request.session['coupon']
                     
@@ -802,7 +819,6 @@ def create_payment(request):
         amount = float(request.POST.get('amount')) * 100  
 
         order = client.order.create({'amount': amount, 'currency': 'INR', 'payment_capture': '1'})
-        print(order['id'], 'id', settings.RAZORPAY_KEY_ID)    
         response_data = {
             'razorpayKey': str(settings.RAZORPAY_KEY_ID),
             'currency': order['currency'],
@@ -815,7 +831,6 @@ def create_payment(request):
 
 def payment_verify(request):
     data = request.POST
-    print(data)
     razorpay_payment_id = data.getlist('payment_details[razorpay_payment_id]')[0]
     razorpay_order_id = data.getlist('payment_details[razorpay_order_id]')[0]
     razorpay_signature = data.getlist('payment_details[razorpay_signature]')[0]
@@ -844,16 +859,16 @@ def generate_invoice_pdf(request, pk):
     total_amount = 0
     for item in order.order_items.all():
         total_amount += item.quantity * item.product.price
-         
+
     context = {'order': order, 'invoice_id': invoice_id, 'total_amount': total_amount}
 
-    template_path = 'product/invoice-template.html' 
+    template_path = 'product/invoice-template.html'
     template = get_template(template_path)
-    context = {'order': order, 'invoice_id': invoice_id, 'total_amount': total_amount}  # Pass data to your template
     html = template.render(context)
+
     pdf_file = io.BytesIO()
-    pisa.CreatePDF(html, dest=pdf_file)
+    pisa.CreatePDF(io.StringIO(html), dest=pdf_file, encoding='utf-8')
 
     response = HttpResponse(pdf_file.getvalue(), content_type='application/pdf')
     response['Content-Disposition'] = 'attachment; filename="invoice.pdf"'
-    return response     
+    return response

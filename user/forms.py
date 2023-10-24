@@ -14,7 +14,6 @@ class CustomUserForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
 
-        # Password validation
         password = cleaned_data.get("password")
         confirm_password = cleaned_data.get("confirm_password")
 
@@ -23,23 +22,17 @@ class CustomUserForm(forms.ModelForm):
         elif len(password) < 8:
             self.add_error("password", "Password must be at least 8 characters.")
 
-        # Email validation
         email = cleaned_data.get("email")
 
-        if email:
+        if email is not None and isinstance(email, str):
             if not re.match(r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$', email):
                 self.add_error("email", "Invalid email format.")
             elif CustomUser.objects.filter(email=email).exists():
                 self.add_error("email", "Email is already taken.")
+        else:
+            self.add_error("email", "Invalid email format.")
 
-        # Phone number validation
-        phone_number = cleaned_data.get("phone_number")
-        if phone_number:
-            if not re.match(r'^\+?\d{10,15}$', phone_number):
-                self.add_error("phone_number", "Invalid phone number format.")
-
-        # Check if other fields have data and don't contain only spaces
-        for field_name in ["first_name", "last_name", "used_code"]:
+        for field_name in ["first_name", "last_name"]:
             field_value = cleaned_data.get(field_name)
             if not field_value:
                 self.add_error(field_name, f"{field_name.replace('_', ' ').title()} is required.")

@@ -3,8 +3,7 @@ import uuid
 
 from django.db import models
 from django.utils.text import slugify
-from django.core.files.uploadedfile import SimpleUploadedFile
-from django.utils import timezone
+from django.core.files.base import ContentFile
 
 from PIL import Image
 from io import BytesIO
@@ -94,21 +93,23 @@ class ProductImage(models.Model):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
 
-        if not self.thumbnail:
-            if self.image:  
-                with open(self.image.path, 'rb') as img_file:
-                    img = Image.open(img_file)
-                    img = img.resize((300, 533), Image.LANCZOS)
+        if self.image:
+            with open(self.image.path, 'rb') as img_file:
+                img = Image.open(img_file)
+                img = img.resize((300, 533), Image.LANCZOS)
 
-                    thumbnail_img = img.copy()
-                    thumbnail_img.thumbnail((200, 240), Image.LANCZOS)
+                thumbnail_img = img.copy()
+                thumbnail_img.thumbnail((200, 240), Image.LANCZOS)
 
-                    thumb_filename = os.path.basename(self.image.path)
-                    thumb_io = BytesIO()
+                # Save the resized image
+                with BytesIO() as img_io:
+                    img.save(img_io, format='JPEG', quality=90)
+                    self.image.save('image.jpg', ContentFile(img_io.getvalue()), save=False)
+
+                # Save the thumbnail
+                with BytesIO() as thumb_io:
                     thumbnail_img.save(thumb_io, format='JPEG', quality=90)
-                    thumb_file = SimpleUploadedFile(thumb_filename, thumb_io.getvalue(), content_type='image/jpeg')
-                    self.thumbnail.save(thumb_filename, thumb_file, save=False)
-                    self.image.save(thumb_filename, thumb_file, save=False)
+                    self.thumbnail.save('thumbnail.jpg', ContentFile(thumb_io.getvalue()), save=False)
 
 
 class Cart(models.Model):

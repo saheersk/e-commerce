@@ -11,7 +11,7 @@
                             <h6>{{item.category}}</h6>
                             <h2>{{item.title}}</h2>
                             <p>{{item.short_description}}</p>
-                            <a href="#" class="primary-btn">Shop now<span class="arrow_right"></span></a>
+                            <a href="{% url 'shop:product_all' %}" class="primary-btn">Shop now<span class="arrow_right"></span></a>
                             <div class="hero__social">
                                 <a href="#"><i class="fa fa-facebook"></i></a>
                                 <a href="#"><i class="fa fa-twitter"></i></a>
@@ -33,19 +33,6 @@
 <section class="banner spad">
     <div class="container">
         <div class="row">
-            {% comment %}
-            <div class="col-lg-7 offset-lg-4">
-                <div class="banner__item">
-                    <div class="banner__item__pic">
-                        <img src="{{item.image.url}}" alt="{{item.title}}" />
-                    </div>
-                    <div class="banner__item__text">
-                        <h2>{{item.title}}</h2>
-                        <a href="#">Shop now</a>
-                    </div>
-                </div>
-            </div>
-            {% endcomment %}
             <div class="col-lg-5">
                 <div class="banner__item banner__item--middle">
                     <div class="banner__item__pic">
@@ -53,7 +40,7 @@
                     </div>
                     <div class="banner__item__text">
                         <h2>Accessories</h2>
-                        <a href="#">Shop now</a>
+                        <a href="{% url 'shop:product_all' %}">Shop now</a>
                     </div>
                 </div>
             </div>
@@ -64,7 +51,7 @@
                     </div>
                     <div class="banner__item__text">
                         <h2>Shoes Spring 2030</h2>
-                        <a href="#">Shop now</a>
+                        <a href="{% url 'shop:product_all' %}">Shop now</a>
                     </div>
                 </div>
             </div>
@@ -76,19 +63,9 @@
 <!-- Product Section Begin -->
 <section class="product spad">
     <div class="container">
-        <div class="row">
-            <div class="col-lg-12">
-                {% comment %}
-                <ul class="filter__controls">
-                    <li class="active" data-filter="*">Best Sellers</li>
-                    <li data-filter=".new-arrivals">New Arrivals</li>
-                    <li data-filter=".hot-sales">Hot Sales</li>
-                </ul>
-                {% endcomment %}
-            </div>
-        </div>
         <div class="row product__filter">
             {% for product in products %}
+            <a href="{% url 'shop:product_details' product.slug %}">
             <div class="col-lg-3 col-md-6 col-sm-6 col-md-6 col-sm-6 mix new-arrivals">
                 <div class="product__item">
                     <div class="product__item__pic set-bg" data-setbg="">
@@ -103,18 +80,12 @@
                     </div>
                     <div class="product__item__text">
                         <h6>{{product.title}}</h6>
-                        <a href="#" class="add-cart">+ Add To Cart</a>
-                        <div class="rating">
-                            <i class="fa fa-star-o"></i>
-                            <i class="fa fa-star-o"></i>
-                            <i class="fa fa-star-o"></i>
-                            <i class="fa fa-star-o"></i>
-                            <i class="fa fa-star-o"></i>
-                        </div>
+                        <a href="#" class="add-cart">{{product.title}}</a>
                         <h5>₹{{product.price}}</h5>
                     </div>
                 </div>
             </div>
+        </a>
             {% endfor %}
         </div>
     </div>

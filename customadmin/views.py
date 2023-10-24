@@ -536,6 +536,7 @@ def admin_product_add(request):
                         thumbnail.save()
                         image.save()
 
+
                 return HttpResponseRedirect(
                     reverse("customadmin:admin_product"))
             else:
@@ -642,7 +643,7 @@ def admin_product_delete(request, pk):
     product = get_object_or_404(Product, id=pk)
     product_image = ProductImage.objects.filter(product=product)
 
-    if not product.is_show:
+    if product.is_show:
         show = False
     else:
         show = True

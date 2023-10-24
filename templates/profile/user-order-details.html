@@ -124,7 +124,7 @@
                         {% endfor %}
                     </div>
                 </div>
-                {% if order.order_status.status == "Delivered" and review == "" %}
+                {% if order.order_status.status == "Delivered"  and not reviews.exists %}
                     <form id='form-review' class="ajax-review">
                         {% csrf_token %}
                         <div class="form-group">

@@ -102,12 +102,9 @@
                 + '/'
             );
             
-            // console.log(chatSocket, 'chat');
-            
             notificationSocket.onmessage = function(e) {
                 const data = JSON.parse(e.data);
                 console.log(data, 'data')
-                //document.querySelector('#chat-log').value += (data.message + '\n');
                 document.getElementById("notification-dropdown").innerHTML = "<li class='list-group-item'>" + data+ "</li>" + document.getElementById("notification-dropdown").innerHTML;
                 document.getElementById("notification-badge").innerHTML = parseInt(document.getElementById("notification-badge").innerHTML) + 1
                 console.log(data)
@@ -117,21 +114,6 @@
                 console.error('Chat socket closed unexpectedly');
             };
         
-            {% comment %} document.querySelector('#chat-message-input').focus();
-            document.querySelector('#chat-message-input').onkeyup = function(e) {
-                if (e.key === 'Enter') {  // enter, return
-                    document.querySelector('#chat-message-submit').click();
-                }
-            }; 
-        
-           document.querySelector('#chat-message-submit').onclick = function(e) {
-                const messageInputDom = document.querySelector('#chat-message-input');
-                const message = messageInputDom.value;
-                chatSocket.send(JSON.stringify({
-                    'message': message
-                }));
-                messageInputDom.value = '';
-            };  {% endcomment %}
         </script>
     </body>
 </html>

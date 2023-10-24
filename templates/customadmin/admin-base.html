@@ -41,7 +41,7 @@
             .notification-panel {
                 position: absolute;
                 top: 100%; /* Position it below the icon */
-                left: -59px; /* Adjust this value as needed for the horizontal position */
+                right: 80px; /* Adjust this value as needed for the horizontal position */
                 background-color: #fff;
                 border: 1px solid #ccc;
                 display: none; /* Initially hide the panel */
@@ -51,19 +51,6 @@
             .notification-panel.show {
                 display: block; /* Show the panel when the collapse class is added */
             }
-            .notification-content {
-                display: none; /* Hide the panel by default */
-                position: absolute;
-                top: 100%; /* Position it below the bell icon */
-                left: 0;
-                background-color: #fff; /* Background color for the panel */
-                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Add shadow for depth */
-                border: 1px solid #ccc; /* Add a border */
-                padding: 10px;
-                z-index: 1000; /* Ensure it appears on top of other elements */
-                width: 200px; /* Adjust the width as needed */
-            }
-            
             /* Style for notification links */
             .notification-content a {
                 display: block;
@@ -84,7 +71,7 @@
     <body>
         {% block content %}{% endblock %}
         <!-- Scripts -->
-
+        {{ room_name|json_script:"room-name" }}
         <!-- dropzone -->
         <script src="{% static 'admin/libs/dropzone/dist/min/dropzone.min.js' %}"></script>
         <!-- flatpickr -->
@@ -92,7 +79,6 @@
 
         <!-- quill js -->
         <script src="{% static 'admin/libs/quill/dist/quill.min.js' %}"></script>
-        {% comment %} <script src="{% static 'admin/libs/%40yaireo/tagify/dist/tagify.min.js' %}"></script> {% endcomment %}
 
         <!-- Libs JS -->
         <script src="{% static 'admin/libs/jquery/dist/jquery.min.js' %}"></script>
@@ -104,18 +90,75 @@
         <script src="{% static 'admin/js/theme.min.js' %}"></script>
         <script src="{% static 'admin/libs/apexcharts/dist/apexcharts.min.js' %}"></script>
         <script src="{% static 'admin/js/vendors/chart.js' %}"></script>
-        <!-- popper js -->
-        {% comment %} <script src="{% static 'admin/libs/%40popperjs/core/dist/umd/popper.min.js' %}"></script> {% endcomment %}
-        <!-- tippy js -->
-        {% comment %} <script src="{% static 'admin/libs/tippy.js' %}"></script> {% endcomment %}
-        {% comment %} <script src="{% static 'admin/js/vendors/tooltip.js' %}"></script> {% endcomment %}
-   
-   
+
         <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
-        {% comment %} <script src="{% static 'admin/libs/datatables/media/js/jquery.dataTables.min.js' %}"></script> {% endcomment %}
-        {% comment %} <script src="{% static 'admin/libs/datatables.net-bs5/js/dataTables.bootstrap5.min.js' %}"></script> {% endcomment %}
-        {% comment %} <script src="{% static 'admin/libs/datatables.net-responsive/js/dataTables.responsive.min.js' %}"></script>
-        <script src="{% static 'admin/js/vendors/datatable.js' %}"></script> {% endcomment %}
         <script src="{% static 'admin/js/script.js' %}"></script>
+        <script>
+            const roomName = JSON.parse(document.getElementById('room-name').textContent);
+            console.log(roomName, 'room');
+            
+            const notificationSocket = new WebSocket(
+                'ws://'
+                + window.location.host
+                + '/ws/notification/admin/'
+                + 'admin'
+                + '/'
+            );
+            
+            notificationSocket.onmessage = function (e) {
+                const data = JSON.parse(e.data);
+                console.log(data, 'data');
+            
+                const orderItems = data.order_data.order_items;
+                const orderItemsHTML = orderItems.map((orderItem) => `
+                    <li>
+                        <a href="/customadmin/order/orders/${orderItem.id}/">
+                            <i class="fas fa-arrow-right me-2 text-primary"></i>${orderItem.product_title}
+                        </a>
+                    </li>
+                `).join('');
+            
+                const notificationDropdown = document.getElementById("notification-dropdown");
+                const newNotificationItem = document.createElement('li');
+                newNotificationItem.className = 'list-group-item';
+                newNotificationItem.innerHTML = `
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <span class="fw-bold mr-2">Username: ${data.full_name}</span>
+                        </div>
+                        <div>
+                            <small class="text-muted">Total Amount: ${data.total_amount}</small>
+                        </div>
+                    </div>
+                    <ul class="list-unstyled">
+                        ${orderItemsHTML}
+                    </ul>
+                `;
+            
+                notificationDropdown.insertBefore(newNotificationItem, notificationDropdown.firstChild);
+            
+                document.getElementById("notification-badge").innerHTML = parseInt(document.getElementById("notification-badge").innerHTML) + 1;
+            };
+            
+            notificationSocket.onclose = function(e) {
+                console.error('Chat socket closed unexpectedly');
+            };
+        
+            document.addEventListener("DOMContentLoaded", function () {
+                const notificationIcon = document.querySelector(".notification-icon");
+                const notificationContent = document.querySelector("#notification-panel");
+                let notificationPanelOpen = false;
+        
+                notificationIcon.addEventListener("click", function () {
+                    if (notificationPanelOpen) {
+                        notificationContent.style.display = "none";
+                        notificationPanelOpen = false;
+                    } else {
+                        notificationContent.style.display = "block";
+                        notificationPanelOpen = true;
+                    }
+                });
+            });
+        </script>
     </body>
 </html>

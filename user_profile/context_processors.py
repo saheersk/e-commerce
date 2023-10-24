@@ -11,3 +11,4 @@ def wallet(request):
         return {'wallet_amount': wallet.balance}
     else:
         return {'wallet_amount': 0}
+    
