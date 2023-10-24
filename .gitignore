@@ -1,11 +1,13 @@
 # Virtual environment
 venv/
-env/
+.env
+.vscode/
 
 # Compiled Python files
 *.pyc
 __pycache__/
 
+.DS_Store
 # # Editor and IDE files
 # .vscode/
 # .idea/
