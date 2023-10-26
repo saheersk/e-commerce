@@ -66,10 +66,15 @@
                     <div class="col-sm-3">
                         <p class="mb-0">Address</p>
                     </div>
+
                     <div class="col-sm-9">
+                        {% if default_address %}
                         <p class="text-muted mb-0"> {{default_address.first_name}} {{default_address.address_line1}} {{default_address.address_line1}},
                             {{ default_address.city }}, {{ default_address.country }}
                         </p>
+                        {% else %}
+                        <button id="new-address" class="site-btn text-center mt-3" style="color:white">Add New Address</button>
+                        {% endif %}
                     </div>
                 </div>
                 <div class="d-flex">

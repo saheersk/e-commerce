@@ -6,6 +6,8 @@ services:
     container_name: redis_container
     ports:
       - "6379:6379" 
+    volumes:
+      - redis_data:/data
 
   #Postgres Database
   postgres_db:
@@ -59,3 +61,4 @@ services:
   
 volumes:
   postgres_data:
+  redis_data:

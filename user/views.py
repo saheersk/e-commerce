@@ -16,6 +16,7 @@ from django.contrib.auth import get_user_model
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from django.http import HttpResponse
 from django.conf import settings
+from decimal import Decimal
 
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
@@ -83,7 +84,7 @@ def signup(request):
             base_username = f"{instance.first_name}_{instance.last_name}"
             username = base_username
             i = 1
-            
+
             while CustomUser.objects.filter(username=username).exists():
                 username  = f"{base_username}_{i}"
                 i += 1
@@ -97,19 +98,21 @@ def signup(request):
 
             if CustomUser.objects.filter(referral_code=used_code).exists():
                 referred_user = CustomUser.objects.get(referral_code=used_code)
-                referred_user.amount += referred_amount.referred_user_amount
-                referred_user.save()
+                referred_user_wallet = Wallet.objects.get(user=referred_user)
+                referred_user_wallet.balance += Decimal(referred_amount.referred_user_amount)
+                referred_user_wallet.save()
 
                 if used_code:
-                    user_wallet.balance += referred_amount.new_user_amount
+                    user_wallet.balance = Decimal(user_wallet.balance)
+                    user_wallet.balance += Decimal(referred_amount.new_user_amount)
                     user_wallet.save()
 
-                    WalletHistory.objects.create(
+                WalletHistory.objects.create(
                             wallet=user_wallet,
                             description= f"Referral Amount Credited From user {instance.first_name}",
-                            amount=referred_amount.amount,
+                            amount=referred_amount.new_user_amount,
                             transaction_operation='credit'
-                        )
+                )    
 
             request.session['email'] = instance.email
             send_otp(request, instance.email)
