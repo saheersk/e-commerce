@@ -15,9 +15,9 @@ services:
     platform: linux/arm64
     container_name: postgres_container
     environment:
-      POSTGRES_DB: 'fashion_db'
-      POSTGRES_USER: 'fashion_user'
-      POSTGRES_PASSWORD: 'fashion_user123'
+      POSTGRES_DB: fashion_db
+      POSTGRES_USER: fashion_user
+      POSTGRES_PASSWORD: fashion_user123
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -30,7 +30,7 @@ services:
       - 8000:8000
     image: app:fashion
     container_name: fashion_container
-    command: gunicorn -k uvicorn.workers.UvicornWorker fashion.asgi:application -b 0.0.0.0:8000
+    command: sh -c "chmod +x /fashion/migrate.sh && chmod +x /fashion/entrypoint.sh  && sh /fashion/migrate.sh && /fashion/entrypoint.sh"
     depends_on:
       - postgres_db
 

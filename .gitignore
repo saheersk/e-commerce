@@ -124,7 +124,8 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-
+.kube/
+.database
 # Spyder project settings
 .spyderproject
 .spyproject
