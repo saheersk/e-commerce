@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fashion-deployment
+  labels:
+    app: fashion
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fashion
+  template:
+    metadata:
+      labels:
+        app: fashion
+    spec:
+      containers:
+      - name: fashion
+        image: saheerabcd/e-commerce:1.0.0
+        envFrom:
+          - secretRef:
+              name: fashion-secret
+        ports:
+        - containerPort: 8000
+      imagePullSecrets:
+        - name: my-docker-secret
+
+---     
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: fashion-service
+spec:
+  selector:
+    app: fashion
+  ports:
+    - protocol: TCP
+      port: 8000
+      targetPort: 8000

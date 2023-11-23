@@ -1,0 +1,16 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fashion-ingress
+spec:
+  rules:
+  - host: saheerkhan.com   # Replace with your actual domain or hostname
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: fashion-service
+            port:
+              number: 8000

@@ -13,7 +13,7 @@ services:
   postgres_db:
     image: postgres:13
     platform: linux/arm64
-    container_name: postgres_container
+    container_name: postgres_ecommerce_container
     environment:
       POSTGRES_DB: fashion_db
       POSTGRES_USER: fashion_user
